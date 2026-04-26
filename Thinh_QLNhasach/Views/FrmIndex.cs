@@ -146,5 +146,17 @@ namespace Thinh_QLNhasach.Views
             }
         }
 
+        private void btnThongKe_Click(object sender, EventArgs e)
+        {
+            FrmThongKe frm = new FrmThongKe();
+            OpenFormInPanel(frm);
+
+        }
+
+        private void btnNhatKy_Click(object sender, EventArgs e)
+        {
+            FrmNhatKy frm = new FrmNhatKy();
+            OpenFormInPanel(frm);
+        }
     }
 }

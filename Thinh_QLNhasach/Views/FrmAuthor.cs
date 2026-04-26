@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
 using System.Windows.Forms;
+using Thinh_QLNhasach.Utility; // Bắt buộc phải có dòng này để gọi được Session.Username
 
 namespace Thinh_QLNhasach
 {
@@ -11,9 +12,10 @@ namespace Thinh_QLNhasach
         string strConn = @"Data Source=THINHLALUOT\SQLEXPRESS01; Initial Catalog=BookShop; Integrated Security=True";
         SqlConnection conn;
 
-        // ===== BẢNG TẠM =====
+        // ===== BẢNG TẠM VÀ BIẾN KIỂM SOÁT =====
         DataTable dtTemp = new DataTable(); // bảng tạm hiển thị trên DGV
-        int editingRowIndex = -1;           // đang sửa dòng nào (-1 = không sửa)
+        int editingRowIndex = -1;           // đang chọn dòng nào (-1 = không chọn)
+        bool isEditing = false;             // CÔNG TẮC: Bật/Tắt chế độ sửa
 
         public FrmTacGia()
         {
@@ -119,6 +121,47 @@ namespace Thinh_QLNhasach
             }
         }
 
+        // ===== HÀM HỖ TRỢ: BỐC DỮ LIỆU TỪ BẢNG LÊN FORM =====
+        private void BocDuLieuTacGia(int index)
+        {
+            if (index < 0 || index >= dtTemp.Rows.Count) return;
+
+            DataRow row = dtTemp.Rows[index];
+            txtTenTG.Text = row["TenTG"]?.ToString();
+            txtQuequan.Text = row["QueQuan"]?.ToString();
+
+            if (row["NamSinh"] != DBNull.Value)
+                dtpNgaySinh.Value = Convert.ToDateTime(row["NamSinh"]);
+            else
+                dtpNgaySinh.Value = DateTime.Now;
+
+            if (row["NamMat"] == DBNull.Value || row["NamMat"] == null || string.IsNullOrEmpty(row["NamMat"].ToString()))
+            {
+                chkDamat.Checked = false;
+                dtpNgayMat.Enabled = false;
+            }
+            else
+            {
+                chkDamat.Checked = true;
+                dtpNgayMat.Enabled = true;
+                dtpNgayMat.Value = Convert.ToDateTime(row["NamMat"]);
+            }
+        }
+
+        // ===== CLICK DGV → NẾU ĐANG BẬT SỬA THÌ ĐỔ DỮ LIỆU LÊN FORM =====
+        private void dgvTacGia_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            editingRowIndex = e.RowIndex; // Ghi nhớ dòng đang chọn
+
+            // Nếu chế độ sửa đang BẬT, tự động bốc dữ liệu lên Form
+            if (isEditing)
+            {
+                BocDuLieuTacGia(editingRowIndex);
+            }
+        }
+
         // ===== NÚT THÊM → THÊM VÀO BẢNG TẠM =====
         private void btnAdd_Click(object sender, EventArgs e)
         {
@@ -135,55 +178,50 @@ namespace Thinh_QLNhasach
             dtTemp.Rows.Add(newRow);
             BindDGV();
             ClearInputs();
-            MessageBox.Show("Đã thêm vào bảng tạm. Nhấn Save để lưu vào database!");
+            MessageBox.Show("Đã thêm vào bảng tạm. Nhấn Save để chốt vào Database!");
         }
 
-        // ===== NÚT SỬA → CẬP NHẬT BẢNG TẠM =====
+        // ===== NÚT SỬA → CÔNG TẮC 2 CHIỀU (BẬT/TẮT) =====
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            if (editingRowIndex < 0) { MessageBox.Show("Vui lòng chọn dòng cần sửa!"); return; }
+            if (editingRowIndex < 0) { MessageBox.Show("Vui lòng chọn dòng cần sửa dưới bảng trước!"); return; }
 
-            DataRow row = dtTemp.Rows[editingRowIndex];
-
-            // Lần 1: đổ dữ liệu lên GroupBox
-            if (row["_Status"].ToString() != "edit_pending")
+            if (!isEditing)
             {
-                txtTenTG.Text = row["TenTG"]?.ToString();
-                txtQuequan.Text = row["QueQuan"]?.ToString();
-                dtpNgaySinh.Value = row["NamSinh"] != DBNull.Value ? Convert.ToDateTime(row["NamSinh"]) : DateTime.Now;
-
-                if (row["NamMat"] == DBNull.Value || row["NamMat"] == null)
-                {
-                    chkDamat.Checked = false;
-                    dtpNgayMat.Enabled = false;
-                }
-                else
-                {
-                    chkDamat.Checked = true;
-                    dtpNgayMat.Enabled = true;
-                    dtpNgayMat.Value = Convert.ToDateTime(row["NamMat"]);
-                }
-
-                row["_Status"] = "edit_pending";
-                BindDGV();
-                return; // chờ người dùng chỉnh
+                // CHIỀU 1: BẬT CHẾ ĐỘ SỬA
+                isEditing = true;
+                BocDuLieuTacGia(editingRowIndex);
+                MessageBox.Show("Đã bật chế độ sửa.");
             }
+            else
+            {
+                // CHIỀU 2: CHỐT DỮ LIỆU TỪ FORM XUỐNG BẢNG TẠM
+                if (string.IsNullOrWhiteSpace(txtTenTG.Text)) { MessageBox.Show("Vui lòng nhập tên tác giả!"); return; }
 
-            // Lần 2: chỉ cập nhật vào bảng tạm, KHÔNG save DB
-            if (string.IsNullOrWhiteSpace(txtTenTG.Text)) { MessageBox.Show("Vui lòng nhập tên tác giả!"); return; }
+                DataRow row = dtTemp.Rows[editingRowIndex];
 
-            row.BeginEdit();
-            row["TenTG"] = txtTenTG.Text.Trim();
-            row["QueQuan"] = txtQuequan.Text.Trim();
-            row["NamSinh"] = dtpNgaySinh.Value;
-            row["NamMat"] = chkDamat.Checked ? (object)dtpNgayMat.Value : DBNull.Value;
-            row["_Status"] = "edit"; // đánh dấu chờ Save
-            row.EndEdit();
+                row.BeginEdit();
+                row["TenTG"] = txtTenTG.Text.Trim();
+                row["QueQuan"] = txtQuequan.Text.Trim();
+                row["NamSinh"] = dtpNgaySinh.Value;
+                row["NamMat"] = chkDamat.Checked ? (object)dtpNgayMat.Value : DBNull.Value;
 
-            BindDGV();
-            ClearInputs();
-            editingRowIndex = -1;
-            MessageBox.Show("Đã cập nhật bảng tạm. Nhấn Save để lưu vào database!"); // nhắc nhở
+                // Tránh ghi đè trạng thái "add" thành "edit" đối với dòng mới thêm
+                if (row["_Status"].ToString() != "add")
+                {
+                    row["_Status"] = "edit";
+                }
+                row.EndEdit();
+
+                BindDGV();
+                ClearInputs();
+
+                // Tắt công tắc sửa đi, dọn dẹp
+                isEditing = false;
+                editingRowIndex = -1;
+
+                MessageBox.Show("Đã cập nhật dòng vào bảng chờ thành công! Nhớ nhấn Save để chốt vào Database.");
+            }
         }
 
         // ===== NÚT XÓA → ĐÁNH DẤU DELETE TRONG BẢNG TẠM =====
@@ -194,28 +232,31 @@ namespace Thinh_QLNhasach
             DataRow row = dtTemp.Rows[idx];
             string ten = row["TenTG"].ToString();
 
-            if (MessageBox.Show($"Đánh dấu xóa '{ten}'?", "Xác nhận", MessageBoxButtons.YesNo) == DialogResult.No) return;
+            if (MessageBox.Show($"Bạn có chắc muốn xóa tác giả '{ten}'?", "Xác nhận xóa", MessageBoxButtons.YesNo) == DialogResult.No) return;
 
             if (row["_Status"].ToString() == "add")
             {
-                // Dòng mới chưa lưu DB → xóa thẳng khỏi bảng tạm
+                // Dòng mới chưa lưu DB → xóa thẳng khỏi bảng tạm luôn
                 dtTemp.Rows.RemoveAt(idx);
             }
             else
             {
-                // Dòng đã có trong DB → đánh dấu để Save xử lý
+                // Dòng đã có trong DB → dán nhãn delete để nút Save xử lý
                 row["_Status"] = "delete";
             }
 
             BindDGV();
+            ClearInputs();
+            editingRowIndex = -1;
+            isEditing = false; // Xóa xong thì tắt luôn chế độ sửa (nếu đang bật)
         }
 
-        // ===== NÚT SAVE → LƯU TẤT CẢ VÀO DATABASE =====
+        // ===== NÚT SAVE → LƯU TẤT CẢ TRẠNG THÁI VÀO DATABASE =====
         private void btnSave_Click(object sender, EventArgs e)
         {
             bool hasPending = false;
             foreach (DataRow r in dtTemp.Rows)
-                if (r["_Status"].ToString() != "none" && r["_Status"].ToString() != "edit_pending")
+                if (r["_Status"].ToString() != "none")
                 { hasPending = true; break; }
 
             if (!hasPending) { MessageBox.Show("Không có thay đổi nào để lưu!"); return; }
@@ -262,26 +303,27 @@ namespace Thinh_QLNhasach
                         catch (SqlException ex)
                         {
                             if (ex.Number == 547)
-                                MessageBox.Show($"Không xóa được '{row["TenTG"]}' vì còn sách liên kết!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                MessageBox.Show($"Không xóa được '{row["TenTG"]}' vì đang có sách thuộc tác giả này!", "Cảnh báo Khóa Ngoại", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             else throw;
                         }
                     }
                 }
 
-                MessageBox.Show($"Lưu thành công!\nThêm: {addCount} | Sửa: {editCount} | Xóa: {delCount}");
+                MessageBox.Show($"Đã Lưu Thành Công!\n+ Thêm mới: {addCount}\n+ Cập nhật: {editCount}\n+ Xóa: {delCount}");
+
+                // ========================================================
+                // CHÈN GHI NHẬT KÝ (LOG) LẤY TÊN TỪ SESSION
+                // ========================================================
+                string chiTietLog = $"Đã chốt danh sách Tác Giả vào Database (Thêm: {addCount}, Sửa: {editCount}, Xóa: {delCount})";
+                AppLogger.GhiLog(Session.Username, "Cập nhật Tác giả", chiTietLog);
+
                 LoadDataFromDB();
                 ClearInputs();
                 editingRowIndex = -1;
+                isEditing = false;
             }
-            catch (Exception ex) { MessageBox.Show("Lỗi lưu: " + ex.Message); }
+            catch (Exception ex) { MessageBox.Show("Lỗi khi lưu Database: " + ex.Message); }
             finally { if (conn.State == ConnectionState.Open) conn.Close(); }
-        }
-
-        // ===== CLICK DGV → ĐỔ DỮ LIỆU LÊN FORM =====
-        private void dgvTacGia_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0) return;
-            editingRowIndex = e.RowIndex; // chỉ ghi nhớ dòng đang chọn
         }
 
         // ===== TÌM KIẾM =====
@@ -294,17 +336,21 @@ namespace Thinh_QLNhasach
             ColorRows();
         }
 
-        // ===== RESET =====
+        // ===== RESET (LÀM MỚI TẤT CẢ) =====
         private void btnReset_Click(object sender, EventArgs e)
         {
             ClearInputs();
             editingRowIndex = -1;
+            isEditing = false;
             LoadDataFromDB();
         }
 
+        // ===== DỌN DẸP FORM =====
         void ClearInputs()
         {
-            txtTenTG.Clear(); txtQuequan.Clear(); txtSearch.Clear();
+            txtTenTG.Clear();
+            txtQuequan.Clear();
+            txtSearch.Clear();
             dtpNgayMat.Checked = false;
             dtpNgayMat.Value = DateTime.Now;
             dtpNgaySinh.Value = DateTime.Now;

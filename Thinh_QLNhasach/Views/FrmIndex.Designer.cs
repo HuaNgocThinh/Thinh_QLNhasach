@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.panelMenu = new System.Windows.Forms.Panel();
+            this.btnNhatKy = new FontAwesome.Sharp.IconButton();
             this.btnLogout = new FontAwesome.Sharp.IconButton();
             this.btnChart = new FontAwesome.Sharp.IconButton();
             this.btnNhap = new FontAwesome.Sharp.IconButton();
@@ -38,12 +39,13 @@
             this.btnBook = new FontAwesome.Sharp.IconButton();
             this.btnTrangchu = new FontAwesome.Sharp.IconButton();
             this.panelTop = new System.Windows.Forms.Panel();
+            this.lblRole = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.lblNguoiDung = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.lblUser = new System.Windows.Forms.Label();
             this.panelMain = new System.Windows.Forms.Panel();
-            this.label1 = new System.Windows.Forms.Label();
-            this.lblNguoiDung = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.lblRole = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
             this.panelMenu.SuspendLayout();
             this.panelTop.SuspendLayout();
             this.SuspendLayout();
@@ -52,6 +54,7 @@
             // 
             this.panelMenu.AutoScroll = true;
             this.panelMenu.BackColor = System.Drawing.Color.SteelBlue;
+            this.panelMenu.Controls.Add(this.btnNhatKy);
             this.panelMenu.Controls.Add(this.btnLogout);
             this.panelMenu.Controls.Add(this.btnChart);
             this.panelMenu.Controls.Add(this.btnNhap);
@@ -67,6 +70,28 @@
             this.panelMenu.Padding = new System.Windows.Forms.Padding(15, 0, 0, 0);
             this.panelMenu.Size = new System.Drawing.Size(386, 1031);
             this.panelMenu.TabIndex = 3;
+            // 
+            // btnNhatKy
+            // 
+            this.btnNhatKy.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnNhatKy.FlatAppearance.BorderSize = 0;
+            this.btnNhatKy.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnNhatKy.Font = new System.Drawing.Font("Segoe UI", 10.875F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnNhatKy.ForeColor = System.Drawing.Color.White;
+            this.btnNhatKy.IconChar = FontAwesome.Sharp.IconChar.History;
+            this.btnNhatKy.IconColor = System.Drawing.Color.White;
+            this.btnNhatKy.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnNhatKy.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnNhatKy.Location = new System.Drawing.Point(15, 672);
+            this.btnNhatKy.Name = "btnNhatKy";
+            this.btnNhatKy.Padding = new System.Windows.Forms.Padding(10, 0, 20, 0);
+            this.btnNhatKy.Size = new System.Drawing.Size(371, 96);
+            this.btnNhatKy.TabIndex = 17;
+            this.btnNhatKy.Text = "Nhật ký hoạt động";
+            this.btnNhatKy.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnNhatKy.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnNhatKy.UseVisualStyleBackColor = true;
+            this.btnNhatKy.Click += new System.EventHandler(this.btnNhatKy_Click);
             // 
             // btnLogout
             // 
@@ -110,6 +135,7 @@
             this.btnChart.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnChart.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnChart.UseVisualStyleBackColor = true;
+            this.btnChart.Click += new System.EventHandler(this.btnThongKe_Click);
             // 
             // btnNhap
             // 
@@ -247,6 +273,7 @@
             // panelTop
             // 
             this.panelTop.BackColor = System.Drawing.Color.SteelBlue;
+            this.panelTop.Controls.Add(this.label2);
             this.panelTop.Controls.Add(this.lblRole);
             this.panelTop.Controls.Add(this.label3);
             this.panelTop.Controls.Add(this.lblNguoiDung);
@@ -257,6 +284,48 @@
             this.panelTop.Name = "panelTop";
             this.panelTop.Size = new System.Drawing.Size(1979, 145);
             this.panelTop.TabIndex = 4;
+            // 
+            // lblRole
+            // 
+            this.lblRole.AutoSize = true;
+            this.lblRole.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblRole.ForeColor = System.Drawing.Color.White;
+            this.lblRole.Location = new System.Drawing.Point(541, 78);
+            this.lblRole.Name = "lblRole";
+            this.lblRole.Size = new System.Drawing.Size(0, 37);
+            this.lblRole.TabIndex = 4;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.ForeColor = System.Drawing.Color.White;
+            this.label3.Location = new System.Drawing.Point(406, 78);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(113, 37);
+            this.label3.TabIndex = 3;
+            this.label3.Text = "Quyền: ";
+            // 
+            // lblNguoiDung
+            // 
+            this.lblNguoiDung.AutoSize = true;
+            this.lblNguoiDung.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblNguoiDung.ForeColor = System.Drawing.Color.White;
+            this.lblNguoiDung.Location = new System.Drawing.Point(541, 27);
+            this.lblNguoiDung.Name = "lblNguoiDung";
+            this.lblNguoiDung.Size = new System.Drawing.Size(0, 37);
+            this.lblNguoiDung.TabIndex = 2;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.ForeColor = System.Drawing.Color.White;
+            this.label1.Location = new System.Drawing.Point(406, 27);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(141, 37);
+            this.label1.TabIndex = 1;
+            this.label1.Text = "Xin chào: ";
             // 
             // lblUser
             // 
@@ -277,47 +346,16 @@
             this.panelMain.Size = new System.Drawing.Size(1979, 1176);
             this.panelMain.TabIndex = 5;
             // 
-            // label1
+            // label2
             // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.ForeColor = System.Drawing.Color.White;
-            this.label1.Location = new System.Drawing.Point(406, 27);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(141, 37);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "Xin chào: ";
-            // 
-            // lblNguoiDung
-            // 
-            this.lblNguoiDung.AutoSize = true;
-            this.lblNguoiDung.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblNguoiDung.ForeColor = System.Drawing.Color.White;
-            this.lblNguoiDung.Location = new System.Drawing.Point(541, 27);
-            this.lblNguoiDung.Name = "lblNguoiDung";
-            this.lblNguoiDung.Size = new System.Drawing.Size(0, 37);
-            this.lblNguoiDung.TabIndex = 2;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.ForeColor = System.Drawing.Color.White;
-            this.label3.Location = new System.Drawing.Point(406, 78);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(113, 37);
-            this.label3.TabIndex = 3;
-            this.label3.Text = "Quyền: ";
-            // 
-            // lblRole
-            // 
-            this.lblRole.AutoSize = true;
-            this.lblRole.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblRole.ForeColor = System.Drawing.Color.White;
-            this.lblRole.Location = new System.Drawing.Point(541, 78);
-            this.lblRole.Name = "lblRole";
-            this.lblRole.Size = new System.Drawing.Size(0, 37);
-            this.lblRole.TabIndex = 4;
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.ForeColor = System.Drawing.Color.White;
+            this.label2.Location = new System.Drawing.Point(1414, 38);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(534, 65);
+            this.label2.TabIndex = 5;
+            this.label2.Text = "Quản lý cửa hàng sách";
             // 
             // FrmIndex
             // 
@@ -356,5 +394,7 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label lblNguoiDung;
         private System.Windows.Forms.Label lblRole;
+        private FontAwesome.Sharp.IconButton btnNhatKy;
+        private System.Windows.Forms.Label label2;
     }
 }

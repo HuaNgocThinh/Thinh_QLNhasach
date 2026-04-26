@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Drawing;
 using System.Windows.Forms;
 using FontAwesome.Sharp;
+using Thinh_QLNhasach.Utility; // Khai báo để lấy tên người dùng từ Session
 
 namespace Thinh_QLNhasach.Views
 {
@@ -40,7 +41,7 @@ namespace Thinh_QLNhasach.Views
             }
             dgvGioHang.DataSource = dtGioHang;
 
-            // Định dạng hiển thị cho các DataGridView (Đã sửa lại để giống dgvTacGia)
+            // Định dạng hiển thị cho các DataGridView
             FormatDataGridView(dgvGioHang);
             FormatDataGridView(dgvHoaDon);
 
@@ -72,7 +73,7 @@ namespace Thinh_QLNhasach.Views
             dgv.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
             dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(128, 128, 128);
             dgv.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             dgv.ColumnHeadersHeight = 45;
 
             // 3. NỘI DUNG CHỮ TO
@@ -88,17 +89,23 @@ namespace Thinh_QLNhasach.Views
             dgv.ColumnAdded += (s, e) =>
             {
                 // Việt hóa bảng Giỏ hàng
-                if (e.Column.Name == "TenSach") e.Column.HeaderText = "Tên Sách";
-                if (e.Column.Name == "SoLuong") { e.Column.HeaderText = "Số Lượng"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; }
-                if (e.Column.Name == "DonGia") { e.Column.HeaderText = "Đơn Giá"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
-                if (e.Column.Name == "ThanhTien") { e.Column.HeaderText = "Thành Tiền"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
+                if (e.Column.Name == "TenSach" && dgv.Name == "dgvGioHang") e.Column.HeaderText = "Tên Sách";
+                if (e.Column.Name == "SoLuong" && dgv.Name == "dgvGioHang") { e.Column.HeaderText = "Số Lượng"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; }
+                if (e.Column.Name == "DonGia" && dgv.Name == "dgvGioHang") { e.Column.HeaderText = "Đơn Giá"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
+                if (e.Column.Name == "ThanhTien" && dgv.Name == "dgvGioHang") { e.Column.HeaderText = "Thành Tiền"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
 
-                // Việt hóa bảng Lịch sử (dgvHoaDon) - Fix cái ảnh bị co của ông đây
-                if (e.Column.Name == "MaHD") e.Column.HeaderText = "Mã Hóa Đơn";
-                if (e.Column.Name == "NgayLap") e.Column.HeaderText = "Ngày Lập";
-                if (e.Column.Name == "NhanVien") e.Column.HeaderText = "Nhân Viên";
-                if (e.Column.Name == "TenKhachHang") e.Column.HeaderText = "Khách Hàng";
-                if (e.Column.Name == "ThanhTien" && dgv.Name == "dgvHoaDon") e.Column.HeaderText = "Tổng Tiền";
+                // BẢN NÂNG CẤP: Việt hóa bảng Lịch sử (dgvHoaDon) hiển thị chi tiết sách
+                if (e.Column.Name == "MaHD") { e.Column.HeaderText = "Mã HD"; e.Column.FillWeight = 80; }
+                if (e.Column.Name == "NgayLap") { e.Column.HeaderText = "Ngày Lập"; e.Column.DefaultCellStyle.Format = "dd/MM/yyyy HH:mm"; }
+                if (e.Column.Name == "NhanVien") { e.Column.HeaderText = "Nhân Viên"; e.Column.FillWeight = 120; }
+                if (e.Column.Name == "TenKhachHang") { e.Column.HeaderText = "Khách Hàng"; e.Column.FillWeight = 120; }
+
+                // Các cột mới thêm vào
+                if (e.Column.Name == "TenSach" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Tên Sách"; e.Column.FillWeight = 150; }
+                if (e.Column.Name == "SoLuong" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "SL"; e.Column.FillWeight = 50; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; }
+                if (e.Column.Name == "DonGia" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Đơn Giá"; e.Column.DefaultCellStyle.Format = "N0"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
+                if (e.Column.Name == "ThanhTien" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Tiền Sách"; e.Column.DefaultCellStyle.Format = "N0"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
+                if (e.Column.Name == "TongTien" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Tổng Hóa Đơn"; e.Column.DefaultCellStyle.Format = "N0"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
 
                 // Chỉ tô màu xanh cho cột ĐẦU TIÊN của mỗi bảng
                 if (e.Column.Index == 0 || (dgv.Columns.Count > 0 && !dgv.Columns[0].Visible && e.Column.Index == 1))
@@ -274,7 +281,6 @@ namespace Thinh_QLNhasach.Views
                         cmdHD.Parameters.AddWithValue("@mand", cboMaNV.SelectedValue);
                         cmdHD.Parameters.AddWithValue("@tenkh", string.IsNullOrWhiteSpace(txtTenKH.Text) ? "Khách lẻ" : txtTenKH.Text.Trim());
 
-                        // FIX Ở ĐÂY: Lấy giá trị từ DateTimePicker thay vì DateTime.Now
                         cmdHD.Parameters.AddWithValue("@ngay", dtpNgayLap.Value);
 
                         // Xử lý convert số an toàn
@@ -299,7 +305,7 @@ namespace Thinh_QLNhasach.Views
                             cmdCT.Parameters.AddWithValue("@tt", dr["ThanhTien"]);
                             cmdCT.ExecuteNonQuery();
 
-                            // Cập nhật kho (Đảm bảo đã xóa Trigger TRG_TuDongGiamTonKhiBan trong SQL trước khi dùng dòng này)
+                            // Cập nhật kho
                             SqlCommand cmdUp = new SqlCommand("UPDATE Sach SET SoLuongTon = SoLuongTon - @sl WHERE MaSach=@ms", conn, trans);
                             cmdUp.Parameters.AddWithValue("@sl", dr["SoLuong"]);
                             cmdUp.Parameters.AddWithValue("@ms", dr["MaSach"]);
@@ -309,15 +315,20 @@ namespace Thinh_QLNhasach.Views
                         trans.Commit(); // Chốt đơn thành công
                         MessageBox.Show("Thanh toán thành công!");
 
+                        // ========================================================
+                        // GHI LOG LẬP HÓA ĐƠN VÀO NHẬT KÝ (LẤY TỪ SESSION)
+                        // ========================================================
+                        AppLogger.GhiLog(Session.Username, "Tạo Hóa Đơn", $"Lập thành công hóa đơn {txtMaHD.Text} - Tổng tiền: {thanhTien.ToString("N0")} VNĐ");
+
                         // 5. LÀM MỚI GIAO DIỆN
-                        ResetForm(); // Hàm này của ông đã có TuSinhMaHD() bên trong rồi
-                        LoadComboBoxSach(); // Cập nhật lại số tồn kho lên UI
-                        LoadLichSuHoaDon(); // Cập nhật danh sách bên Tab lịch sử
+                        ResetForm();
+                        LoadComboBoxSach();
+                        LoadLichSuHoaDon();
                     }
                     catch (Exception ex)
                     {
-                        trans.Rollback(); // Có biến là hoàn tác ngay
-                        dtGioHang = dtTemp.Copy(); // Trả lại hàng vào giỏ để ông không phải nhập lại từ đầu
+                        trans.Rollback();
+                        dtGioHang = dtTemp.Copy();
                         MessageBox.Show("Lỗi SQL: " + ex.Message);
                     }
                 }
@@ -325,26 +336,34 @@ namespace Thinh_QLNhasach.Views
             }
         }
 
-        private void LoadLichSuHoaDon(bool filter = false) // Thêm cái cờ filter để biết khi nào cần lọc
+        // =========================================================================
+        // ĐIỂM NÂNG CẤP: Lấy thẳng Chi Tiết Hóa Đơn (Bao gồm Tên Sách) lên Bảng
+        // =========================================================================
+        private void LoadLichSuHoaDon(bool filter = false)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 try
                 {
                     conn.Open();
-                    // Câu lệnh gốc: Lấy tất cả
-                    string sql = @"SELECT h.MaHD, h.NgayLap, n.HoTen as NhanVien, h.TenKhachHang, h.ThanhTien 
-                           FROM HoaDon h JOIN NguoiDung n ON h.MaND = n.MaND WHERE 1=1";
+                    // Câu lệnh JOIN 4 bảng để lấy trọn bộ thông tin
+                    string sql = @"SELECT h.MaHD, h.NgayLap, n.HoTen as NhanVien, h.TenKhachHang, 
+                                          s.TenSach, ct.SoLuong, ct.DonGia, ct.ThanhTien, h.TongTien 
+                                   FROM HoaDon h 
+                                   JOIN NguoiDung n ON h.MaND = n.MaND 
+                                   JOIN ChiTietHoaDon ct ON h.MaHD = ct.MaHD
+                                   JOIN Sach s ON ct.MaSach = s.MaSach
+                                   WHERE 1=1";
 
-                    // Nếu filter = true (nghĩa là ông vừa bấm nút Tìm kiếm) thì mới thêm điều kiện vào
                     if (filter)
                     {
                         sql += " AND h.NgayLap BETWEEN @tuNgay AND @denNgay";
                         if (!string.IsNullOrWhiteSpace(txtSearch.Text))
-                            sql += " AND (h.MaHD LIKE @search OR h.TenKhachHang LIKE @search)";
+                            // Cho phép tìm luôn bằng Tên Khách, Mã HD hoặc Tên Sách
+                            sql += " AND (h.MaHD LIKE @search OR h.TenKhachHang LIKE @search OR s.TenSach LIKE @search)";
                     }
 
-                    sql += " ORDER BY h.NgayLap DESC"; // Luôn hiện hóa đơn mới nhất lên đầu
+                    sql += " ORDER BY h.NgayLap DESC";
 
                     SqlCommand cmd = new SqlCommand(sql, conn);
 
@@ -365,31 +384,26 @@ namespace Thinh_QLNhasach.Views
             }
         }
 
+        // =========================================================================
+        // ĐIỂM NÂNG CẤP: Bốc thẳng dữ liệu từ Bảng sang Textbox, tối ưu tốc độ
+        // =========================================================================
         private void dgvHoaDon_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
             {
-                string maHD = dgvHoaDon.Rows[e.RowIndex].Cells["MaHD"].Value.ToString();
-                using (SqlConnection conn = new SqlConnection(connectionString))
-                {
-                    conn.Open();
-                    string sql = @"SELECT TOP 1 s.TenSach, ct.SoLuong, ct.DonGia, ct.ThanhTien FROM ChiTietHoaDon ct JOIN Sach s ON ct.MaSach = s.MaSach WHERE ct.MaHD = @ma";
-                    SqlCommand cmd = new SqlCommand(sql, conn);
-                    cmd.Parameters.AddWithValue("@ma", maHD);
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    if (reader.Read())
-                    {
-                        textBox1.Text = reader["TenSach"].ToString();
-                        textBox2.Text = reader["SoLuong"].ToString();
-                        textBox3.Text = reader["DonGia"].ToString();
-                        textBox4.Text = reader["ThanhTien"].ToString();
-                    }
-                    reader.Close();
-                }
+                // Thay vì đâm xuống SQL, ta bốc thẳng từ lưới DGV lên Textbox
+                DataGridViewRow row = dgvHoaDon.Rows[e.RowIndex];
+
+                textBox1.Text = row.Cells["TenSach"].Value.ToString();
+                textBox2.Text = row.Cells["SoLuong"].Value.ToString();
+
+                // Format lại tiền cho có dấu phẩy cho đẹp
+                textBox3.Text = Convert.ToDouble(row.Cells["DonGia"].Value).ToString("N0");
+                textBox4.Text = Convert.ToDouble(row.Cells["ThanhTien"].Value).ToString("N0");
             }
         }
 
-        private void BtnSearch_Click(object sender, EventArgs e) { LoadLichSuHoaDon(); }
+        private void BtnSearch_Click(object sender, EventArgs e) { LoadLichSuHoaDon(true); } // Truyền true để kích hoạt bộ lọc
 
         private void btnResetFilter_Click(object sender, EventArgs e)
         {
@@ -403,7 +417,7 @@ namespace Thinh_QLNhasach.Views
         {
             if (dgvHoaDon.CurrentRow == null) return;
             string maHD = dgvHoaDon.CurrentRow.Cells["MaHD"].Value.ToString();
-            if (MessageBox.Show($"Xác nhận HỦY hóa đơn {maHD} và HOÀN KHO?", "Cảnh báo", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (MessageBox.Show($"Xác nhận HỦY TOÀN BỘ hóa đơn {maHD} và HOÀN KHO?", "Cảnh báo", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 using (SqlConnection conn = new SqlConnection(connectionString))
                 {
@@ -421,8 +435,15 @@ namespace Thinh_QLNhasach.Views
                         }
                         new SqlCommand($"DELETE FROM ChiTietHoaDon WHERE MaHD='{maHD}'", conn, trans).ExecuteNonQuery();
                         new SqlCommand($"DELETE FROM HoaDon WHERE MaHD='{maHD}'", conn, trans).ExecuteNonQuery();
+
                         trans.Commit();
                         MessageBox.Show("Hủy hóa đơn thành công!");
+
+                        // ========================================================
+                        // GHI LOG HỦY HÓA ĐƠN VÀO NHẬT KÝ (LẤY TỪ SESSION)
+                        // ========================================================
+                        AppLogger.GhiLog(Session.Username, "Hủy Hóa Đơn", $"Đã hủy hóa đơn {maHD} và hoàn lại sách vào kho");
+
                         LoadLichSuHoaDon(); LoadComboBoxSach();
                     }
                     catch (Exception ex) { trans.Rollback(); MessageBox.Show("Lỗi: " + ex.Message); }

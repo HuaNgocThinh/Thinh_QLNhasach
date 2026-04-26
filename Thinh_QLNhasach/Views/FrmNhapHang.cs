@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
 using System.Windows.Forms;
+using Thinh_QLNhasach.Utility; // Khai báo để lấy tên người dùng từ Session
 
 namespace Thinh_QLNhasach
 {
@@ -98,7 +99,7 @@ namespace Thinh_QLNhasach
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 string sql = @"SELECT ct.MaPN, ct.MaSach, s.TenSach, ct.SoLuong, ct.DonGiaNhap, ct.ThanhTien, 
-                              pn.NgayNhap, pn.GhiChu, pn.MaNCC, pn.MaND, pn.TongTien 
+                               pn.NgayNhap, pn.GhiChu, pn.MaNCC, pn.MaND, pn.TongTien 
                        FROM ChiTietPhieuNhap ct
                        JOIN PhieuNhap pn ON ct.MaPN = pn.MaPN
                        JOIN Sach s ON ct.MaSach = s.MaSach
@@ -206,6 +207,12 @@ namespace Thinh_QLNhasach
                         isEditingPhieu = false;
 
                         MessageBox.Show("Sửa phiếu thành công!");
+
+                        // ========================================================
+                        // GHI LOG: SỬA PHIẾU NHẬP
+                        // ========================================================
+                        AppLogger.GhiLog(Session.Username, "Sửa Phiếu Nhập", $"Đã sửa thông tin phiếu nhập mã {data.MaPN}");
+
                         LoadData();
                         ResetTabLapPhieu();
                         return;
@@ -248,6 +255,12 @@ namespace Thinh_QLNhasach
                     }
                     trans.Commit();
                     MessageBox.Show("Đã chốt phiếu " + txtMaPN.Text);
+
+                    // ========================================================
+                    // GHI LOG: LẬP PHIẾU NHẬP MỚI
+                    // ========================================================
+                    AppLogger.GhiLog(Session.Username, "Lập Phiếu Nhập", $"Đã lập phiếu nhập mới mã {txtMaPN.Text} với tổng tiền {txtTongtien.Text} VNĐ");
+
                     dtGioHang.Clear();
                     ResetTabLapPhieu();
                     LoadData();
@@ -473,6 +486,11 @@ namespace Thinh_QLNhasach
                     }
                     trans.Commit();
                     MessageBox.Show("Đã chốt cứng danh sách Nhà cung cấp vào DB!");
+
+                    // ========================================================
+                    // GHI LOG: CẬP NHẬT NHÀ CUNG CẤP
+                    // ========================================================
+                    AppLogger.GhiLog(Session.Username, "Cập nhật Nhà Cung Cấp", "Đã lưu thay đổi danh sách Nhà cung cấp vào hệ thống");
 
                     LoadDataNhaCungCap();
                     ResetTabNCC();

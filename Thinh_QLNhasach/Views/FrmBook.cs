@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Drawing;
 using System.Windows.Forms;
 using Thinh_QLNhasach.Database;
+using Thinh_QLNhasach.Utility; // Thêm thư viện này để gọi biến Session
 
 namespace Thinh_QLNhasach.Views
 {
@@ -231,7 +232,9 @@ namespace Thinh_QLNhasach.Views
         {
             if (dgvBook.CurrentRow != null)
             {
-                dtSachTam.Rows.RemoveAt(dgvBook.CurrentRow.Index);
+                DataRowView drv = (DataRowView)dgvBook.CurrentRow.DataBoundItem;
+                drv.Row.Delete();
+
                 indexChonSach = -1;
             }
         }
@@ -303,7 +306,9 @@ namespace Thinh_QLNhasach.Views
         {
             if (dgvTheLoai.CurrentRow != null)
             {
-                dtTLTam.Rows.RemoveAt(dgvTheLoai.CurrentRow.Index);
+                DataRowView drv = (DataRowView)dgvTheLoai.CurrentRow.DataBoundItem;
+                drv.Row.Delete();
+
                 indexChonTL = -1;
             }
         }
@@ -363,7 +368,7 @@ namespace Thinh_QLNhasach.Views
             {
                 isEditingNXB = true;
                 BocDuLieuNXB(indexChonNXB);
-                MessageBox.Show("Chế độ Sửa bật! Click dòng nào bốc dòng đó.");
+                MessageBox.Show("Đã bật chế độ sửa.");
             }
             else
             {
@@ -381,7 +386,9 @@ namespace Thinh_QLNhasach.Views
         {
             if (dgvNXB.CurrentRow != null)
             {
-                dtNXBTam.Rows.RemoveAt(dgvNXB.CurrentRow.Index);
+                DataRowView drv = (DataRowView)dgvNXB.CurrentRow.DataBoundItem;
+                drv.Row.Delete();
+
                 indexChonNXB = -1;
             }
         }
@@ -426,15 +433,24 @@ namespace Thinh_QLNhasach.Views
                     {
                         foreach (DataRow dr in dtSachTam.Rows)
                         {
-                            if (dr.RowState == DataRowState.Deleted) continue;
+                            // 1. NẾU DÒNG BỊ XÓA -> GỬI LỆNH DELETE XUỐNG SQL
+                            if (dr.RowState == DataRowState.Deleted)
+                            {
+                                string sqlDelete = "DELETE FROM Sach WHERE MaSach = @ma";
+                                SqlCommand cmdDel = new SqlCommand(sqlDelete, conn, trans);
+                                cmdDel.Parameters.AddWithValue("@ma", dr["MaSach", DataRowVersion.Original]);
+                                cmdDel.ExecuteNonQuery();
+                                continue;
+                            }
 
+                            // 2. NẾU DÒNG KHÔNG BỊ XÓA -> THỰC HIỆN UPDATE HOẶC INSERT NHƯ CŨ
                             string sql = @"IF EXISTS (SELECT 1 FROM Sach WHERE MaSach = @ma)
-                                UPDATE Sach SET TenSach=@ten, MaTG=(SELECT TOP 1 MaTG FROM TacGia WHERE TenTG=@tg), 
-                                MaTL=(SELECT TOP 1 MaTL FROM TheLoai WHERE TenTL=@tl), MaNXB=(SELECT TOP 1 MaNXB FROM NhaXuatBan WHERE TenNXB=@nxb), 
-                                GiaNhap=@gn, GiaBan=@gb, SoLuongTon=@sl, MoTa=@mt WHERE MaSach=@ma
-                                ELSE INSERT INTO Sach (TenSach, MaTG, MaTL, MaNXB, GiaNhap, GiaBan, SoLuongTon, MoTa) 
-                                VALUES (@ten, (SELECT TOP 1 MaTG FROM TacGia WHERE TenTG=@tg), (SELECT TOP 1 MaTL FROM TheLoai WHERE TenTL=@tl), 
-                                (SELECT TOP 1 MaNXB FROM NhaXuatBan WHERE TenNXB=@nxb), @gn, @gb, @sl, @mt)";
+                            UPDATE Sach SET TenSach=@ten, MaTG=(SELECT TOP 1 MaTG FROM TacGia WHERE TenTG=@tg), 
+                            MaTL=(SELECT TOP 1 MaTL FROM TheLoai WHERE TenTL=@tl), MaNXB=(SELECT TOP 1 MaNXB FROM NhaXuatBan WHERE TenNXB=@nxb), 
+                            GiaNhap=@gn, GiaBan=@gb, SoLuongTon=@sl, MoTa=@mt WHERE MaSach=@ma
+                            ELSE INSERT INTO Sach (TenSach, MaTG, MaTL, MaNXB, GiaNhap, GiaBan, SoLuongTon, MoTa) 
+                            VALUES (@ten, (SELECT TOP 1 MaTG FROM TacGia WHERE TenTG=@tg), (SELECT TOP 1 MaTL FROM TheLoai WHERE TenTL=@tl), 
+                            (SELECT TOP 1 MaNXB FROM NhaXuatBan WHERE TenNXB=@nxb), @gn, @gb, @sl, @mt)";
 
                             SqlCommand cmd = new SqlCommand(sql, conn, trans);
                             cmd.Parameters.AddWithValue("@ma", dr["MaSach"] == DBNull.Value ? -1 : dr["MaSach"]);
@@ -488,6 +504,23 @@ namespace Thinh_QLNhasach.Views
 
                     trans.Commit();
                     MessageBox.Show("Đã lưu cứng lả lướt vào Database!");
+
+                    // ========================================================
+                    // CHÈN GHI NHẬT KÝ (LOG) SAU KHI LƯU THÀNH CÔNG (DÙNG SESSION)
+                    // ========================================================
+                    if (loai == "Sach")
+                    {
+                        AppLogger.GhiLog(Session.Username, "Cập nhật Sách", "Đã lưu thay đổi danh sách Sách vào hệ thống");
+                    }
+                    else if (loai == "TheLoai")
+                    {
+                        AppLogger.GhiLog(Session.Username, "Cập nhật Thể Loại", "Đã lưu thay đổi danh sách Thể Loại vào hệ thống");
+                    }
+                    else if (loai == "NXB")
+                    {
+                        AppLogger.GhiLog(Session.Username, "Cập nhật Nhà Xuất Bản", "Đã lưu thay đổi danh sách Nhà Xuất Bản vào hệ thống");
+                    }
+
                     LoadDataTuDatabase();
                 }
                 catch (Exception ex)
