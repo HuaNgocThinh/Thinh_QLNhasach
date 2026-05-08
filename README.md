@@ -1,311 +1,420 @@
-# 📚 Thinh_QLNhasach — Phần Mềm Quản Lý Nhà Sách
+# 📚 Hệ Thống Quản Lý Nhà Sách — BookShop
 
-> Ứng dụng Windows Forms (C# / .NET) quản lý toàn bộ hoạt động kinh doanh của một cửa hàng sách: từ quản lý kho, nhập hàng, bán hàng, khách hàng cho đến thống kê báo cáo.
+> **Nền tảng:** Windows Forms (.NET) · **CSDL:** SQL Server (SSMS) · **Tên DB:** `BookShop`
 
 ---
 
-## 📋 Mục lục
+## 📋 Mục Lục
 
+- [Giới thiệu](#-giới-thiệu)
 - [Yêu cầu hệ thống](#-yêu-cầu-hệ-thống)
-- [Cài đặt & Khôi phục Database](#-cài-đặt--khôi-phục-database)
-- [Cấu hình kết nối](#-cấu-hình-kết-nối)
+- [Hướng dẫn cài đặt Database (SSMS)](#-hướng-dẫn-cài-đặt-database-ssms)
+- [Cấu trúc Database](#-cấu-trúc-database)
+- [Tài khoản mặc định](#-tài-khoản-mặc-định)
 - [Chức năng hệ thống](#-chức-năng-hệ-thống)
-- [Sơ đồ cơ sở dữ liệu](#-sơ-đồ-cơ-sở-dữ-liệu)
-- [Tác giả](#-tác-giả)
+- [Sơ đồ quan hệ (ERD)](#-sơ-đồ-quan-hệ-erd)
+
+---
+
+## 🧾 Giới thiệu
+
+**BookShop** là ứng dụng quản lý cửa hàng sách xây dựng bằng **Windows Forms (C#)**, kết nối **SQL Server** thông qua ADO.NET. Hệ thống hỗ trợ đầy đủ nghiệp vụ bán sách: từ quản lý danh mục, nhập hàng, lập hóa đơn bán hàng, quản lý kho đến phân quyền người dùng và ghi nhật ký hoạt động.
 
 ---
 
 ## 💻 Yêu cầu hệ thống
 
-| Thành phần | Phiên bản |
+| Thành phần | Phiên bản tối thiểu |
 |---|---|
-| Hệ điều hành | Windows 10 / 11 |
-| .NET Framework | 4.8 hoặc .NET 6+ |
-| SQL Server | SQL Server 2019 / 2022 hoặc SQL Server Express |
-| SQL Server Management Studio (SSMS) | 18.x trở lên |
-| Visual Studio | 2019 / 2022 |
+| .NET Framework / .NET | .NET 6+ hoặc .NET Framework 4.8 |
+| SQL Server | SQL Server 2019+ hoặc SQL Server Express |
+| SSMS | 18.x trở lên |
+| Visual Studio | 2022 (có hỗ trợ WinForms) |
+| Hệ điều hành | Windows 10/11 |
 
 ---
 
-## 🗄️ Cài đặt & Khôi phục Database
+## 🗄️ Hướng dẫn cài đặt Database (SSMS)
 
-### Bước 1 — Mở SQL Server Management Studio (SSMS)
+### Bước 1 — Mở SSMS và kết nối Server
 
-1. Khởi động **SSMS**.
-2. Tại hộp thoại **Connect to Server**, nhập thông tin kết nối:
+1. Khởi động **SQL Server Management Studio (SSMS)**.
+2. Tại hộp thoại **Connect to Server**, nhập thông tin:
    - **Server type:** Database Engine
-   - **Server name:** `localhost\SQLEXPRESS` *(hoặc tên instance SQL Server của bạn)*
-   - **Authentication:** Windows Authentication *(hoặc SQL Server Authentication nếu có tài khoản)*
+   - **Server name:** `.\SQLEXPRESS` hoặc tên instance SQL Server của bạn (ví dụ: `localhost`)
+   - **Authentication:** Windows Authentication (hoặc SQL Server Authentication nếu có tài khoản riêng)
 3. Nhấn **Connect**.
 
-### Bước 2 — Restore file `.bak`
+### Bước 2 — Mở file script SQL
 
-1. Trong **Object Explorer**, chuột phải lên mục **Databases** → chọn **Restore Database...**.
+1. Trên thanh công cụ, chọn **File → Open → File...** (hoặc nhấn `Ctrl + O`).
+2. Duyệt đến file `Thinh_QLNhaSach.sql` và nhấn **Open**.
+3. File script sẽ mở trong cửa sổ Query Editor.
 
-   ![Restore menu](https://i.imgur.com/placeholder-restore.png)
+### Bước 3 — Chạy script để tạo Database
 
-2. Tại cửa sổ **Restore Database**:
-   - Chọn **Device** → nhấn nút **...** (Browse).
-   - Nhấn **Add** → điều hướng đến file `BookShop.bak` → nhấn **OK**.
+1. Đảm bảo kết nối đang trỏ đến đúng server (kiểm tra thanh trạng thái phía dưới bên phải).
+2. Nhấn **F5** hoặc nhấn nút **Execute** (▶) để chạy toàn bộ script.
+3. Script sẽ tự động:
+   - Tạo database `BookShop`
+   - Tạo toàn bộ các bảng
+   - Chèn dữ liệu mẫu vào tất cả các bảng
 
-3. Tại mục **Destination**:
-   - **Database:** nhập tên `BookShop` *(hoặc giữ nguyên tên mặc định từ file backup)*.
+> ⚠️ **Lưu ý:**  
+> - Nếu database `BookShop` đã tồn tại, hãy xóa trước: chuột phải vào `BookShop` → **Delete** → tích chọn **Close existing connections** → **OK**.  
+> - Script được mã hóa **UTF-16 LE** — SSMS đọc được trực tiếp, không cần chuyển đổi.  
+> - Đường dẫn lưu file `.mdf` mặc định trong script là `C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS01\MSSQL\DATA\`. Nếu instance của bạn khác, SQL Server sẽ tự điều chỉnh hoặc bạn có thể sửa đường dẫn trước khi chạy.
 
-4. Chuyển sang tab **Options**:
-   - Tích chọn ✅ **Overwrite the existing database (WITH REPLACE)** *(nếu database đã tồn tại)*.
-   - Kiểm tra đường dẫn lưu file `.mdf` và `.ldf` trong phần **Restore As** — đảm bảo thư mục tồn tại.
+### Bước 4 — Kiểm tra kết quả
 
-5. Nhấn **OK** để bắt đầu quá trình khôi phục.
+Sau khi chạy thành công, trong **Object Explorer** bạn sẽ thấy:
 
-6. Khi xuất hiện thông báo:
-   ```
-   Database 'BookShop' restored successfully.
-   ```
-   quá trình đã hoàn tất.
-
-### Bước 3 — Kiểm tra database
-
-Mở **New Query** và chạy lệnh sau để xác nhận:
-
-```sql
-USE BookShop;
-SELECT TABLE_NAME
-FROM INFORMATION_SCHEMA.TABLES
-WHERE TABLE_TYPE = 'BASE TABLE'
-ORDER BY TABLE_NAME;
+```
+BookShop
+ └── Tables
+      ├── dbo.ChiTietHoaDon
+      ├── dbo.ChiTietPhieuNhap
+      ├── dbo.HoaDon
+      ├── dbo.Kho
+      ├── dbo.NguoiDung
+      ├── dbo.NhaCungCap
+      ├── dbo.NhatKyHoatDong
+      ├── dbo.NhaXuatBan
+      ├── dbo.PhieuNhap
+      ├── dbo.Sach
+      ├── dbo.TacGia
+      └── dbo.TheLoai
 ```
 
----
+### Bước 5 — Cấu hình connection string trong project
 
-## ⚙️ Cấu hình kết nối
-
-Mở file cấu hình kết nối trong project (thường là `app.config` hoặc một class `DBConnection.cs`), chỉnh sửa **Connection String** cho phù hợp với môi trường của bạn:
+Mở file cấu hình kết nối trong project (thường là `App.config` hoặc một class `DBConnection`) và chỉnh sửa chuỗi kết nối cho phù hợp với môi trường của bạn:
 
 ```xml
-<!-- app.config -->
 <connectionStrings>
-  <add name="BookShopDB"
-       connectionString="Data Source=localhost\SQLEXPRESS;Initial Catalog=BookShop;Integrated Security=True;"
+  <add name="BookShop"
+       connectionString="Data Source=.\SQLEXPRESS;Initial Catalog=BookShop;Integrated Security=True;"
        providerName="System.Data.SqlClient" />
 </connectionStrings>
 ```
 
-> **Lưu ý:** Nếu dùng SQL Server Authentication, thay `Integrated Security=True` bằng `User ID=sa;Password=yourpassword`.
+> Thay `.\SQLEXPRESS` bằng tên instance SQL Server thực tế trên máy bạn.
 
 ---
 
-## 🧩 Chức năng hệ thống
+## 🗂️ Cấu trúc Database
 
-### 1. 🔐 Đăng nhập & Phân quyền
+### Danh sách các bảng
 
-- Màn hình đăng nhập với tài khoản và mật khẩu.
-- Hệ thống phân quyền theo vai trò:
-  - **Admin:** toàn quyền truy cập tất cả chức năng.
-  - **Nhân viên bán hàng:** chỉ truy cập bán hàng, tra cứu sách, xem hóa đơn.
-  - **Thủ kho:** quản lý nhập hàng và tồn kho.
-- Đổi mật khẩu tài khoản.
-
----
-
-### 2. 📖 Quản lý Sách
-
-| Chức năng | Mô tả |
+| Tên bảng | Mô tả |
 |---|---|
-| Thêm sách | Nhập thông tin sách mới vào hệ thống |
-| Sửa thông tin sách | Cập nhật tên, giá, mô tả, ảnh bìa, v.v. |
-| Xóa sách | Xóa sách khỏi danh mục (kiểm tra ràng buộc) |
-| Tìm kiếm sách | Tìm theo tên, mã sách, tác giả, thể loại, NXB |
-| Xem chi tiết sách | Hiển thị đầy đủ thông tin: tên, tác giả, NXB, thể loại, giá bán, số lượng tồn |
-| Quản lý ảnh bìa | Upload và hiển thị ảnh bìa sách |
-
-**Thông tin sách bao gồm:** Mã sách, Tên sách, Tác giả, Nhà xuất bản, Thể loại, Năm xuất bản, Giá nhập, Giá bán, Số lượng tồn kho, Mô tả, Ảnh bìa.
-
----
-
-### 3. 🗂️ Quản lý Danh mục
-
-#### Thể loại sách
-- Thêm / sửa / xóa thể loại (Văn học, Khoa học, Kỹ thuật, Thiếu nhi, v.v.).
-
-#### Nhà xuất bản
-- Thêm / sửa / xóa thông tin nhà xuất bản: tên, địa chỉ, số điện thoại, email.
-
-#### Tác giả
-- Quản lý thông tin tác giả: tên, quốc tịch, tiểu sử ngắn.
-
----
-
-### 4. 📦 Quản lý Nhập hàng (Kho)
-
-- Tạo **phiếu nhập hàng** từ nhà cung cấp.
-- Nhập nhiều đầu sách trong một phiếu nhập.
-- Tự động **cập nhật số lượng tồn kho** sau khi nhập.
-- Xem lịch sử các phiếu nhập theo ngày, theo nhà cung cấp.
-- In phiếu nhập hàng.
-
----
-
-### 5. 🏪 Quản lý Nhà cung cấp
-
-- Thêm / sửa / xóa nhà cung cấp.
-- Thông tin: tên công ty, địa chỉ, số điện thoại, email, người liên hệ.
-- Xem lịch sử nhập hàng theo từng nhà cung cấp.
-
----
-
-### 6. 👥 Quản lý Khách hàng
-
-- Thêm / sửa / xóa thông tin khách hàng.
-- Thông tin: họ tên, số điện thoại, địa chỉ, email, ngày sinh.
-- Tra cứu lịch sử mua hàng của từng khách hàng.
-- Tìm kiếm khách hàng theo tên hoặc số điện thoại.
-
----
-
-### 7. 🛒 Bán hàng & Lập hóa đơn
-
-- Giao diện **bán hàng nhanh** (Point of Sale):
-  - Tìm kiếm và chọn sách bằng mã hoặc tên.
-  - Thêm sách vào giỏ hàng, điều chỉnh số lượng.
-  - Chọn khách hàng (có thể bán cho khách vãng lai).
-  - Áp dụng **khuyến mãi / giảm giá**.
-  - Tính tiền, nhận tiền, trả lại tiền thừa.
-- Tự động **trừ số lượng tồn kho** sau khi bán.
-- **In hóa đơn** bán hàng (hỗ trợ máy in hóa đơn nhiệt).
-- Xem lại và tìm kiếm hóa đơn đã lập.
-
----
-
-### 8. 👨‍💼 Quản lý Nhân viên
-
-- Thêm / sửa / xóa thông tin nhân viên.
-- Thông tin: họ tên, chức vụ, số điện thoại, địa chỉ, ngày vào làm.
-- Phân công tài khoản đăng nhập cho nhân viên.
-- Theo dõi hoạt động của từng nhân viên (hóa đơn đã lập, phiếu nhập đã tạo).
-
----
-
-### 9. 📊 Thống kê & Báo cáo
-
-| Báo cáo | Nội dung |
-|---|---|
-| Doanh thu theo ngày / tháng / năm | Tổng doanh thu, số hóa đơn, trung bình/hóa đơn |
-| Top sách bán chạy | Xếp hạng sách theo số lượng đã bán |
-| Tồn kho hiện tại | Danh sách sách còn tồn, cảnh báo sách sắp hết |
-| Báo cáo nhập hàng | Tổng giá trị nhập theo kỳ |
-| Doanh thu theo nhân viên | Hiệu suất bán hàng từng nhân viên |
-| Khách hàng thân thiết | Xếp hạng khách theo tổng chi tiêu |
-
-- Hiển thị biểu đồ cột / đường trực quan (Chart).
-- Xuất báo cáo ra **Excel (.xlsx)** hoặc **PDF**.
-- Lọc báo cáo theo khoảng thời gian tùy chọn.
-
----
-
-### 10. 🔔 Cảnh báo hệ thống
-
-- Cảnh báo sách **sắp hết hàng** (dưới ngưỡng tồn kho tối thiểu).
-- Thông báo khi **số lượng nhập** vượt quá giới hạn cho phép.
-
----
-
-## 🗃️ Sơ đồ cơ sở dữ liệu
-
-```
-NhanVien ────────────────────────────────────────────┐
-   │                                                  │
-   │ (tao boi)                                        │
-   ▼                                                  ▼
-PhieuNhap ──── ChiTietPhieuNhap ──── Sach ──── ChiTietHoaDon
-                                      │               │
-                              NhaXuatBan         HoaDon ── KhachHang
-                              TheLoaiSach
-                              TacGia
-                              NhaCungCap
-```
-
-**Các bảng chính:**
-
-| Bảng | Mô tả |
-|---|---|
-| `Sach` | Thông tin sách (mã, tên, giá, tồn kho, ...) |
+| `NguoiDung` | Tài khoản người dùng hệ thống (Admin, Staff, Nhân viên) |
+| `Sach` | Danh mục sách |
+| `TacGia` | Thông tin tác giả |
 | `TheLoai` | Thể loại sách |
-| `TacGia` | Tác giả |
-| `NhaXuatBan` | Nhà xuất bản |
-| `NhaCungCap` | Nhà cung cấp |
-| `KhachHang` | Khách hàng |
-| `NhanVien` | Nhân viên |
-| `TaiKhoan` | Tài khoản đăng nhập, vai trò, mật khẩu |
+| `NhaXuatBan` | Thông tin nhà xuất bản |
+| `NhaCungCap` | Thông tin nhà cung cấp |
 | `HoaDon` | Hóa đơn bán hàng |
-| `ChiTietHoaDon` | Chi tiết từng dòng hóa đơn |
-| `PhieuNhap` | Phiếu nhập kho |
-| `ChiTietPhieuNhap` | Chi tiết từng dòng phiếu nhập |
+| `ChiTietHoaDon` | Chi tiết từng dòng sách trong hóa đơn |
+| `PhieuNhap` | Phiếu nhập hàng từ nhà cung cấp |
+| `ChiTietPhieuNhap` | Chi tiết từng dòng sách trong phiếu nhập |
+| `Kho` | Số lượng tồn kho theo từng đầu sách |
+| `NhatKyHoatDong` | Nhật ký ghi lại các thao tác của người dùng |
+
+### Chi tiết cột chính
+
+#### `NguoiDung` — Người dùng
+| Cột | Kiểu | Mô tả |
+|---|---|---|
+| `MaND` | int IDENTITY | Khóa chính |
+| `TenDangNhap` | nvarchar(50) | Tên đăng nhập (duy nhất) |
+| `HoTen` | nvarchar(100) | Họ tên đầy đủ |
+| `NgaySinh` | date | Ngày sinh |
+| `SoDienThoai` | nvarchar(15) | Số điện thoại |
+| `VaiTro` | nvarchar(20) | Vai trò: `Admin` / `Staff` / `Nhân viên` |
+| `TrangThai` | nvarchar(20) | Trạng thái: `Còn làm` / nghỉ việc |
+| `MatKhau` | varbinary(max) | Mật khẩu được mã hóa MD5 |
+
+#### `Sach` — Sách
+| Cột | Kiểu | Mô tả |
+|---|---|---|
+| `MaSach` | int IDENTITY | Khóa chính |
+| `TenSach` | nvarchar(200) | Tên sách |
+| `MaTG` | int | FK → TacGia |
+| `MaTL` | int | FK → TheLoai |
+| `MaNXB` | int | FK → NhaXuatBan |
+| `NamXuatBan` | int | Năm xuất bản |
+| `GiaNhap` | decimal(10,2) | Giá nhập |
+| `GiaBan` | decimal(10,2) | Giá bán |
+| `SoLuongTon` | int | Số lượng tồn kho |
+| `MoTa` | nvarchar(max) | Mô tả nội dung sách |
+| `HinhAnh` | nvarchar(255) | Tên file ảnh bìa |
+
+#### `HoaDon` — Hóa đơn bán hàng
+| Cột | Kiểu | Mô tả |
+|---|---|---|
+| `MaHD` | nvarchar(50) | Khóa chính (ví dụ: HD001) |
+| `MaND` | int | FK → NguoiDung (nhân viên lập) |
+| `TenKhachHang` | nvarchar(100) | Tên khách hàng |
+| `NgayLap` | datetime | Ngày lập hóa đơn (mặc định: getdate()) |
+| `TongTien` | decimal(10,2) | Tổng tiền trước giảm giá |
+| `GiamGia` | decimal(10,2) | Số tiền giảm giá |
+| `ThanhTien` | decimal(10,2) | Thành tiền sau giảm giá |
+
+#### `PhieuNhap` — Phiếu nhập hàng
+| Cột | Kiểu | Mô tả |
+|---|---|---|
+| `MaPN` | nvarchar(50) | Khóa chính (ví dụ: PN001) |
+| `NgayNhap` | datetime | Ngày nhập hàng |
+| `MaNCC` | int | FK → NhaCungCap |
+| `MaND` | int | FK → NguoiDung (người lập phiếu) |
+| `TongTien` | decimal(10,2) | Tổng giá trị phiếu nhập |
+| `GhiChu` | nvarchar(255) | Ghi chú thêm |
 
 ---
 
-## 📁 Cấu trúc Project
+## 🔑 Tài khoản mặc định
 
-```
-Thinh_QLNhasach/
-├── Thinh_QLNhasach.sln
-├── Thinh_QLNhasach/
-│   ├── Forms/
-│   │   ├── frmDangNhap.cs          # Màn hình đăng nhập
-│   │   ├── frmMain.cs              # Form chính / menu
-│   │   ├── frmQuanLySach.cs        # Quản lý sách
-│   │   ├── frmQuanLyKhachHang.cs   # Quản lý khách hàng
-│   │   ├── frmQuanLyNhanVien.cs    # Quản lý nhân viên
-│   │   ├── frmBanHang.cs           # Giao diện bán hàng
-│   │   ├── frmHoaDon.cs            # Xem / in hóa đơn
-│   │   ├── frmNhapHang.cs          # Nhập kho
-│   │   ├── frmThongKe.cs           # Thống kê báo cáo
-│   │   └── frmDanhMuc.cs           # Quản lý danh mục
-│   ├── DAL/                        # Data Access Layer
-│   │   ├── DBConnection.cs
-│   │   ├── SachDAL.cs
-│   │   └── ...
-│   ├── BLL/                        # Business Logic Layer
-│   │   ├── SachBLL.cs
-│   │   └── ...
-│   ├── Models/                     # Entity classes
-│   │   ├── Sach.cs
-│   │   ├── KhachHang.cs
-│   │   └── ...
-│   ├── Resources/                  # Ảnh, icon
-│   └── app.config
-└── BookShop.bak                    # File backup SQL Server
-```
+Sau khi import database, hệ thống có sẵn các tài khoản sau:
+
+| Tên đăng nhập | Mật khẩu | Vai trò | Họ tên |
+|---|---|---|---|
+| `admin` | `1` | Admin | Đào Ngọc Thịnh |
+| `staff` | `1` | Staff | Quách Thị Tố Tâm |
+| `staff2` | `1` | Staff | Nguyễn Quang Toàn |
+| `nvien` | `1` | Nhân viên | Lưu Đức Hòa |
+| `nvien3` | `1` | Nhân viên | Hoàng Văn Trường |
+
+> 💡 Mật khẩu được lưu dưới dạng **MD5 hash**. Mật khẩu mặc định cho tất cả tài khoản là `1`.
 
 ---
 
-## 🚀 Hướng dẫn chạy project
+## ⚙️ Chức năng hệ thống
 
-1. **Clone** repository về máy:
-   ```bash
-   git clone https://github.com/<your-username>/Thinh_QLNhasach.git
-   ```
-
-2. **Restore database** theo hướng dẫn ở phần [Cài đặt & Khôi phục Database](#-cài-đặt--khôi-phục-database).
-
-3. **Mở solution** `Thinh_QLNhasach.slnx` bằng Visual Studio.
-
-4. **Chỉnh sửa Connection String** trong `app.config` cho phù hợp với tên SQL Server instance của bạn.
-
-5. **Build & Run** (F5).
+Hệ thống phân quyền theo 3 vai trò: **Admin**, **Staff** và **Nhân viên**. Dưới đây là toàn bộ chức năng hiện có.
 
 ---
 
-## 👤 Tác giả
+### 🔐 1. Đăng nhập & Phân quyền
 
-| | |
+- Màn hình đăng nhập bằng tên đăng nhập và mật khẩu.
+- Mật khẩu được mã hóa MD5 trước khi so sánh với database.
+- Sau khi đăng nhập thành công, hệ thống load giao diện phù hợp theo vai trò.
+- Tài khoản có trạng thái nghỉ việc sẽ không được phép đăng nhập.
+
+---
+
+### 📖 2. Quản lý Sách
+
+Cho phép xem, thêm, sửa, xóa thông tin sách trong hệ thống.
+
+**Thông tin quản lý:**
+- Tên sách, tác giả, thể loại, nhà xuất bản, năm xuất bản
+- Giá nhập, giá bán
+- Số lượng tồn kho
+- Mô tả và hình ảnh bìa sách
+
+**Tính năng:**
+- Tìm kiếm sách theo tên (có index `IDX_Sach_Ten` hỗ trợ tìm kiếm nhanh)
+- Upload và hiển thị ảnh bìa sách
+- Lưu hàng loạt thay đổi (Thêm / Sửa / Xóa) vào database trong một lần xác nhận
+- Ghi nhật ký hoạt động sau mỗi lần lưu
+
+---
+
+### ✍️ 3. Quản lý Tác giả
+
+Quản lý danh sách tác giả của các đầu sách.
+
+**Thông tin quản lý:**
+- Tên tác giả, quê quán, năm sinh, năm mất (nếu có)
+
+**Tính năng:**
+- Thêm, sửa, xóa tác giả trực tiếp trên lưới dữ liệu (DataGridView)
+- Chốt danh sách (lưu hàng loạt) với thông báo số lượng thêm / sửa / xóa
+- Ghi nhật ký chi tiết: ví dụ *"Thêm: 1, Sửa: 0, Xóa: 0"*
+
+---
+
+### 🏷️ 4. Quản lý Thể loại
+
+Quản lý các thể loại sách (Tiểu thuyết, Khoa học, Ngôn tình, Kinh dị, Kỹ năng sống, Trinh thám, Tâm lý,...).
+
+**Thông tin quản lý:**
+- Tên thể loại, mô tả
+
+**Tính năng:**
+- Thêm, sửa, xóa thể loại
+- Lưu thay đổi hàng loạt và ghi nhật ký
+
+---
+
+### 🏢 5. Quản lý Nhà xuất bản
+
+Quản lý danh sách các nhà xuất bản liên kết với cửa hàng.
+
+**Thông tin quản lý:**
+- Tên NXB, địa chỉ, số điện thoại, email
+
+**Tính năng:**
+- Thêm, sửa, xóa nhà xuất bản
+- Lưu thay đổi và ghi nhật ký hoạt động
+
+---
+
+### 🚛 6. Quản lý Nhà cung cấp
+
+Quản lý các đơn vị cung cấp sách cho cửa hàng.
+
+**Thông tin quản lý:**
+- Tên nhà cung cấp, địa chỉ, số điện thoại, email
+
+**Tính năng:**
+- Thêm, sửa, xóa nhà cung cấp
+
+---
+
+### 📦 7. Quản lý Nhập hàng (Phiếu nhập)
+
+Nghiệp vụ nhập sách từ nhà cung cấp vào kho.
+
+**Thông tin phiếu nhập:**
+- Mã phiếu nhập (tự sinh, ví dụ: PN001)
+- Ngày nhập, nhà cung cấp, người lập phiếu
+- Danh sách sách nhập kèm số lượng và đơn giá nhập
+- Tổng tiền, ghi chú
+
+**Tính năng:**
+- Tạo phiếu nhập mới, chọn nhà cung cấp
+- Thêm nhiều dòng sách vào một phiếu nhập
+- Tự động tính thành tiền theo từng dòng và tổng tiền toàn phiếu
+- Sau khi lưu, số lượng tồn kho trong bảng `Sach` được cập nhật tự động
+- Ghi nhật ký: *"Đã lập phiếu nhập mới mã PNxxx với tổng tiền x,xxx,xxx VNĐ"*
+- Xem lịch sử các phiếu nhập đã lập
+
+---
+
+### 🧾 8. Quản lý Bán hàng (Hóa đơn)
+
+Nghiệp vụ bán sách và lập hóa đơn cho khách hàng.
+
+**Thông tin hóa đơn:**
+- Mã hóa đơn (tự sinh, ví dụ: HD001)
+- Tên khách hàng, ngày lập, nhân viên lập
+- Danh sách sách bán kèm số lượng và đơn giá
+- Tổng tiền, giảm giá, thành tiền
+
+**Tính năng:**
+- Tạo hóa đơn mới, nhập tên khách hàng
+- Thêm sách vào hóa đơn, tự động lấy giá bán từ danh mục
+- Hỗ trợ **giảm giá** theo số tiền cụ thể
+- Tự động tính thành tiền sau giảm giá
+- Sau khi lưu hóa đơn, số lượng tồn kho tự động giảm theo
+- **Hủy hóa đơn:** hoàn lại số lượng sách vào kho
+- Ghi nhật ký: *"Lập thành công hóa đơn HDxxx - Tổng tiền: x,xxx,xxx VNĐ"*
+- Xem lịch sử hóa đơn đã lập (có index `IDX_HoaDon_Ngay` hỗ trợ lọc theo ngày)
+
+---
+
+### 🏪 9. Quản lý Kho
+
+Theo dõi số lượng tồn kho của từng đầu sách.
+
+**Thông tin:**
+- Mã sách, tên sách, số lượng tồn
+
+**Tính năng:**
+- Xem danh sách tồn kho hiện tại
+- Số lượng kho được cập nhật tự động khi có phiếu nhập hoặc hóa đơn bán ra
+
+---
+
+### 👥 10. Quản lý Người dùng (Admin)
+
+Chức năng dành riêng cho **Admin** để quản lý tài khoản nhân viên.
+
+**Thông tin quản lý:**
+- Tên đăng nhập, họ tên, ngày sinh, số điện thoại
+- Vai trò (Admin / Staff / Nhân viên)
+- Trạng thái (Còn làm / Nghỉ việc)
+- Mật khẩu (mã hóa MD5)
+
+**Tính năng:**
+- Thêm tài khoản nhân viên mới
+- Chỉnh sửa thông tin, vai trò, trạng thái nhân viên
+- Vô hiệu hóa tài khoản (đổi trạng thái) thay vì xóa vĩnh viễn
+- Đặt lại mật khẩu
+
+---
+
+### 📋 11. Nhật ký hoạt động
+
+Tự động ghi lại toàn bộ thao tác quan trọng của người dùng trong hệ thống.
+
+**Thông tin ghi lại:**
+- Tên đăng nhập thực hiện
+- Hành động (Tạo Hóa Đơn, Lập Phiếu Nhập, Cập nhật Sách, Hủy Hóa Đơn,...)
+- Chi tiết nội dung thao tác
+- Thời gian thực hiện (tự động lấy `getdate()`)
+
+**Các hành động được ghi nhật ký:**
+
+| Hành động | Ví dụ chi tiết |
 |---|---|
-| **Họ tên** | Thịnh |
-| **Tài khoản máy** | `THINHLALUOT` |
-| **SQL Server Instance** | `THINHLALUOT\SQLEXPRESS01` |
-| **Công nghệ** | C# · Windows Forms · SQL Server · ADO.NET |
+| Tạo Hóa Đơn | `Lập thành công hóa đơn HD015 - Tổng tiền: 3,135,000 VNĐ` |
+| Hủy Hóa Đơn | `Đã hủy hóa đơn HD013 và hoàn lại sách vào kho` |
+| Lập Phiếu Nhập | `Đã lập phiếu nhập mới mã PN007 với tổng tiền 10,000,000 VNĐ` |
+| Cập nhật Sách | `Đã lưu thay đổi danh sách Sách vào hệ thống` |
+| Cập nhật Tác giả | `Thêm: 1, Sửa: 0, Xóa: 0` |
+| Cập nhật Thể Loại | `Đã lưu thay đổi danh sách Thể Loại vào hệ thống` |
+| Cập nhật Nhà Xuất Bản | `Đã lưu thay đổi danh sách Nhà Xuất Bản vào hệ thống` |
 
 ---
 
-## 📄 License
+## 🔗 Sơ đồ quan hệ (ERD)
 
-Dự án được phát triển cho mục đích học tập. Vui lòng ghi nguồn khi sử dụng lại.
+```
+TacGia ──────┐
+             ├──→ Sach ←── TheLoai
+NhaXuatBan ──┘      │
+                     │
+              ┌──────┴──────┐
+              ↓             ↓
+       ChiTietHoaDon   ChiTietPhieuNhap
+              │             │
+              ↓             ↓
+           HoaDon       PhieuNhap ←── NhaCungCap
+              │             │
+              └──────┬──────┘
+                     ↓
+                 NguoiDung
+                 
+Sach ──→ Kho
+NhatKyHoatDong (ghi log độc lập)
+```
+
+### Các ràng buộc khóa ngoại (Foreign Key)
+
+| Bảng con | Cột | Bảng cha |
+|---|---|---|
+| `Sach` | `MaTG` | `TacGia` |
+| `Sach` | `MaTL` | `TheLoai` |
+| `Sach` | `MaNXB` | `NhaXuatBan` |
+| `HoaDon` | `MaND` | `NguoiDung` |
+| `ChiTietHoaDon` | `MaHD` | `HoaDon` |
+| `ChiTietHoaDon` | `MaSach` | `Sach` |
+| `PhieuNhap` | `MaNCC` | `NhaCungCap` |
+| `PhieuNhap` | `MaND` | `NguoiDung` |
+| `ChiTietPhieuNhap` | `MaPN` | `PhieuNhap` |
+| `ChiTietPhieuNhap` | `MaSach` | `Sach` |
+| `Kho` | `MaSach` | `Sach` |
+
+---
+
+## 👨‍💻 Tác giả
+
+**Đào Ngọc Thịnh** — Dự án học phần Lập trình Windows Forms
+
+---
+
+*README này được tạo tự động dựa trên phân tích file `Thinh_QLNhaSach.sql` và `Thinh_QLNhasach.slnx`.*
