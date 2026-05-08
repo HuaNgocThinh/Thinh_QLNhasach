@@ -1,6 +1,7 @@
 ﻿using OfficeOpenXml;        // Thêm thư viện EPPlus Xuất Excel
 using OfficeOpenXml.Style;  // Thêm thư viện Trang trí Excel
 using System;
+using System.Collections.Generic; // Thêm thư viện Dictionary để lưu cache ảnh
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
@@ -12,17 +13,16 @@ namespace Thinh_QLNhasach
 {
     public partial class FrmThongKe : Form
     {
+        // TẠO BỘ NHỚ ĐỆM (CACHE) ẢNH ĐỂ CUỘN CHUỘT KHÔNG BỊ GIẬT LAG
+        private Dictionary<string, Image> imageCache = new Dictionary<string, Image>();
+
         public FrmThongKe()
         {
             InitializeComponent();
 
-            // Đăng ký sự kiện TỰ TAY VẼ BẢNG 100%
             dgvTopSach.CellPainting += dgvTopSach_CellPainting;
-
-            // Đăng ký sự kiện tự động dàn lại dòng khi Form/Bảng bị thay đổi kích thước
+            dgvTopSach.RowPostPaint += dgvTopSach_RowPostPaint;
             dgvTopSach.Resize += (s, e) => DanDeuDongDGV(dgvTopSach);
-
-            // CHIÊU BẤT TỬ: Khóa hoàn toàn tính năng bôi đen (chọn dòng)
             dgvTopSach.SelectionChanged += (s, e) => dgvTopSach.ClearSelection();
         }
 
@@ -30,14 +30,12 @@ namespace Thinh_QLNhasach
         {
             dtpThang.Value = DateTime.Now;
 
-            // ☢️ BỘ HỦY DIỆT: ĐẬP NÁT MỌI LOẠI ĐƯỜNG VIỀN MẶC ĐỊNH
+            // Xóa mọi đường viền mặc định
             dgvTopSach.CellBorderStyle = DataGridViewCellBorderStyle.None;
             dgvTopSach.AdvancedCellBorderStyle.All = DataGridViewAdvancedCellBorderStyle.None;
-            dgvTopSach.GridColor = Color.White; // Ép màu Grid thành Trắng tàng hình
+            dgvTopSach.GridColor = Color.White;
             dgvTopSach.BackgroundColor = Color.White;
-            dgvTopSach.BorderStyle = BorderStyle.None; // Ẩn viền bao quanh DGV
 
-            // Khóa mọi thao tác tương tác
             dgvTopSach.ReadOnly = true;
             dgvTopSach.AllowUserToResizeColumns = false;
             dgvTopSach.AllowUserToResizeRows = false;
@@ -101,13 +99,18 @@ namespace Thinh_QLNhasach
         private void LoadTop10Sach(SqlConnection conn, int thang, int nam)
         {
             string query = @"SELECT TOP 10 
-                                CAST(ROW_NUMBER() OVER(ORDER BY SUM(c.SoLuong) DESC) AS VARCHAR) + '. ' + s.TenSach AS [Tên Sách], 
-                                SUM(c.SoLuong) AS [Số Lượng Bán]
+                                ROW_NUMBER() OVER(ORDER BY SUM(c.SoLuong) DESC) AS STT,
+                                s.MaSach,
+                                s.TenSach, 
+                                tg.TenTG AS TacGia, 
+                                s.HinhAnh, 
+                                SUM(c.SoLuong) AS SoLuongBan
                              FROM ChiTietHoaDon c
                              INNER JOIN HoaDon h ON c.MaHD = h.MaHD
                              INNER JOIN Sach s ON c.MaSach = s.MaSach
+                             LEFT JOIN TacGia tg ON s.MaTG = tg.MaTG 
                              WHERE MONTH(h.NgayLap) = @Thang AND YEAR(h.NgayLap) = @Nam
-                             GROUP BY s.TenSach
+                             GROUP BY s.MaSach, s.TenSach, tg.TenTG, s.HinhAnh
                              ORDER BY SUM(c.SoLuong) DESC";
 
             using (SqlCommand cmd = new SqlCommand(query, conn))
@@ -121,19 +124,21 @@ namespace Thinh_QLNhasach
                     da.Fill(dt);
                     dgvTopSach.DataSource = dt;
 
-                    if (dgvTopSach.Columns.Count >= 2)
-                    {
-                        dgvTopSach.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                        dgvTopSach.Columns[0].DividerWidth = 0; // Chặn kẽ hở cột 0
+                    // Ẩn đi các cột phụ trợ
+                    if (dgvTopSach.Columns.Contains("STT")) dgvTopSach.Columns["STT"].Visible = false;
+                    if (dgvTopSach.Columns.Contains("MaSach")) dgvTopSach.Columns["MaSach"].Visible = false;
+                    if (dgvTopSach.Columns.Contains("TacGia")) dgvTopSach.Columns["TacGia"].Visible = false;
+                    if (dgvTopSach.Columns.Contains("HinhAnh")) dgvTopSach.Columns["HinhAnh"].Visible = false;
 
-                        dgvTopSach.Columns[1].Width = 140;
-                        dgvTopSach.Columns[1].DividerWidth = 0; // Chặn kẽ hở cột 1
+                    if (dgvTopSach.Columns.Contains("TenSach") && dgvTopSach.Columns.Contains("SoLuongBan"))
+                    {
+                        dgvTopSach.Columns["TenSach"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                        dgvTopSach.Columns["TenSach"].DividerWidth = 0;
+
+                        dgvTopSach.Columns["SoLuongBan"].Width = 140;
+                        dgvTopSach.Columns["SoLuongBan"].DividerWidth = 0;
                     }
 
-                    // Tránh scrollbar nếu số dòng nhỏ (làm giao diện ko đẹp)
-                    dgvTopSach.ScrollBars = dt.Rows.Count > 10 ? ScrollBars.Vertical : ScrollBars.None;
-
-                    // Gọi dàn dòng sau khi nạp dữ liệu
                     DanDeuDongDGV(dgvTopSach);
                 }
             }
@@ -160,70 +165,129 @@ namespace Thinh_QLNhasach
             }
         }
 
-        // =========================================================
-        // TỰ VẼ 100% GIAO DIỆN - QUÉT SƠN ĐÈ LÊN MỌI LỖI CỦA WINFORMS
-        // =========================================================
         private void dgvTopSach_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
-                // 1. Phóng to cọ quét sang 2 bên thêm 2 pixel để "đè bẹp" bất kỳ đường kẻ dọc nào còn sót lại giữa các cột
-                Rectangle clearRect = new Rectangle(e.CellBounds.X - 1, e.CellBounds.Y, e.CellBounds.Width + 2, e.CellBounds.Height);
+                DataRowView drv = (DataRowView)dgvTopSach.Rows[e.RowIndex].DataBoundItem;
+                if (drv == null) return;
+
+                Rectangle clearRect = new Rectangle(e.CellBounds.X - 1, e.CellBounds.Y - 1, e.CellBounds.Width + 2, e.CellBounds.Height + 2);
                 e.Graphics.FillRectangle(Brushes.White, clearRect);
 
-                // 2. Tự kẻ tay 1 đường line xám mỏng manh dưới đáy (Xóa sổ vĩnh viễn đường kẻ dọc)
-                using (Pen p = new Pen(Color.FromArgb(235, 238, 245), 1))
+                int colTenSach = dgvTopSach.Columns["TenSach"].Index;
+                int colSoLuong = dgvTopSach.Columns["SoLuongBan"].Index;
+
+                if (e.ColumnIndex == colTenSach)
                 {
-                    // Trừ đi 1 px để ko bị viền chèn
-                    e.Graphics.DrawLine(p, e.CellBounds.Left, e.CellBounds.Bottom - 1, e.CellBounds.Right, e.CellBounds.Bottom - 1);
+                    // =========================================================
+                    // SỬA Ở ĐÂY: TĂNG KÍCH THƯỚC ẢNH LÊN 80 PIXEL
+                    // =========================================================
+                    int imgSize = 120;
+                    int imgX = e.CellBounds.X + 20;
+                    int imgY = e.CellBounds.Y + (e.CellBounds.Height - imgSize) / 2;
+
+                    string maSach = drv["MaSach"].ToString();
+                    object imgData = drv["HinhAnh"];
+                    Image imgToDraw = null;
+
+                    if (!imageCache.ContainsKey(maSach))
+                    {
+                        if (imgData != DBNull.Value && imgData != null)
+                        {
+                            try
+                            {
+                                if (imgData is byte[])
+                                {
+                                    using (MemoryStream ms = new MemoryStream((byte[])imgData))
+                                    {
+                                        imageCache[maSach] = Image.FromStream(ms);
+                                    }
+                                }
+                                else if (imgData is string && !string.IsNullOrWhiteSpace(imgData.ToString()))
+                                {
+                                    string path = Path.Combine(Application.StartupPath, "Images", imgData.ToString());
+                                    if (File.Exists(path)) imageCache[maSach] = Image.FromFile(path);
+                                    else imageCache[maSach] = null;
+                                }
+                                else { imageCache[maSach] = null; }
+                            }
+                            catch { imageCache[maSach] = null; }
+                        }
+                        else { imageCache[maSach] = null; }
+                    }
+                    imgToDraw = imageCache[maSach];
+
+                    if (imgToDraw != null)
+                    {
+                        e.Graphics.DrawImage(imgToDraw, new Rectangle(imgX, imgY, imgSize, imgSize));
+                    }
+                    else
+                    {
+                        e.Graphics.FillRectangle(Brushes.WhiteSmoke, imgX, imgY, imgSize, imgSize);
+                        e.Graphics.DrawRectangle(Pens.LightGray, imgX, imgY, imgSize, imgSize);
+                    }
+
+                    // VẼ TÊN SÁCH VÀ TÁC GIẢ
+                    Font titleFont = new Font("Segoe UI", 12, FontStyle.Bold);
+                    Font authorFont = new Font("Segoe UI", 10, FontStyle.Regular);
+
+                    string titleText = $"{drv["STT"]}. {drv["TenSach"]}";
+                    string authorText = drv["TacGia"].ToString();
+
+                    int textX = imgX + imgSize + 15; // Chữ tự động lùi ra theo độ to của ảnh
+                    int totalTextHeight = titleFont.Height + 5 + authorFont.Height;
+                    int startY = e.CellBounds.Y + (e.CellBounds.Height - totalTextHeight) / 2;
+
+                    e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                    e.Graphics.DrawString(titleText, titleFont, Brushes.Black, textX, startY);
+
+                    using (SolidBrush authorBrush = new SolidBrush(Color.Gray))
+                    {
+                        e.Graphics.DrawString(authorText, authorFont, authorBrush, textX, startY + titleFont.Height + 5);
+                    }
+                }
+                else if (e.ColumnIndex == colSoLuong)
+                {
+                    string text = drv["SoLuongBan"].ToString() + " quyển";
+                    Font badgeFont = new Font("Segoe UI", 10, FontStyle.Bold);
+                    SizeF textSize = e.Graphics.MeasureString(text, badgeFont);
+
+                    int width = (int)textSize.Width + 24;
+                    int height = (int)textSize.Height + 12;
+
+                    int x = e.CellBounds.Right - width - 20;
+                    int y = e.CellBounds.Top + (e.CellBounds.Height - height) / 2;
+
+                    GraphicsPath path = new GraphicsPath();
+                    path.AddArc(x, y, height, height, 90, 180);
+                    path.AddArc(x + width - height, y, height, height, 270, 180);
+                    path.CloseFigure();
+
+                    e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                    using (SolidBrush brush = new SolidBrush(Color.FromArgb(13, 110, 253)))
+                    {
+                        e.Graphics.FillPath(brush, path);
+                    }
+
+                    using (SolidBrush textBrush = new SolidBrush(Color.White))
+                    {
+                        StringFormat sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                        e.Graphics.DrawString(text, badgeFont, textBrush, new Rectangle(x, y, width, height), sf);
+                    }
                 }
 
-                // 3. TỰ VẼ NỘI DUNG VÀO Ô
-                if (e.Value != null)
-                {
-                    // CỘT 0: VẼ TÊN SÁCH
-                    if (e.ColumnIndex == 0)
-                    {
-                        Font textFont = new Font("Segoe UI", 11, FontStyle.Regular);
-                        int textY = e.CellBounds.Y + (e.CellBounds.Height - textFont.Height) / 2;
-
-                        e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                        e.Graphics.DrawString(e.Value.ToString(), textFont, Brushes.Black, e.CellBounds.X + 15, textY);
-                    }
-                    // CỘT 1: VẼ HUY HIỆU SỐ LƯỢNG
-                    else if (e.ColumnIndex == 1)
-                    {
-                        string text = e.Value.ToString() + " quyển";
-                        Font badgeFont = new Font("Segoe UI", 10, FontStyle.Bold);
-                        SizeF textSize = e.Graphics.MeasureString(text, badgeFont);
-
-                        int width = (int)textSize.Width + 24;
-                        int height = (int)textSize.Height + 12;
-
-                        int x = e.CellBounds.Right - width - 30; // Chừa margin phải
-                        int y = e.CellBounds.Top + (e.CellBounds.Height - height) / 2;
-
-                        GraphicsPath path = new GraphicsPath();
-                        path.AddArc(x, y, height, height, 90, 180);
-                        path.AddArc(x + width - height, y, height, height, 270, 180);
-                        path.CloseFigure();
-
-                        e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                        using (SolidBrush brush = new SolidBrush(Color.FromArgb(41, 128, 185)))
-                        {
-                            e.Graphics.FillPath(brush, path);
-                        }
-
-                        using (SolidBrush textBrush = new SolidBrush(Color.White))
-                        {
-                            StringFormat sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                            e.Graphics.DrawString(text, badgeFont, textBrush, new Rectangle(x, y, width, height), sf);
-                        }
-                    }
-                }
-
-                // 4. CHỐT CHẶN TỐI THƯỢNG: Báo cho WinForms "Tao vẽ xong rồi, cấm mày vẽ thêm cái gì nữa"
                 e.Handled = true;
+            }
+        }
+
+        private void dgvTopSach_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.None;
+            using (Pen p = new Pen(Color.FromArgb(235, 235, 235), 1))
+            {
+                int y = e.RowBounds.Bottom - 1;
+                e.Graphics.DrawLine(p, e.RowBounds.Left, y, e.RowBounds.Right, y);
             }
         }
 
@@ -232,17 +296,17 @@ namespace Thinh_QLNhasach
             if (dgv != null && dgv.Rows.Count > 0)
             {
                 dgv.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
-                
-                // Lấy chiều cao vùng Data khả dụng (bỏ viền)
-                int totalHeight = dgv.ClientRectangle.Height;
+                int totalHeight = dgv.ClientSize.Height;
 
                 if (dgv.ColumnHeadersVisible) totalHeight -= dgv.ColumnHeadersHeight;
 
-                // Chia đều cho các hàng
                 int rowHeight = totalHeight / dgv.Rows.Count;
-                if (rowHeight < 40) rowHeight = 40;
 
-                // Gán chiều cao
+                // =========================================================
+                // SỬA Ở ĐÂY: TĂNG CHIỀU CAO DÒNG LÊN 100 PIXEL ĐỂ ĐỰNG VỪA ẢNH MỚI
+                // =========================================================
+                if (rowHeight < 100) rowHeight = 100;
+
                 foreach (DataGridViewRow row in dgv.Rows)
                 {
                     row.Height = rowHeight;
@@ -287,22 +351,27 @@ namespace Thinh_QLNhasach
                         ws.Cells["A6:B6"].Merge = true;
                         ws.Cells["A6"].Style.Font.Bold = true;
 
-                        for (int i = 0; i < dgvTopSach.Columns.Count; i++)
-                        {
-                            ws.Cells[7, i + 1].Value = dgvTopSach.Columns[i].HeaderText;
-                            ws.Cells[7, i + 1].Style.Font.Bold = true;
-                            ws.Cells[7, i + 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            ws.Cells[7, i + 1].Style.Fill.BackgroundColor.SetColor(Color.LightGray);
-                            ws.Cells[7, i + 1].Style.Border.BorderAround(ExcelBorderStyle.Thin);
-                        }
+                        ws.Cells[7, 1].Value = "Tên Sách";
+                        ws.Cells[7, 1].Style.Font.Bold = true;
+                        ws.Cells[7, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        ws.Cells[7, 1].Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                        ws.Cells[7, 1].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+
+                        ws.Cells[7, 2].Value = "Số Lượng Bán";
+                        ws.Cells[7, 2].Style.Font.Bold = true;
+                        ws.Cells[7, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        ws.Cells[7, 2].Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                        ws.Cells[7, 2].Style.Border.BorderAround(ExcelBorderStyle.Thin);
 
                         for (int i = 0; i < dgvTopSach.Rows.Count; i++)
                         {
-                            for (int j = 0; j < dgvTopSach.Columns.Count; j++)
-                            {
-                                ws.Cells[i + 8, j + 1].Value = dgvTopSach.Rows[i].Cells[j].Value?.ToString();
-                                ws.Cells[i + 8, j + 1].Style.Border.BorderAround(ExcelBorderStyle.Thin);
-                            }
+                            DataRowView drv = (DataRowView)dgvTopSach.Rows[i].DataBoundItem;
+
+                            ws.Cells[i + 8, 1].Value = $"{drv["STT"]}. {drv["TenSach"]}";
+                            ws.Cells[i + 8, 2].Value = drv["SoLuongBan"].ToString();
+
+                            ws.Cells[i + 8, 1].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                            ws.Cells[i + 8, 2].Style.Border.BorderAround(ExcelBorderStyle.Thin);
                         }
 
                         int lastRow = dgvTopSach.Rows.Count + 10;
