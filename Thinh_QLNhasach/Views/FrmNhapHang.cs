@@ -21,8 +21,51 @@ namespace Thinh_QLNhasach
         public FrmNhapHang()
         {
             InitializeComponent();
+        }
+
+        private void FrmNhapHang_Load(object sender, EventArgs e)
+        {
+            FormatDataGridView(dgvPhieuNhap);
+            FormatDataGridView(dgvNCC);
+
+            // BẢN NÂNG CẤP: Thêm cột Giá Bán vào giỏ hàng
+            if (dtGioHang.Columns.Count == 0)
+            {
+                dtGioHang.Columns.Add("MaSach", typeof(string));
+                dtGioHang.Columns.Add("TenSach", typeof(string));
+                dtGioHang.Columns.Add("SoLuong", typeof(int));
+                dtGioHang.Columns.Add("DonGiaNhap", typeof(double));
+                dtGioHang.Columns.Add("GiaBan", typeof(double)); // <-- Cột mới thêm
+                dtGioHang.Columns.Add("ThanhTien", typeof(double), "SoLuong * DonGiaNhap");
+            }
+
+            SetupDataTableNCC();
+
             LoadData();
+            LoadComboBoxNCC();
             LoadComboBoxSach();
+            LoadComboBoxNguoiDung();
+            LoadDataNhaCungCap();
+            ResetTabLapPhieu();
+
+            dgvPhieuNhap.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvNCC.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        }
+
+        // =========================================================================
+        // NÚT GỌI FORM TẠO SÁCH MỚI
+        // =========================================================================
+        private void btnTaoSachMoi_Click(object sender, EventArgs e)
+        {
+            Views.FrmTaoSachMoi frm = new Views.FrmTaoSachMoi(); // Gọi đúng Namespace Views
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                LoadComboBoxSach();
+                cboMaSach.SelectedValue = frm.MaSachVuaTao;
+                txtDongianhap.Clear();
+                txtGiaBan.Clear();
+                MessageBox.Show("Hãy nhập Số Lượng, Giá Nhập và Giá Bán cho sách mới rồi bấm Thêm (+)", "Hướng dẫn", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         private string TuSinhMaPhieu()
@@ -57,41 +100,23 @@ namespace Thinh_QLNhasach
             dgv.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             dgv.ColumnHeadersHeight = 35;
             dgv.CellBorderStyle = DataGridViewCellBorderStyle.Single;
-            dgv.GridColor = System.Drawing.Color.Silver;
+            dgv.GridColor = System.Drawing.Color.Black;
             dgv.RowHeadersVisible = false;
             dgv.BackgroundColor = System.Drawing.Color.White;
-            dgv.BorderStyle = BorderStyle.None;
+            dgv.BorderStyle = BorderStyle.FixedSingle;
             dgv.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F);
             dgv.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(231, 229, 255);
             dgv.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.Black;
             dgv.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        }
 
-        private void FrmNhapHang_Load(object sender, EventArgs e)
-        {
-            FormatDataGridView(dgvPhieuNhap);
-            FormatDataGridView(dgvNCC);
-
-            if (dtGioHang.Columns.Count == 0)
+            if (dgv.Name == "dgvPhieuNhap")
             {
-                dtGioHang.Columns.Add("MaSach", typeof(string));
-                dtGioHang.Columns.Add("TenSach", typeof(string));
-                dtGioHang.Columns.Add("SoLuong", typeof(int));
-                dtGioHang.Columns.Add("DonGiaNhap", typeof(double));
-                dtGioHang.Columns.Add("ThanhTien", typeof(double), "SoLuong * DonGiaNhap");
+                dgv.ColumnAdded += (s, e) =>
+                {
+                    if (e.Column.Name == "GiaBan") e.Column.HeaderText = "Giá Bán Cập Nhật";
+                    if (e.Column.Name == "DonGiaNhap") e.Column.HeaderText = "Giá Nhập";
+                };
             }
-
-            SetupDataTableNCC();
-
-            LoadData();
-            LoadComboBoxNCC();
-            LoadComboBoxSach();
-            LoadComboBoxNguoiDung();
-            LoadDataNhaCungCap();
-            ResetTabLapPhieu();
-
-            dgvPhieuNhap.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvNCC.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         }
 
         private void LoadData()
@@ -120,7 +145,7 @@ namespace Thinh_QLNhasach
                     dgvPhieuNhap.Columns["MaPN"].HeaderText = "Mã Phiếu";
                     dgvPhieuNhap.Columns["TenSach"].HeaderText = "Tên Sách";
                     dgvPhieuNhap.Columns["SoLuong"].HeaderText = "SL";
-                    dgvPhieuNhap.Columns["DonGiaNhap"].HeaderText = "Đơn Giá";
+                    dgvPhieuNhap.Columns["DonGiaNhap"].HeaderText = "Đơn Giá Nhập";
                     dgvPhieuNhap.Columns["ThanhTien"].HeaderText = "Thành Tiền";
                     dgvPhieuNhap.Columns["NgayNhap"].HeaderText = "Ngày Nhập";
                     if (dgvPhieuNhap.Columns.Contains("GhiChu")) dgvPhieuNhap.Columns["GhiChu"].HeaderText = "Ghi Chú";
@@ -140,6 +165,7 @@ namespace Thinh_QLNhasach
                 cboMaSach.SelectedValue = r.Cells["MaSach"].Value.ToString();
                 nudSoLuong.Value = Convert.ToDecimal(r.Cells["SoLuong"].Value);
                 txtDongianhap.Text = r.Cells["DonGiaNhap"].Value.ToString();
+                if (r.Cells["GiaBan"] != null) txtGiaBan.Text = r.Cells["GiaBan"].Value.ToString();
             }
             else
             {
@@ -158,6 +184,9 @@ namespace Thinh_QLNhasach
                 txtDongianhap.Text = r.Cells["DonGiaNhap"].Value.ToString();
                 txtThanhTien.Text = Convert.ToDouble(r.Cells["ThanhTien"].Value).ToString("N0");
 
+                // Khi sửa phiếu cũ, ta giấu ô Giá Bán đi cho an toàn
+                txtGiaBan.Clear();
+
                 btnSave.Tag = new { Mode = "EDIT_LE", MaPN = maPN, MaSachCu = r.Cells["MaSach"].Value.ToString(), SoLuongCu = r.Cells["SoLuong"].Value };
             }
         }
@@ -169,13 +198,19 @@ namespace Thinh_QLNhasach
                 dgvPhieuNhap.DataSource = dtGioHang;
                 if (dgvPhieuNhap.Columns.Contains("MaSach")) dgvPhieuNhap.Columns["MaSach"].Visible = true;
             }
-            if (cboMaSach.SelectedValue == null) return;
-            dtGioHang.Rows.Add(cboMaSach.SelectedValue.ToString(), cboMaSach.Text, nudSoLuong.Value, Convert.ToDouble(txtDongianhap.Text));
+            if (cboMaSach.SelectedValue == null) { MessageBox.Show("Vui lòng chọn Sách!"); return; }
+            if (string.IsNullOrWhiteSpace(txtGiaBan.Text)) { MessageBox.Show("Vui lòng nhập Giá Bán để cập nhật hệ thống!"); return; }
+
+            double giaNhap = string.IsNullOrEmpty(txtDongianhap.Text) ? 0 : Convert.ToDouble(txtDongianhap.Text);
+            double giaBan = Convert.ToDouble(txtGiaBan.Text);
+
+            dtGioHang.Rows.Add(cboMaSach.SelectedValue.ToString(), cboMaSach.Text, nudSoLuong.Value, giaNhap, giaBan);
             CapNhatTongTien();
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
+            // === LOGIC SỬA PHIẾU CŨ ===
             if (btnSave.Tag != null && btnSave.Tag.ToString().Contains("EDIT_LE"))
             {
                 dynamic data = btnSave.Tag;
@@ -207,10 +242,6 @@ namespace Thinh_QLNhasach
                         isEditingPhieu = false;
 
                         MessageBox.Show("Sửa phiếu thành công!");
-
-                        // ========================================================
-                        // GHI LOG: SỬA PHIẾU NHẬP
-                        // ========================================================
                         AppLogger.GhiLog(Session.Username, "Sửa Phiếu Nhập", $"Đã sửa thông tin phiếu nhập mã {data.MaPN}");
 
                         LoadData();
@@ -226,6 +257,7 @@ namespace Thinh_QLNhasach
                 }
             }
 
+            // === LOGIC LƯU PHIẾU MỚI (CÓ CẬP NHẬT GIÁ BÁN) ===
             if (dtGioHang.Rows.Count == 0 || cboMaNCC.SelectedValue == null) return;
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -251,14 +283,14 @@ namespace Thinh_QLNhasach
                         cmdCT.Parameters.AddWithValue("@dg", dr["DonGiaNhap"]);
                         cmdCT.Parameters.AddWithValue("@tt", dr["ThanhTien"]);
                         cmdCT.ExecuteNonQuery();
-                        new SqlCommand($"UPDATE Sach SET SoLuongTon = SoLuongTon + {dr["SoLuong"]} WHERE MaSach='{dr["MaSach"]}'", conn, trans).ExecuteNonQuery();
+
+                        // NÂNG CẤP: Cập nhật CẢ Giá Nhập và Giá Bán thẳng vào bảng Sách
+                        string sqlUpdateSach = $"UPDATE Sach SET SoLuongTon = SoLuongTon + {dr["SoLuong"]}, GiaNhap = {dr["DonGiaNhap"]}, GiaBan = {dr["GiaBan"]} WHERE MaSach='{dr["MaSach"]}'";
+                        new SqlCommand(sqlUpdateSach, conn, trans).ExecuteNonQuery();
                     }
                     trans.Commit();
-                    MessageBox.Show("Đã chốt phiếu " + txtMaPN.Text);
+                    MessageBox.Show("Đã chốt phiếu và Cập nhật Tồn kho, Giá bán thành công!");
 
-                    // ========================================================
-                    // GHI LOG: LẬP PHIẾU NHẬP MỚI
-                    // ========================================================
                     AppLogger.GhiLog(Session.Username, "Lập Phiếu Nhập", $"Đã lập phiếu nhập mới mã {txtMaPN.Text} với tổng tiền {txtTongtien.Text} VNĐ");
 
                     dtGioHang.Clear();
@@ -316,8 +348,37 @@ namespace Thinh_QLNhasach
 
         private void btnSearch_Click(object sender, EventArgs e)
         {
-            string keyword = txtSearch.Text.Trim();
-            dtGioHang.DefaultView.RowFilter = string.IsNullOrEmpty(keyword) ? "" : string.Format("TenSach LIKE '%{0}%'", keyword);
+            // Lấy từ khóa và bọc thép chống lỗi ký tự nháy đơn (nhỡ tìm sách tên là Harry's)
+            string keyword = txtSearch.Text.Trim().Replace("'", "''");
+
+            DataTable dtCurrent = dgvPhieuNhap.DataSource as DataTable;
+
+            if (dtCurrent != null)
+            {
+                try
+                {
+                    if (dtCurrent == dtGioHang)
+                    {
+                        // Lọc trên Giỏ hàng
+                        if (string.IsNullOrEmpty(keyword))
+                            dtCurrent.DefaultView.RowFilter = "";
+                        else
+                            dtCurrent.DefaultView.RowFilter = string.Format("Convert(TenSach, 'System.String') LIKE '%{0}%'", keyword);
+                    }
+                    else
+                    {
+                        // Lọc trên Lịch sử DB (Dùng Convert để ép toàn bộ về chuỗi, né tuyệt đối lỗi Null và Data Type)
+                        if (string.IsNullOrEmpty(keyword))
+                            dtCurrent.DefaultView.RowFilter = "";
+                        else
+                            dtCurrent.DefaultView.RowFilter = string.Format("Convert(TenSach, 'System.String') LIKE '%{0}%' OR Convert(MaPN, 'System.String') LIKE '%{0}%'", keyword);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi cú pháp tìm kiếm: " + ex.Message);
+                }
+            }
         }
 
         private void dgvPhieuNhap_CellClick(object sender, DataGridViewCellEventArgs e)
@@ -335,6 +396,9 @@ namespace Thinh_QLNhasach
             }
         }
 
+        // =========================================================================
+        // TAB NHÀ CUNG CẤP (GIỮ NGUYÊN HOÀN TOÀN TỪ CODE CỦA ÔNG)
+        // =========================================================================
         private void SetupDataTableNCC()
         {
             if (dtNCCTam.Columns.Count == 0)
@@ -399,23 +463,17 @@ namespace Thinh_QLNhasach
 
         private void btnEditNCC_Click(object sender, EventArgs e)
         {
-            // Đảo ngược trạng thái: Đang tắt thành bật, đang bật thành tắt
             isEditingNCC = !isEditingNCC;
 
             if (isEditingNCC)
             {
                 MessageBox.Show("Đã bật chế độ Sửa!");
-
-                // Nếu ông đang click chọn sẵn 1 dòng dưới bảng thì nó bốc lên luôn cho lẹ
-                if (indexChonNCC != -1)
-                {
-                    BocDuLieuNCC(indexChonNCC);
-                }
+                if (indexChonNCC != -1) BocDuLieuNCC(indexChonNCC);
             }
             else
             {
                 MessageBox.Show("Đã TẮT chế độ Sửa.");
-                ResetTabNCC(); // Tắt đi thì xóa trắng form cho gọn
+                ResetTabNCC();
             }
         }
 
@@ -446,9 +504,6 @@ namespace Thinh_QLNhasach
         {
             dgvNCC.EndEdit();
 
-            // =========================================================================
-            // ĐIỂM ĂN TIỀN Ở ĐÂY: Nếu đang bật chế độ Sửa, tự động ép TextBox vào bảng tạm
-            // =========================================================================
             if (isEditingNCC && indexChonNCC != -1)
             {
                 DataRow dr = dtNCCTam.Rows[indexChonNCC];
@@ -458,9 +513,6 @@ namespace Thinh_QLNhasach
                 dr["Email"] = txtEmail.Text.Trim();
             }
 
-            // =========================================================================
-            // DƯỚI NÀY LÀ LOGIC LƯU DATABASE NHƯ CŨ, KHÔNG ĐỔI
-            // =========================================================================
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
@@ -487,15 +539,12 @@ namespace Thinh_QLNhasach
                     trans.Commit();
                     MessageBox.Show("Đã chốt cứng danh sách Nhà cung cấp vào DB!");
 
-                    // ========================================================
-                    // GHI LOG: CẬP NHẬT NHÀ CUNG CẤP
-                    // ========================================================
                     AppLogger.GhiLog(Session.Username, "Cập nhật Nhà Cung Cấp", "Đã lưu thay đổi danh sách Nhà cung cấp vào hệ thống");
 
                     LoadDataNhaCungCap();
                     ResetTabNCC();
                     indexChonNCC = -1;
-                    isEditingNCC = false; // Lưu xong thì tự động tắt cờ Sửa đi
+                    isEditingNCC = false;
                 }
                 catch (Exception ex)
                 {
@@ -522,7 +571,8 @@ namespace Thinh_QLNhasach
                 try
                 {
                     conn.Open();
-                    SqlDataAdapter da = new SqlDataAdapter("SELECT MaSach, TenSach FROM Sach", conn);
+                    // Lấy sẵn GiaNhap, GiaBan để tí tự điền
+                    SqlDataAdapter da = new SqlDataAdapter("SELECT MaSach, TenSach, GiaNhap, GiaBan FROM Sach", conn);
                     DataTable dt = new DataTable(); da.Fill(dt);
                     cboMaSach.DataSource = null; this.BindingContext = new BindingContext();
                     cboMaSach.DataSource = dt; cboMaSach.DisplayMember = "TenSach"; cboMaSach.ValueMember = "MaSach";
@@ -548,7 +598,18 @@ namespace Thinh_QLNhasach
             txtMaPN.ReadOnly = true;
             cboMaSach.SelectedIndex = -1;
             cboMaNCC.SelectedIndex = -1;
+
+            // Ép người lập phiếu là người đang đăng nhập (nếu có Session)
+            if (cboMaND.Items.Count > 0)
+            {
+                // Nếu ông có Session.Username, hãy dùng dòng này (tùy vào cách ông lưu Tên hay Mã)
+                // cboMaND.Text = Session.Username; 
+                cboMaND.SelectedIndex = 0; // Tạm thời chọn người đầu tiên
+                cboMaND.Enabled = false; // Khóa mồm lại, cấm chọn người khác
+            }
+
             txtDongianhap.Clear();
+            txtGiaBan.Clear();
             txtTongtien.Text = "0";
             txtGhichu.Clear();
             nudSoLuong.Value = 1;
@@ -572,7 +633,10 @@ namespace Thinh_QLNhasach
 
         private void TinhThanhTienHienTai()
         {
-            if (double.TryParse(txtDongianhap.Text, out double dg)) txtThanhTien.Text = ((double)nudSoLuong.Value * dg).ToString();
+            if (double.TryParse(txtDongianhap.Text, out double dg))
+                txtThanhTien.Text = ((double)nudSoLuong.Value * dg).ToString("N0"); // Thêm phẩy cho đẹp
+            else
+                txtThanhTien.Text = "0";
         }
 
         private void nudSoLuong_ValueChanged(object sender, EventArgs e) => TinhThanhTienHienTai();
@@ -584,6 +648,23 @@ namespace Thinh_QLNhasach
             if (tcPhieuHang.SelectedIndex == 0) LoadComboBoxSach();
         }
 
-        private void cboMaSach_Enter(object sender, EventArgs e) => LoadComboBoxSach();
+        // TỰ ĐỘNG ĐIỀN GIÁ NHẬP & GIÁ BÁN KHI CHỌN SÁCH CŨ
+        private void cboMaSach_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cboMaSach.SelectedIndex >= 0 && cboMaSach.SelectedItem != null)
+            {
+                DataRowView row = cboMaSach.SelectedItem as DataRowView;
+                if (row != null)
+                {
+                    txtDongianhap.Text = row["GiaNhap"].ToString();
+                    txtGiaBan.Text = row["GiaBan"].ToString();
+                }
+            }
+            else
+            {
+                txtDongianhap.Clear();
+                txtGiaBan.Clear();
+            }
+        }
     }
 }

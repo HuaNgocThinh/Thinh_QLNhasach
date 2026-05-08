@@ -36,6 +36,7 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
             this.tcPhieuHang = new Guna.UI2.WinForms.Guna2TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.btnTaoSachMoi = new Guna.UI2.WinForms.Guna2Button();
             this.btnSave = new FontAwesome.Sharp.IconButton();
             this.txtSearch = new System.Windows.Forms.TextBox();
             this.BtnSearch = new FontAwesome.Sharp.IconButton();
@@ -44,6 +45,8 @@
             this.btnEdit = new FontAwesome.Sharp.IconButton();
             this.btnAdd = new FontAwesome.Sharp.IconButton();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.txtGiaBan = new System.Windows.Forms.TextBox();
+            this.label16 = new System.Windows.Forms.Label();
             this.txtThanhTien = new System.Windows.Forms.TextBox();
             this.nudSoLuong = new System.Windows.Forms.NumericUpDown();
             this.cboMaSach = new Guna.UI2.WinForms.Guna2ComboBox();
@@ -69,6 +72,7 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.dgvNCC = new Guna.UI2.WinForms.Guna2DataGridView();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.iconButton1 = new FontAwesome.Sharp.IconButton();
             this.btnResetNCC = new FontAwesome.Sharp.IconButton();
             this.btnDelNCC = new FontAwesome.Sharp.IconButton();
             this.btnEditNCC = new FontAwesome.Sharp.IconButton();
@@ -85,7 +89,6 @@
             this.label13 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
-            this.iconButton1 = new FontAwesome.Sharp.IconButton();
             this.tcPhieuHang.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -107,7 +110,7 @@
             this.tcPhieuHang.Location = new System.Drawing.Point(0, 0);
             this.tcPhieuHang.Name = "tcPhieuHang";
             this.tcPhieuHang.SelectedIndex = 0;
-            this.tcPhieuHang.Size = new System.Drawing.Size(1975, 1122);
+            this.tcPhieuHang.Size = new System.Drawing.Size(1975, 1301);
             this.tcPhieuHang.TabButtonHoverState.BorderColor = System.Drawing.Color.Empty;
             this.tcPhieuHang.TabButtonHoverState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(52)))), ((int)(((byte)(70)))));
             this.tcPhieuHang.TabButtonHoverState.Font = new System.Drawing.Font("Segoe UI Semibold", 10F);
@@ -129,6 +132,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.btnTaoSachMoi);
             this.tabPage1.Controls.Add(this.btnSave);
             this.tabPage1.Controls.Add(this.txtSearch);
             this.tabPage1.Controls.Add(this.BtnSearch);
@@ -142,18 +146,36 @@
             this.tabPage1.Location = new System.Drawing.Point(184, 4);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1787, 1114);
+            this.tabPage1.Size = new System.Drawing.Size(1787, 1293);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Lập phiếu nhập";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // btnTaoSachMoi
+            // 
+            this.btnTaoSachMoi.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnTaoSachMoi.DisabledState.BorderColor = System.Drawing.Color.DarkGray;
+            this.btnTaoSachMoi.DisabledState.CustomBorderColor = System.Drawing.Color.DarkGray;
+            this.btnTaoSachMoi.DisabledState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(169)))), ((int)(((byte)(169)))), ((int)(((byte)(169)))));
+            this.btnTaoSachMoi.DisabledState.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(141)))), ((int)(((byte)(141)))), ((int)(((byte)(141)))));
+            this.btnTaoSachMoi.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnTaoSachMoi.ForeColor = System.Drawing.Color.White;
+            this.btnTaoSachMoi.Location = new System.Drawing.Point(1519, 357);
+            this.btnTaoSachMoi.Name = "btnTaoSachMoi";
+            this.btnTaoSachMoi.Size = new System.Drawing.Size(246, 45);
+            this.btnTaoSachMoi.TabIndex = 62;
+            this.btnTaoSachMoi.Text = "Tạo sách mới";
+            this.btnTaoSachMoi.Click += new System.EventHandler(this.btnTaoSachMoi_Click);
+            // 
             // btnSave
             // 
+            this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSave.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnSave.IconChar = FontAwesome.Sharp.IconChar.FloppyDisk;
             this.btnSave.IconColor = System.Drawing.Color.Black;
             this.btnSave.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnSave.IconSize = 32;
-            this.btnSave.Location = new System.Drawing.Point(1519, 380);
+            this.btnSave.Location = new System.Drawing.Point(1519, 282);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(176, 46);
             this.btnSave.TabIndex = 61;
@@ -164,7 +186,9 @@
             // 
             // txtSearch
             // 
-            this.txtSearch.Location = new System.Drawing.Point(1044, 321);
+            this.txtSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtSearch.Location = new System.Drawing.Point(1027, 420);
             this.txtSearch.Multiline = true;
             this.txtSearch.Name = "txtSearch";
             this.txtSearch.Size = new System.Drawing.Size(459, 38);
@@ -172,13 +196,14 @@
             // 
             // BtnSearch
             // 
+            this.BtnSearch.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.BtnSearch.IconChar = FontAwesome.Sharp.IconChar.MagnifyingGlass;
             this.BtnSearch.IconColor = System.Drawing.Color.Black;
             this.BtnSearch.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.BtnSearch.IconSize = 32;
-            this.BtnSearch.Location = new System.Drawing.Point(841, 321);
+            this.BtnSearch.Location = new System.Drawing.Point(802, 420);
             this.BtnSearch.Name = "BtnSearch";
-            this.BtnSearch.Size = new System.Drawing.Size(186, 38);
+            this.BtnSearch.Size = new System.Drawing.Size(190, 46);
             this.BtnSearch.TabIndex = 59;
             this.BtnSearch.Text = "Tìm kiếm";
             this.BtnSearch.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
@@ -187,11 +212,13 @@
             // 
             // btnReset
             // 
+            this.btnReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnReset.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnReset.IconChar = FontAwesome.Sharp.IconChar.RotateBackward;
             this.btnReset.IconColor = System.Drawing.Color.Black;
             this.btnReset.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnReset.IconSize = 32;
-            this.btnReset.Location = new System.Drawing.Point(1519, 296);
+            this.btnReset.Location = new System.Drawing.Point(1519, 214);
             this.btnReset.Name = "btnReset";
             this.btnReset.Size = new System.Drawing.Size(176, 46);
             this.btnReset.TabIndex = 58;
@@ -202,11 +229,13 @@
             // 
             // btnDel
             // 
+            this.btnDel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnDel.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnDel.IconChar = FontAwesome.Sharp.IconChar.Trash;
             this.btnDel.IconColor = System.Drawing.Color.Black;
             this.btnDel.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnDel.IconSize = 32;
-            this.btnDel.Location = new System.Drawing.Point(1519, 201);
+            this.btnDel.Location = new System.Drawing.Point(1519, 147);
             this.btnDel.Name = "btnDel";
             this.btnDel.Size = new System.Drawing.Size(176, 46);
             this.btnDel.TabIndex = 57;
@@ -217,11 +246,13 @@
             // 
             // btnEdit
             // 
+            this.btnEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnEdit.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnEdit.IconChar = FontAwesome.Sharp.IconChar.Wrench;
             this.btnEdit.IconColor = System.Drawing.Color.Black;
             this.btnEdit.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnEdit.IconSize = 32;
-            this.btnEdit.Location = new System.Drawing.Point(1519, 106);
+            this.btnEdit.Location = new System.Drawing.Point(1519, 81);
             this.btnEdit.Name = "btnEdit";
             this.btnEdit.Size = new System.Drawing.Size(176, 46);
             this.btnEdit.TabIndex = 56;
@@ -232,6 +263,8 @@
             // 
             // btnAdd
             // 
+            this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAdd.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnAdd.IconChar = FontAwesome.Sharp.IconChar.Plus;
             this.btnAdd.IconColor = System.Drawing.Color.Black;
             this.btnAdd.IconFont = FontAwesome.Sharp.IconFont.Auto;
@@ -247,6 +280,10 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox3.Controls.Add(this.txtGiaBan);
+            this.groupBox3.Controls.Add(this.label16);
             this.groupBox3.Controls.Add(this.txtThanhTien);
             this.groupBox3.Controls.Add(this.nudSoLuong);
             this.groupBox3.Controls.Add(this.cboMaSach);
@@ -255,27 +292,43 @@
             this.groupBox3.Controls.Add(this.label9);
             this.groupBox3.Controls.Add(this.label8);
             this.groupBox3.Controls.Add(this.label7);
-            this.groupBox3.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.groupBox3.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox3.Location = new System.Drawing.Point(773, 8);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(730, 297);
+            this.groupBox3.Size = new System.Drawing.Size(730, 394);
             this.groupBox3.TabIndex = 2;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Nhập thông tin";
             // 
+            // txtGiaBan
+            // 
+            this.txtGiaBan.Location = new System.Drawing.Point(198, 261);
+            this.txtGiaBan.Name = "txtGiaBan";
+            this.txtGiaBan.Size = new System.Drawing.Size(526, 43);
+            this.txtGiaBan.TabIndex = 9;
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(12, 264);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(114, 37);
+            this.label16.TabIndex = 8;
+            this.label16.Text = "Giá Bán";
+            // 
             // txtThanhTien
             // 
-            this.txtThanhTien.Location = new System.Drawing.Point(198, 240);
+            this.txtThanhTien.Location = new System.Drawing.Point(198, 329);
             this.txtThanhTien.Name = "txtThanhTien";
             this.txtThanhTien.ReadOnly = true;
-            this.txtThanhTien.Size = new System.Drawing.Size(526, 38);
+            this.txtThanhTien.Size = new System.Drawing.Size(526, 43);
             this.txtThanhTien.TabIndex = 7;
             // 
             // nudSoLuong
             // 
             this.nudSoLuong.Location = new System.Drawing.Point(198, 112);
             this.nudSoLuong.Name = "nudSoLuong";
-            this.nudSoLuong.Size = new System.Drawing.Size(526, 38);
+            this.nudSoLuong.Size = new System.Drawing.Size(526, 43);
             this.nudSoLuong.TabIndex = 6;
             this.nudSoLuong.ValueChanged += new System.EventHandler(this.nudSoLuong_ValueChanged);
             // 
@@ -301,16 +354,16 @@
             // 
             this.txtDongianhap.Location = new System.Drawing.Point(198, 183);
             this.txtDongianhap.Name = "txtDongianhap";
-            this.txtDongianhap.Size = new System.Drawing.Size(526, 38);
+            this.txtDongianhap.Size = new System.Drawing.Size(526, 43);
             this.txtDongianhap.TabIndex = 4;
             this.txtDongianhap.TextChanged += new System.EventHandler(this.txtDongianhap_TextChanged);
             // 
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(6, 247);
+            this.label10.Location = new System.Drawing.Point(6, 336);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(152, 31);
+            this.label10.Size = new System.Drawing.Size(153, 37);
             this.label10.TabIndex = 3;
             this.label10.Text = "Thành tiền";
             // 
@@ -319,7 +372,7 @@
             this.label9.AutoSize = true;
             this.label9.Location = new System.Drawing.Point(6, 183);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(186, 31);
+            this.label9.Size = new System.Drawing.Size(188, 37);
             this.label9.TabIndex = 2;
             this.label9.Text = "Đơn giá nhập";
             // 
@@ -328,7 +381,7 @@
             this.label8.AutoSize = true;
             this.label8.Location = new System.Drawing.Point(6, 114);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(128, 31);
+            this.label8.Size = new System.Drawing.Size(132, 37);
             this.label8.TabIndex = 1;
             this.label8.Text = "Số lượng";
             // 
@@ -337,7 +390,7 @@
             this.label7.AutoSize = true;
             this.label7.Location = new System.Drawing.Point(6, 51);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(123, 31);
+            this.label7.Size = new System.Drawing.Size(121, 37);
             this.label7.TabIndex = 0;
             this.label7.Text = "Mã sách";
             // 
@@ -346,6 +399,9 @@
             this.dgvPhieuNhap.AllowUserToAddRows = false;
             dataGridViewCellStyle10.BackColor = System.Drawing.Color.White;
             this.dgvPhieuNhap.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle10;
+            this.dgvPhieuNhap.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             dataGridViewCellStyle11.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle11.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(88)))), ((int)(((byte)(255)))));
             dataGridViewCellStyle11.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.875F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -365,7 +421,7 @@
             dataGridViewCellStyle12.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dgvPhieuNhap.DefaultCellStyle = dataGridViewCellStyle12;
             this.dgvPhieuNhap.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(229)))), ((int)(((byte)(255)))));
-            this.dgvPhieuNhap.Location = new System.Drawing.Point(0, 452);
+            this.dgvPhieuNhap.Location = new System.Drawing.Point(0, 524);
             this.dgvPhieuNhap.Name = "dgvPhieuNhap";
             this.dgvPhieuNhap.ReadOnly = true;
             this.dgvPhieuNhap.RowHeadersVisible = false;
@@ -413,7 +469,7 @@
             this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox2.Location = new System.Drawing.Point(3, 8);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(764, 438);
+            this.groupBox2.Size = new System.Drawing.Size(764, 472);
             this.groupBox2.TabIndex = 0;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Nhập thông tin";
@@ -425,7 +481,7 @@
             this.cboMaND.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboMaND.FocusedColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
             this.cboMaND.FocusedState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
-            this.cboMaND.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.cboMaND.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cboMaND.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(68)))), ((int)(((byte)(88)))), ((int)(((byte)(112)))));
             this.cboMaND.ItemHeight = 30;
             this.cboMaND.Location = new System.Drawing.Point(230, 250);
@@ -440,7 +496,7 @@
             this.cboMaNCC.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboMaNCC.FocusedColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
             this.cboMaNCC.FocusedState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
-            this.cboMaNCC.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.cboMaNCC.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cboMaNCC.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(68)))), ((int)(((byte)(88)))), ((int)(((byte)(112)))));
             this.cboMaNCC.IntegralHeight = false;
             this.cboMaNCC.ItemHeight = 30;
@@ -451,6 +507,7 @@
             // 
             // txtGhichu
             // 
+            this.txtGhichu.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtGhichu.Location = new System.Drawing.Point(230, 380);
             this.txtGhichu.Multiline = true;
             this.txtGhichu.Name = "txtGhichu";
@@ -459,77 +516,86 @@
             // 
             // txtTongtien
             // 
+            this.txtTongtien.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtTongtien.Location = new System.Drawing.Point(230, 317);
             this.txtTongtien.Name = "txtTongtien";
-            this.txtTongtien.Size = new System.Drawing.Size(528, 38);
+            this.txtTongtien.Size = new System.Drawing.Size(528, 43);
             this.txtTongtien.TabIndex = 10;
             // 
             // label6
             // 
             this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label6.Location = new System.Drawing.Point(20, 383);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(114, 31);
+            this.label6.Size = new System.Drawing.Size(112, 37);
             this.label6.TabIndex = 8;
             this.label6.Text = "Ghi chú";
             // 
             // label5
             // 
             this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.Location = new System.Drawing.Point(20, 250);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(103, 31);
+            this.label5.Size = new System.Drawing.Size(106, 37);
             this.label5.TabIndex = 7;
             this.label5.Text = "Mã ND";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label4.Location = new System.Drawing.Point(20, 320);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(136, 31);
+            this.label4.Size = new System.Drawing.Size(140, 37);
             this.label4.TabIndex = 6;
             this.label4.Text = "Tổng tiền";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.Location = new System.Drawing.Point(20, 186);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(124, 31);
+            this.label3.Size = new System.Drawing.Size(119, 37);
             this.label3.TabIndex = 4;
             this.label3.Text = "Mã NCC";
             // 
             // dtpNgayNhap
             // 
+            this.dtpNgayNhap.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.dtpNgayNhap.Location = new System.Drawing.Point(230, 114);
             this.dtpNgayNhap.Name = "dtpNgayNhap";
-            this.dtpNgayNhap.Size = new System.Drawing.Size(528, 38);
+            this.dtpNgayNhap.Size = new System.Drawing.Size(528, 43);
             this.dtpNgayNhap.TabIndex = 3;
             // 
             // txtMaPN
             // 
+            this.txtMaPN.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtMaPN.Location = new System.Drawing.Point(230, 51);
             this.txtMaPN.Name = "txtMaPN";
             this.txtMaPN.ReadOnly = true;
-            this.txtMaPN.Size = new System.Drawing.Size(528, 38);
+            this.txtMaPN.Size = new System.Drawing.Size(528, 43);
             this.txtMaPN.TabIndex = 2;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.Location = new System.Drawing.Point(20, 120);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(154, 31);
+            this.label2.Size = new System.Drawing.Size(156, 37);
             this.label2.TabIndex = 1;
             this.label2.Text = "Ngày nhập";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.Location = new System.Drawing.Point(20, 51);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(204, 31);
+            this.label1.Size = new System.Drawing.Size(208, 37);
             this.label1.TabIndex = 0;
             this.label1.Text = "Mã phiếu nhập";
             // 
@@ -540,7 +606,7 @@
             this.tabPage2.Location = new System.Drawing.Point(184, 4);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(1787, 1114);
+            this.tabPage2.Size = new System.Drawing.Size(1787, 1293);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Nhà cung cấp";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -550,6 +616,9 @@
             this.dgvNCC.AllowUserToAddRows = false;
             dataGridViewCellStyle7.BackColor = System.Drawing.Color.White;
             this.dgvNCC.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle7;
+            this.dgvNCC.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle8.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(88)))), ((int)(((byte)(255)))));
             dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.875F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -575,7 +644,7 @@
             this.dgvNCC.RowHeadersVisible = false;
             this.dgvNCC.RowHeadersWidth = 82;
             this.dgvNCC.RowTemplate.Height = 33;
-            this.dgvNCC.Size = new System.Drawing.Size(1756, 591);
+            this.dgvNCC.Size = new System.Drawing.Size(1779, 643);
             this.dgvNCC.TabIndex = 1;
             this.dgvNCC.ThemeStyle.AlternatingRowsStyle.BackColor = System.Drawing.Color.White;
             this.dgvNCC.ThemeStyle.AlternatingRowsStyle.Font = null;
@@ -602,6 +671,8 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.iconButton1);
             this.groupBox1.Controls.Add(this.btnResetNCC);
             this.groupBox1.Controls.Add(this.btnDelNCC);
@@ -622,18 +693,35 @@
             this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox1.Location = new System.Drawing.Point(0, 8);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(1756, 479);
+            this.groupBox1.Size = new System.Drawing.Size(1779, 479);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Nhập thông tin";
             // 
+            // iconButton1
+            // 
+            this.iconButton1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.iconButton1.IconChar = FontAwesome.Sharp.IconChar.FloppyDisk;
+            this.iconButton1.IconColor = System.Drawing.Color.Black;
+            this.iconButton1.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.iconButton1.IconSize = 32;
+            this.iconButton1.Location = new System.Drawing.Point(1574, 397);
+            this.iconButton1.Name = "iconButton1";
+            this.iconButton1.Size = new System.Drawing.Size(186, 46);
+            this.iconButton1.TabIndex = 65;
+            this.iconButton1.Text = "Save";
+            this.iconButton1.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
+            this.iconButton1.UseVisualStyleBackColor = true;
+            this.iconButton1.Click += new System.EventHandler(this.btnSaveNCC_Click);
+            // 
             // btnResetNCC
             // 
+            this.btnResetNCC.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnResetNCC.IconChar = FontAwesome.Sharp.IconChar.RotateBackward;
             this.btnResetNCC.IconColor = System.Drawing.Color.Black;
             this.btnResetNCC.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnResetNCC.IconSize = 32;
-            this.btnResetNCC.Location = new System.Drawing.Point(910, 315);
+            this.btnResetNCC.Location = new System.Drawing.Point(1574, 315);
             this.btnResetNCC.Name = "btnResetNCC";
             this.btnResetNCC.Size = new System.Drawing.Size(186, 46);
             this.btnResetNCC.TabIndex = 64;
@@ -644,11 +732,12 @@
             // 
             // btnDelNCC
             // 
+            this.btnDelNCC.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnDelNCC.IconChar = FontAwesome.Sharp.IconChar.Trash;
             this.btnDelNCC.IconColor = System.Drawing.Color.Black;
             this.btnDelNCC.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnDelNCC.IconSize = 32;
-            this.btnDelNCC.Location = new System.Drawing.Point(910, 228);
+            this.btnDelNCC.Location = new System.Drawing.Point(1574, 228);
             this.btnDelNCC.Name = "btnDelNCC";
             this.btnDelNCC.Size = new System.Drawing.Size(186, 46);
             this.btnDelNCC.TabIndex = 63;
@@ -659,11 +748,12 @@
             // 
             // btnEditNCC
             // 
+            this.btnEditNCC.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnEditNCC.IconChar = FontAwesome.Sharp.IconChar.Wrench;
             this.btnEditNCC.IconColor = System.Drawing.Color.Black;
             this.btnEditNCC.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnEditNCC.IconSize = 32;
-            this.btnEditNCC.Location = new System.Drawing.Point(910, 144);
+            this.btnEditNCC.Location = new System.Drawing.Point(1574, 144);
             this.btnEditNCC.Name = "btnEditNCC";
             this.btnEditNCC.Size = new System.Drawing.Size(186, 46);
             this.btnEditNCC.TabIndex = 62;
@@ -674,11 +764,12 @@
             // 
             // btnAddNCC
             // 
+            this.btnAddNCC.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnAddNCC.IconChar = FontAwesome.Sharp.IconChar.Plus;
             this.btnAddNCC.IconColor = System.Drawing.Color.Black;
             this.btnAddNCC.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnAddNCC.IconSize = 32;
-            this.btnAddNCC.Location = new System.Drawing.Point(910, 68);
+            this.btnAddNCC.Location = new System.Drawing.Point(1574, 71);
             this.btnAddNCC.Name = "btnAddNCC";
             this.btnAddNCC.Size = new System.Drawing.Size(186, 46);
             this.btnAddNCC.TabIndex = 61;
@@ -693,7 +784,7 @@
             this.btnSearchNCC.IconColor = System.Drawing.Color.Black;
             this.btnSearchNCC.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnSearchNCC.IconSize = 32;
-            this.btnSearchNCC.Location = new System.Drawing.Point(1582, 68);
+            this.btnSearchNCC.Location = new System.Drawing.Point(909, 131);
             this.btnSearchNCC.Name = "btnSearchNCC";
             this.btnSearchNCC.Size = new System.Drawing.Size(174, 38);
             this.btnSearchNCC.TabIndex = 60;
@@ -704,9 +795,11 @@
             // 
             // txtSearchNCC
             // 
-            this.txtSearchNCC.Location = new System.Drawing.Point(1102, 68);
+            this.txtSearchNCC.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtSearchNCC.Location = new System.Drawing.Point(909, 68);
             this.txtSearchNCC.Name = "txtSearchNCC";
-            this.txtSearchNCC.Size = new System.Drawing.Size(474, 38);
+            this.txtSearchNCC.Size = new System.Drawing.Size(497, 38);
             this.txtSearchNCC.TabIndex = 10;
             // 
             // txtEmail
@@ -790,26 +883,11 @@
             this.label11.TabIndex = 0;
             this.label11.Text = "Mã NCC";
             // 
-            // iconButton1
-            // 
-            this.iconButton1.IconChar = FontAwesome.Sharp.IconChar.FloppyDisk;
-            this.iconButton1.IconColor = System.Drawing.Color.Black;
-            this.iconButton1.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.iconButton1.IconSize = 32;
-            this.iconButton1.Location = new System.Drawing.Point(910, 397);
-            this.iconButton1.Name = "iconButton1";
-            this.iconButton1.Size = new System.Drawing.Size(186, 46);
-            this.iconButton1.TabIndex = 65;
-            this.iconButton1.Text = "Save";
-            this.iconButton1.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
-            this.iconButton1.UseVisualStyleBackColor = true;
-            this.iconButton1.Click += new System.EventHandler(this.btnSaveNCC_Click);
-            // 
             // FrmNhapHang
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1975, 1122);
+            this.ClientSize = new System.Drawing.Size(1975, 1301);
             this.Controls.Add(this.tcPhieuHang);
             this.Name = "FrmNhapHang";
             this.Text = "FrmNhapHang";
@@ -885,5 +963,8 @@
         private FontAwesome.Sharp.IconButton btnResetNCC;
         private FontAwesome.Sharp.IconButton btnDelNCC;
         private FontAwesome.Sharp.IconButton iconButton1;
+        private System.Windows.Forms.TextBox txtGiaBan;
+        private System.Windows.Forms.Label label16;
+        private Guna.UI2.WinForms.Guna2Button btnTaoSachMoi;
     }
 }

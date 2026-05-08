@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
@@ -38,7 +37,7 @@
             this.guna2TabControl1 = new Guna.UI2.WinForms.Guna2TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.btnPrint = new FontAwesome.Sharp.IconButton();
+            this.btnHuyDon = new FontAwesome.Sharp.IconButton();
             this.btnSave = new FontAwesome.Sharp.IconButton();
             this.txtThanhTien = new System.Windows.Forms.TextBox();
             this.txtGiamGia = new System.Windows.Forms.TextBox();
@@ -89,7 +88,6 @@
             this.label13 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
-            this.guna2BorderlessForm1 = new Guna.UI2.WinForms.Guna2BorderlessForm(this.components);
             this.guna2TabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -108,12 +106,12 @@
             this.guna2TabControl1.Alignment = System.Windows.Forms.TabAlignment.Left;
             this.guna2TabControl1.Controls.Add(this.tabPage1);
             this.guna2TabControl1.Controls.Add(this.tabPage2);
-            this.guna2TabControl1.Dock = System.Windows.Forms.DockStyle.Left;
+            this.guna2TabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.guna2TabControl1.ItemSize = new System.Drawing.Size(180, 40);
             this.guna2TabControl1.Location = new System.Drawing.Point(0, 0);
             this.guna2TabControl1.Name = "guna2TabControl1";
             this.guna2TabControl1.SelectedIndex = 0;
-            this.guna2TabControl1.Size = new System.Drawing.Size(1970, 1071);
+            this.guna2TabControl1.Size = new System.Drawing.Size(1982, 1071);
             this.guna2TabControl1.TabButtonHoverState.BorderColor = System.Drawing.Color.Empty;
             this.guna2TabControl1.TabButtonHoverState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(52)))), ((int)(((byte)(70)))));
             this.guna2TabControl1.TabButtonHoverState.Font = new System.Drawing.Font("Segoe UI Semibold", 10F);
@@ -146,16 +144,17 @@
             this.tabPage1.Location = new System.Drawing.Point(184, 4);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1782, 1063);
+            this.tabPage1.Size = new System.Drawing.Size(1794, 1063);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Quản lý hóa đơn";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // panel1
             // 
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.BackColor = System.Drawing.SystemColors.ControlLight;
             this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel1.Controls.Add(this.btnPrint);
+            this.panel1.Controls.Add(this.btnHuyDon);
             this.panel1.Controls.Add(this.btnSave);
             this.panel1.Controls.Add(this.txtThanhTien);
             this.panel1.Controls.Add(this.txtGiamGia);
@@ -165,23 +164,23 @@
             this.panel1.Controls.Add(this.label8);
             this.panel1.Location = new System.Drawing.Point(684, 719);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1092, 336);
+            this.panel1.Size = new System.Drawing.Size(1104, 336);
             this.panel1.TabIndex = 66;
             // 
-            // btnPrint
+            // btnHuyDon
             // 
-            this.btnPrint.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnPrint.IconChar = FontAwesome.Sharp.IconChar.FileInvoiceDollar;
-            this.btnPrint.IconColor = System.Drawing.Color.Black;
-            this.btnPrint.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.btnPrint.Location = new System.Drawing.Point(815, 131);
-            this.btnPrint.Name = "btnPrint";
-            this.btnPrint.Size = new System.Drawing.Size(260, 77);
-            this.btnPrint.TabIndex = 60;
-            this.btnPrint.Text = "In hóa đơn";
-            this.btnPrint.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
-            this.btnPrint.UseVisualStyleBackColor = true;
-            this.btnPrint.Click += new System.EventHandler(this.btnPrint_Click);
+            this.btnHuyDon.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnHuyDon.IconChar = FontAwesome.Sharp.IconChar.TrashAlt;
+            this.btnHuyDon.IconColor = System.Drawing.Color.Black;
+            this.btnHuyDon.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.btnHuyDon.Location = new System.Drawing.Point(815, 154);
+            this.btnHuyDon.Name = "btnHuyDon";
+            this.btnHuyDon.Size = new System.Drawing.Size(260, 77);
+            this.btnHuyDon.TabIndex = 61;
+            this.btnHuyDon.Text = "Hủy";
+            this.btnHuyDon.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
+            this.btnHuyDon.UseVisualStyleBackColor = true;
+            this.btnHuyDon.Click += new System.EventHandler(this.btnHuyDon_Click);
             // 
             // btnSave
             // 
@@ -263,6 +262,10 @@
             this.dgvGioHang.AllowUserToAddRows = false;
             dataGridViewCellStyle1.BackColor = System.Drawing.Color.White;
             this.dgvGioHang.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            this.dgvGioHang.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dgvGioHang.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(88)))), ((int)(((byte)(255)))));
             dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.875F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -288,7 +291,7 @@
             this.dgvGioHang.RowHeadersVisible = false;
             this.dgvGioHang.RowHeadersWidth = 82;
             this.dgvGioHang.RowTemplate.Height = 33;
-            this.dgvGioHang.Size = new System.Drawing.Size(1770, 326);
+            this.dgvGioHang.Size = new System.Drawing.Size(1782, 326);
             this.dgvGioHang.TabIndex = 65;
             this.dgvGioHang.ThemeStyle.AlternatingRowsStyle.BackColor = System.Drawing.Color.White;
             this.dgvGioHang.ThemeStyle.AlternatingRowsStyle.Font = null;
@@ -314,12 +317,13 @@
             // 
             // btnReset
             // 
+            this.btnReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnReset.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnReset.IconChar = FontAwesome.Sharp.IconChar.RotateBackward;
             this.btnReset.IconColor = System.Drawing.Color.Black;
             this.btnReset.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnReset.IconSize = 32;
-            this.btnReset.Location = new System.Drawing.Point(1523, 325);
+            this.btnReset.Location = new System.Drawing.Point(1535, 325);
             this.btnReset.Name = "btnReset";
             this.btnReset.Size = new System.Drawing.Size(176, 46);
             this.btnReset.TabIndex = 64;
@@ -330,12 +334,13 @@
             // 
             // btnDel
             // 
+            this.btnDel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnDel.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnDel.IconChar = FontAwesome.Sharp.IconChar.Trash;
             this.btnDel.IconColor = System.Drawing.Color.Black;
             this.btnDel.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnDel.IconSize = 32;
-            this.btnDel.Location = new System.Drawing.Point(1523, 218);
+            this.btnDel.Location = new System.Drawing.Point(1535, 218);
             this.btnDel.Name = "btnDel";
             this.btnDel.Size = new System.Drawing.Size(176, 46);
             this.btnDel.TabIndex = 63;
@@ -346,12 +351,13 @@
             // 
             // btnEdit
             // 
+            this.btnEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnEdit.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnEdit.IconChar = FontAwesome.Sharp.IconChar.Wrench;
             this.btnEdit.IconColor = System.Drawing.Color.Black;
             this.btnEdit.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnEdit.IconSize = 32;
-            this.btnEdit.Location = new System.Drawing.Point(1523, 114);
+            this.btnEdit.Location = new System.Drawing.Point(1535, 114);
             this.btnEdit.Name = "btnEdit";
             this.btnEdit.Size = new System.Drawing.Size(176, 46);
             this.btnEdit.TabIndex = 62;
@@ -362,12 +368,13 @@
             // 
             // btnAdd
             // 
+            this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnAdd.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnAdd.IconChar = FontAwesome.Sharp.IconChar.Plus;
             this.btnAdd.IconColor = System.Drawing.Color.Black;
             this.btnAdd.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnAdd.IconSize = 32;
-            this.btnAdd.Location = new System.Drawing.Point(1523, 8);
+            this.btnAdd.Location = new System.Drawing.Point(1535, 8);
             this.btnAdd.Name = "btnAdd";
             this.btnAdd.Size = new System.Drawing.Size(176, 46);
             this.btnAdd.TabIndex = 61;
@@ -378,6 +385,8 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox2.Controls.Add(this.txtDonGia);
             this.groupBox2.Controls.Add(this.label7);
             this.groupBox2.Controls.Add(this.nudSoLuong);
@@ -387,7 +396,7 @@
             this.groupBox2.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox2.Location = new System.Drawing.Point(697, 8);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(699, 363);
+            this.groupBox2.Size = new System.Drawing.Size(711, 363);
             this.groupBox2.TabIndex = 60;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Chọn sách";
@@ -415,7 +424,11 @@
             this.nudSoLuong.Size = new System.Drawing.Size(478, 43);
             this.nudSoLuong.TabIndex = 3;
             this.nudSoLuong.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.nudSoLuong.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            this.nudSoLuong.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             // 
             // label6
             // 
@@ -537,13 +550,15 @@
             this.tabPage2.Location = new System.Drawing.Point(184, 4);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(1782, 1063);
+            this.tabPage2.Size = new System.Drawing.Size(1794, 1063);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Lịch sử hóa đơn";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
             // groupBox4
             // 
+            this.groupBox4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox4.Controls.Add(this.btnIn);
             this.groupBox4.Controls.Add(this.btnHuy);
             this.groupBox4.Controls.Add(this.textBox4);
@@ -557,18 +572,19 @@
             this.groupBox4.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox4.Location = new System.Drawing.Point(878, 8);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(898, 464);
+            this.groupBox4.Size = new System.Drawing.Size(910, 464);
             this.groupBox4.TabIndex = 2;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Chi tiết hóa đơn";
             // 
             // btnIn
             // 
+            this.btnIn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnIn.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnIn.IconChar = FontAwesome.Sharp.IconChar.FileInvoiceDollar;
             this.btnIn.IconColor = System.Drawing.Color.Black;
             this.btnIn.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.btnIn.Location = new System.Drawing.Point(670, 146);
+            this.btnIn.Location = new System.Drawing.Point(682, 163);
             this.btnIn.Name = "btnIn";
             this.btnIn.Size = new System.Drawing.Size(222, 77);
             this.btnIn.TabIndex = 61;
@@ -579,10 +595,11 @@
             // 
             // btnHuy
             // 
+            this.btnHuy.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnHuy.IconChar = FontAwesome.Sharp.IconChar.TrashAlt;
             this.btnHuy.IconColor = System.Drawing.Color.Black;
             this.btnHuy.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.btnHuy.Location = new System.Drawing.Point(670, 45);
+            this.btnHuy.Location = new System.Drawing.Point(682, 62);
             this.btnHuy.Name = "btnHuy";
             this.btnHuy.Size = new System.Drawing.Size(222, 77);
             this.btnHuy.TabIndex = 8;
@@ -593,6 +610,8 @@
             // 
             // textBox4
             // 
+            this.textBox4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.textBox4.Location = new System.Drawing.Point(184, 286);
             this.textBox4.Name = "textBox4";
             this.textBox4.ReadOnly = true;
@@ -601,6 +620,8 @@
             // 
             // textBox3
             // 
+            this.textBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.textBox3.Location = new System.Drawing.Point(184, 213);
             this.textBox3.Name = "textBox3";
             this.textBox3.ReadOnly = true;
@@ -609,6 +630,8 @@
             // 
             // textBox2
             // 
+            this.textBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.textBox2.Location = new System.Drawing.Point(184, 135);
             this.textBox2.Name = "textBox2";
             this.textBox2.ReadOnly = true;
@@ -617,6 +640,8 @@
             // 
             // textBox1
             // 
+            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.textBox1.Location = new System.Drawing.Point(184, 62);
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
@@ -625,6 +650,8 @@
             // 
             // label17
             // 
+            this.label17.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.label17.AutoSize = true;
             this.label17.Location = new System.Drawing.Point(21, 292);
             this.label17.Name = "label17";
@@ -634,6 +661,8 @@
             // 
             // label16
             // 
+            this.label16.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.label16.AutoSize = true;
             this.label16.Location = new System.Drawing.Point(21, 219);
             this.label16.Name = "label16";
@@ -643,6 +672,8 @@
             // 
             // label15
             // 
+            this.label15.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.label15.AutoSize = true;
             this.label15.Location = new System.Drawing.Point(21, 135);
             this.label15.Name = "label15";
@@ -652,6 +683,8 @@
             // 
             // label14
             // 
+            this.label14.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.label14.AutoSize = true;
             this.label14.Location = new System.Drawing.Point(21, 65);
             this.label14.Name = "label14";
@@ -664,6 +697,9 @@
             this.dgvHoaDon.AllowUserToAddRows = false;
             dataGridViewCellStyle4.BackColor = System.Drawing.Color.White;
             this.dgvHoaDon.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            this.dgvHoaDon.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(88)))), ((int)(((byte)(255)))));
             dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.875F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -689,7 +725,7 @@
             this.dgvHoaDon.RowHeadersVisible = false;
             this.dgvHoaDon.RowHeadersWidth = 82;
             this.dgvHoaDon.RowTemplate.Height = 33;
-            this.dgvHoaDon.Size = new System.Drawing.Size(1764, 567);
+            this.dgvHoaDon.Size = new System.Drawing.Size(1782, 567);
             this.dgvHoaDon.TabIndex = 1;
             this.dgvHoaDon.ThemeStyle.AlternatingRowsStyle.BackColor = System.Drawing.Color.White;
             this.dgvHoaDon.ThemeStyle.AlternatingRowsStyle.Font = null;
@@ -812,12 +848,6 @@
             this.label11.TabIndex = 0;
             this.label11.Text = "Nhập thông tin";
             // 
-            // guna2BorderlessForm1
-            // 
-            this.guna2BorderlessForm1.ContainerControl = this;
-            this.guna2BorderlessForm1.DockIndicatorTransparencyValue = 0.6D;
-            this.guna2BorderlessForm1.TransparentWhileDrag = true;
-            // 
             // FrmHoaDon
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
@@ -853,7 +883,6 @@
         private Guna.UI2.WinForms.Guna2TabControl guna2TabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.Panel panel1;
-        private FontAwesome.Sharp.IconButton btnPrint;
         private FontAwesome.Sharp.IconButton btnSave;
         private System.Windows.Forms.TextBox txtThanhTien;
         private System.Windows.Forms.TextBox txtGiamGia;
@@ -892,7 +921,6 @@
         private System.Windows.Forms.Label label12;
         private FontAwesome.Sharp.IconButton BtnSearch;
         private FontAwesome.Sharp.IconButton btnReset2;
-        private Guna.UI2.WinForms.Guna2BorderlessForm guna2BorderlessForm1;
         private Guna.UI2.WinForms.Guna2DataGridView dgvHoaDon;
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.Label label14;
@@ -905,5 +933,6 @@
         private System.Windows.Forms.Label label15;
         private FontAwesome.Sharp.IconButton btnHuy;
         private FontAwesome.Sharp.IconButton btnIn;
+        private FontAwesome.Sharp.IconButton btnHuyDon;
     }
 }

@@ -4,117 +4,111 @@ using System.Data.SqlClient;
 using System.Drawing;
 using System.Windows.Forms;
 using FontAwesome.Sharp;
-using Thinh_QLNhasach.Utility; // Khai báo để lấy tên người dùng từ Session
+using Thinh_QLNhasach.Utility;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using System.IO;
 
 namespace Thinh_QLNhasach.Views
 {
     public partial class FrmHoaDon : Form
     {
-        // Chuỗi kết nối đến cơ sở dữ liệu SQL Server
         string connectionString = @"Data Source=THINHLALUOT\SQLEXPRESS01;Initial Catalog=BookShop;Integrated Security=True";
-
-        // DataTable dùng làm giỏ hàng tạm thời để hiển thị trên DataGridView
         DataTable dtGioHang = new DataTable();
-
-        // Biến cờ (Flag) dùng để ngăn chặn việc người dùng click quá nhanh gây nhân đôi dữ liệu
         bool isProcessing = false;
 
         public FrmHoaDon()
         {
             InitializeComponent();
+            InitGioHang();
         }
 
-        /// <summary>
-        /// Sự kiện chạy khi Form được nạp lên
-        /// </summary>
-        private void FrmHoaDon_Load(object sender, EventArgs e)
+        private void InitGioHang()
         {
-            // Khởi tạo các cột cho giỏ hàng nếu chưa có
             if (dtGioHang.Columns.Count == 0)
             {
                 dtGioHang.Columns.Add("MaSach", typeof(string));
                 dtGioHang.Columns.Add("TenSach", typeof(string));
                 dtGioHang.Columns.Add("SoLuong", typeof(int));
                 dtGioHang.Columns.Add("DonGia", typeof(double));
-                // Cột Thành tiền tự động tính toán dựa trên Số lượng và Đơn giá
-                dtGioHang.Columns.Add("ThanhTien", typeof(double), "SoLuong * DonGia");
+                dtGioHang.Columns.Add("ThanhTien", typeof(double));
             }
+        }
+
+        private void FrmHoaDon_Load(object sender, EventArgs e)
+        {
             dgvGioHang.DataSource = dtGioHang;
 
-            // Định dạng hiển thị cho các DataGridView
             FormatDataGridView(dgvGioHang);
             FormatDataGridView(dgvHoaDon);
 
-            // Ẩn cột Mã sách đi cho đẹp giao diện nhưng vẫn giữ dữ liệu ngầm
             if (dgvGioHang.Columns.Contains("MaSach")) dgvGioHang.Columns["MaSach"].Visible = false;
 
-            // Nạp dữ liệu vào các ComboBox và làm mới Form
+            if (cboGiamGia != null)
+            {
+                cboGiamGia.Items.Clear();
+                cboGiamGia.Items.AddRange(new string[] { "0%", "5%", "10%", "15%" });
+                cboGiamGia.DropDownStyle = ComboBoxStyle.DropDownList;
+                cboGiamGia.SelectedIndex = 0;
+            }
+
             LoadComboBoxNguoiDung();
             LoadComboBoxSach();
             ResetForm();
-            LoadLichSuHoaDon(); // Tải lịch sử hóa đơn ở Tab 2
+            LoadLichSuHoaDon();
         }
 
-        /// <summary>
-        /// Hàm định dạng giao diện cho DataGridView (Header xám đen, chữ trắng, Row trắng lả lướt)
-        /// </summary>
         private void FormatDataGridView(DataGridView dgv)
         {
             if (dgv == null) return;
 
-            // 1. HIỆN GRIDLINES (ĐƯỜNG KẺ Ô)
             dgv.CellBorderStyle = DataGridViewCellBorderStyle.Single;
-            dgv.GridColor = Color.FromArgb(224, 224, 224);
+            dgv.GridColor = Color.DarkGray;
             dgv.BackgroundColor = Color.White;
-            dgv.BorderStyle = BorderStyle.None;
+            dgv.BorderStyle = BorderStyle.FixedSingle;
             dgv.EnableHeadersVisualStyles = false;
 
-            // 2. HEADER TO VÀ CÓ VIỀN
             dgv.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
             dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(128, 128, 128);
             dgv.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            dgv.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 11F, FontStyle.Bold);
             dgv.ColumnHeadersHeight = 45;
 
-            // 3. NỘI DUNG CHỮ TO
-            dgv.DefaultCellStyle.Font = new Font("Segoe UI", 11F);
+            dgv.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 11F);
             dgv.RowTemplate.Height = 40;
             dgv.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgv.RowHeadersVisible = false;
-
-            // 4. CHỐNG CO RÚM: Dàn đều cột ra toàn bảng
             dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
-            // 5. TIẾNG VIỆT & TÔ MÀU XANH CỘT ĐẦU
             dgv.ColumnAdded += (s, e) =>
             {
-                // Việt hóa bảng Giỏ hàng
+                // BẢNG GIỎ HÀNG
                 if (e.Column.Name == "TenSach" && dgv.Name == "dgvGioHang") e.Column.HeaderText = "Tên Sách";
                 if (e.Column.Name == "SoLuong" && dgv.Name == "dgvGioHang") { e.Column.HeaderText = "Số Lượng"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; }
                 if (e.Column.Name == "DonGia" && dgv.Name == "dgvGioHang") { e.Column.HeaderText = "Đơn Giá"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
                 if (e.Column.Name == "ThanhTien" && dgv.Name == "dgvGioHang") { e.Column.HeaderText = "Thành Tiền"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
 
-                // BẢN NÂNG CẤP: Việt hóa bảng Lịch sử (dgvHoaDon) hiển thị chi tiết sách
+                // BẢNG LỊCH SỬ HÓA ĐƠN
                 if (e.Column.Name == "MaHD") { e.Column.HeaderText = "Mã HD"; e.Column.FillWeight = 80; }
                 if (e.Column.Name == "NgayLap") { e.Column.HeaderText = "Ngày Lập"; e.Column.DefaultCellStyle.Format = "dd/MM/yyyy HH:mm"; }
                 if (e.Column.Name == "NhanVien") { e.Column.HeaderText = "Nhân Viên"; e.Column.FillWeight = 120; }
                 if (e.Column.Name == "TenKhachHang") { e.Column.HeaderText = "Khách Hàng"; e.Column.FillWeight = 120; }
-
-                // Các cột mới thêm vào
                 if (e.Column.Name == "TenSach" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Tên Sách"; e.Column.FillWeight = 150; }
                 if (e.Column.Name == "SoLuong" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "SL"; e.Column.FillWeight = 50; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; }
                 if (e.Column.Name == "DonGia" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Đơn Giá"; e.Column.DefaultCellStyle.Format = "N0"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
                 if (e.Column.Name == "ThanhTien" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Tiền Sách"; e.Column.DefaultCellStyle.Format = "N0"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
-                if (e.Column.Name == "TongTien" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Tổng Hóa Đơn"; e.Column.DefaultCellStyle.Format = "N0"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
 
-                // Chỉ tô màu xanh cho cột ĐẦU TIÊN của mỗi bảng
+                // 3 CỘT MỚI UPDATE: TỔNG TIỀN GỐC, GIẢM GIÁ, THỰC THU
+                if (e.Column.Name == "TongTien" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Tổng Tiền Gốc"; e.Column.DefaultCellStyle.Format = "N0"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
+                if (e.Column.Name == "GiamGia" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Giảm Giá"; e.Column.DefaultCellStyle.Format = "N0"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; e.Column.DefaultCellStyle.ForeColor = Color.IndianRed; }
+                if (e.Column.Name == "ThucThu" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Thực Thu"; e.Column.DefaultCellStyle.Format = "N0"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; e.Column.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 11F, FontStyle.Bold); e.Column.DefaultCellStyle.ForeColor = Color.MediumSeaGreen; }
+
                 if (e.Column.Index == 0 || (dgv.Columns.Count > 0 && !dgv.Columns[0].Visible && e.Column.Index == 1))
                 {
                     e.Column.HeaderCell.Style.BackColor = Color.FromArgb(0, 120, 215);
                 }
             };
 
-            // 6. MÀU XEN KẼ
             dgv.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(248, 249, 250);
         }
 
@@ -131,8 +125,10 @@ namespace Thinh_QLNhasach.Views
                     if (result != null && result != DBNull.Value)
                     {
                         string maCu = result.ToString();
-                        int soHienTai = int.Parse(maCu.Substring(2));
-                        maMoi = "HD" + (soHienTai + 1).ToString("D3");
+                        if (int.TryParse(maCu.Substring(2), out int soHienTai))
+                        {
+                            maMoi = "HD" + (soHienTai + 1).ToString("D3");
+                        }
                     }
                 }
                 catch { maMoi = "HD001"; }
@@ -192,23 +188,33 @@ namespace Thinh_QLNhasach.Views
                 DataRowView row = cboMaSach.SelectedItem as DataRowView;
                 int tonKho = Convert.ToInt32(row["SoLuongTon"]);
 
-                foreach (DataRow dr in dtGioHang.Rows)
+                foreach (DataRow r in dtGioHang.Rows)
                 {
-                    if (dr["MaSach"].ToString() == maSach)
+                    if (r["MaSach"].ToString() == maSach)
                     {
-                        if (Convert.ToInt32(dr["SoLuong"]) + soLuongThem > tonKho)
+                        int slHienTai = Convert.ToInt32(r["SoLuong"]);
+                        if (slHienTai + soLuongThem > tonKho)
                         {
                             MessageBox.Show($"Kho chỉ còn {tonKho} cuốn!");
                             return;
                         }
-                        dr["SoLuong"] = Convert.ToInt32(dr["SoLuong"]) + soLuongThem;
+
+                        r["SoLuong"] = slHienTai + soLuongThem;
+                        double gia = Convert.ToDouble(r["DonGia"]);
+                        r["ThanhTien"] = (slHienTai + soLuongThem) * gia;
+
                         CapNhatTien();
                         return;
                     }
                 }
 
                 if (soLuongThem > tonKho) { MessageBox.Show($"Kho chỉ còn {tonKho} cuốn!"); return; }
-                dtGioHang.Rows.Add(maSach, cboMaSach.Text, soLuongThem, Convert.ToDouble(txtDonGia.Text));
+
+                double donGia = 0;
+                double.TryParse(txtDonGia.Text, out donGia);
+                double thanhTien = soLuongThem * donGia;
+
+                dtGioHang.Rows.Add(maSach, cboMaSach.Text, soLuongThem, donGia, thanhTien);
                 CapNhatTien();
             }
             finally { isProcessing = false; }
@@ -216,53 +222,82 @@ namespace Thinh_QLNhasach.Views
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            if (dgvGioHang.CurrentRow == null) return;
-            DataGridViewRow r = dgvGioHang.CurrentRow;
-            cboMaSach.SelectedValue = r.Cells["MaSach"].Value.ToString();
-            nudSoLuong.Value = Convert.ToDecimal(r.Cells["SoLuong"].Value);
-            txtDonGia.Text = r.Cells["DonGia"].Value.ToString();
-            dtGioHang.Rows.RemoveAt(r.Index);
+            if (dgvGioHang.CurrentRow == null || dgvGioHang.CurrentRow.IsNewRow) return;
+
+            DataRowView drv = (DataRowView)dgvGioHang.CurrentRow.DataBoundItem;
+            cboMaSach.SelectedValue = drv["MaSach"].ToString();
+
+            decimal sl = 1;
+            if (drv["SoLuong"] != DBNull.Value) decimal.TryParse(drv["SoLuong"].ToString(), out sl);
+
+            if (sl > nudSoLuong.Maximum) nudSoLuong.Maximum = sl + 500;
+            nudSoLuong.Value = sl;
+
+            txtDonGia.Text = drv["DonGia"].ToString();
+            dtGioHang.Rows.Remove(drv.Row);
             CapNhatTien();
         }
 
         private void btnDel_Click(object sender, EventArgs e)
         {
-            if (dgvGioHang.CurrentRow != null)
+            if (dgvGioHang.CurrentRow != null && !dgvGioHang.CurrentRow.IsNewRow)
             {
-                dtGioHang.Rows.RemoveAt(dgvGioHang.CurrentRow.Index);
+                DataRowView drv = (DataRowView)dgvGioHang.CurrentRow.DataBoundItem;
+                dtGioHang.Rows.Remove(drv.Row);
                 CapNhatTien();
             }
         }
 
         private void CapNhatTien()
         {
-            object sum = dtGioHang.Compute("Sum(ThanhTien)", "");
-            double tongTien = sum.ToString() == "" ? 0 : Convert.ToDouble(sum);
+            double tongTien = 0;
+            foreach (DataRow r in dtGioHang.Rows)
+            {
+                if (r["ThanhTien"] != DBNull.Value)
+                {
+                    tongTien += Convert.ToDouble(r["ThanhTien"]);
+                }
+            }
             txtTongTien.Text = tongTien.ToString("N0");
 
-            double giamGia = 0;
-            string rawGiamGia = txtGiamGia.Text.Replace("%", "").Trim();
-            if (double.TryParse(rawGiamGia, out double parseGiamGia)) giamGia = parseGiamGia;
+            double phanTramGiam = 0;
+            if (cboGiamGia.SelectedItem != null)
+            {
+                string rawGiamGia = cboGiamGia.SelectedItem.ToString().Replace("%", "").Trim();
+                if (double.TryParse(rawGiamGia, out double parseGiamGia))
+                {
+                    phanTramGiam = parseGiamGia / 100.0;
+                }
+            }
 
-            double thanhTien = tongTien - giamGia;
+            double giamGiaTien = tongTien * phanTramGiam;
+            double thanhTien = tongTien - giamGiaTien;
+
             if (thanhTien < 0) thanhTien = 0;
+
             txtThanhTien.Text = thanhTien.ToString("N0");
         }
 
-        private void txtGiamGia_TextChanged(object sender, EventArgs e)
-        {
-            CapNhatTien();
-        }
+        private void txtGiamGia_TextChanged(object sender, EventArgs e) { CapNhatTien(); }
+
+        private void cboGiamGia_SelectedIndexChanged(object sender, EventArgs e) { CapNhatTien(); }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            // 1. CHỐT CHẶN TỨC THÌ: Nếu giỏ hàng rỗng thì thoát ngay
             if (dtGioHang == null || dtGioHang.Rows.Count == 0) return;
             if (cboMaNV.SelectedValue == null) { MessageBox.Show("Vui lòng chọn Nhân viên!"); return; }
 
-            // 2. COPY DỮ LIỆU RA BIẾN TẠM VÀ XÓA GIỎ GỐC (Chống nhân đôi dữ liệu)
             DataTable dtTemp = dtGioHang.Copy();
             dtGioHang.Clear();
+
+            double tongTien = 0;
+            double thanhTien = 0;
+            double giamGiaTien = 0;
+
+            double.TryParse(txtTongTien.Text.Replace(",", "").Replace(".", ""), out tongTien);
+            double.TryParse(txtThanhTien.Text.Replace(",", "").Replace(".", ""), out thanhTien);
+
+            giamGiaTien = tongTien - thanhTien;
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -272,7 +307,6 @@ namespace Thinh_QLNhasach.Views
                     SqlTransaction trans = conn.BeginTransaction();
                     try
                     {
-                        // 3. LƯU HÓA ĐƠN CHÍNH
                         string sqlHD = @"INSERT INTO HoaDon (MaHD, MaND, TenKhachHang, NgayLap, TongTien, GiamGia, ThanhTien) 
                                  VALUES (@mahd, @mand, @tenkh, @ngay, @tong, @giam, @thanhtien)";
 
@@ -280,23 +314,14 @@ namespace Thinh_QLNhasach.Views
                         cmdHD.Parameters.AddWithValue("@mahd", txtMaHD.Text);
                         cmdHD.Parameters.AddWithValue("@mand", cboMaNV.SelectedValue);
                         cmdHD.Parameters.AddWithValue("@tenkh", string.IsNullOrWhiteSpace(txtTenKH.Text) ? "Khách lẻ" : txtTenKH.Text.Trim());
-
                         cmdHD.Parameters.AddWithValue("@ngay", dtpNgayLap.Value);
-
-                        // Xử lý convert số an toàn
-                        double tongTien = double.Parse(txtTongTien.Text.Replace(",", "").Replace(".", ""));
-                        double giamGia = string.IsNullOrWhiteSpace(txtGiamGia.Text) ? 0 : double.Parse(txtGiamGia.Text.Replace(",", "").Replace(".", ""));
-                        double thanhTien = double.Parse(txtThanhTien.Text.Replace(",", "").Replace(".", ""));
-
                         cmdHD.Parameters.AddWithValue("@tong", tongTien);
-                        cmdHD.Parameters.AddWithValue("@giam", giamGia);
+                        cmdHD.Parameters.AddWithValue("@giam", giamGiaTien);
                         cmdHD.Parameters.AddWithValue("@thanhtien", thanhTien);
                         cmdHD.ExecuteNonQuery();
 
-                        // 4. DUYỆT GIỎ HÀNG ĐỂ LƯU CHI TIẾT VÀ TRỪ KHO
                         foreach (DataRow dr in dtTemp.Rows)
                         {
-                            // Lưu chi tiết
                             SqlCommand cmdCT = new SqlCommand("INSERT INTO ChiTietHoaDon (MaHD, MaSach, SoLuong, DonGia, ThanhTien) VALUES (@mahd, @masach, @sl, @dg, @tt)", conn, trans);
                             cmdCT.Parameters.AddWithValue("@mahd", txtMaHD.Text);
                             cmdCT.Parameters.AddWithValue("@masach", dr["MaSach"]);
@@ -305,22 +330,17 @@ namespace Thinh_QLNhasach.Views
                             cmdCT.Parameters.AddWithValue("@tt", dr["ThanhTien"]);
                             cmdCT.ExecuteNonQuery();
 
-                            // Cập nhật kho
                             SqlCommand cmdUp = new SqlCommand("UPDATE Sach SET SoLuongTon = SoLuongTon - @sl WHERE MaSach=@ms", conn, trans);
                             cmdUp.Parameters.AddWithValue("@sl", dr["SoLuong"]);
                             cmdUp.Parameters.AddWithValue("@ms", dr["MaSach"]);
                             cmdUp.ExecuteNonQuery();
                         }
 
-                        trans.Commit(); // Chốt đơn thành công
+                        trans.Commit();
                         MessageBox.Show("Thanh toán thành công!");
 
-                        // ========================================================
-                        // GHI LOG LẬP HÓA ĐƠN VÀO NHẬT KÝ (LẤY TỪ SESSION)
-                        // ========================================================
                         AppLogger.GhiLog(Session.Username, "Tạo Hóa Đơn", $"Lập thành công hóa đơn {txtMaHD.Text} - Tổng tiền: {thanhTien.ToString("N0")} VNĐ");
 
-                        // 5. LÀM MỚI GIAO DIỆN
                         ResetForm();
                         LoadComboBoxSach();
                         LoadLichSuHoaDon();
@@ -328,16 +348,25 @@ namespace Thinh_QLNhasach.Views
                     catch (Exception ex)
                     {
                         trans.Rollback();
-                        dtGioHang = dtTemp.Copy();
-                        MessageBox.Show("Lỗi SQL: " + ex.Message);
+                        MessageBox.Show("Lỗi CSDL khi lưu hóa đơn: " + ex.Message);
                     }
                 }
                 catch (Exception ex) { MessageBox.Show("Lỗi kết nối: " + ex.Message); }
             }
         }
 
+        private void btnHuyDon_Click(object sender, EventArgs e)
+        {
+            if (dtGioHang.Rows.Count > 0)
+            {
+                DialogResult result = MessageBox.Show("Đại ca có chắc chắn muốn hủy toàn bộ đơn hàng đang tạo này không?", "Xác nhận hủy", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (result == DialogResult.Yes) ResetForm();
+            }
+            else ResetForm();
+        }
+
         // =========================================================================
-        // ĐIỂM NÂNG CẤP: Lấy thẳng Chi Tiết Hóa Đơn (Bao gồm Tên Sách) lên Bảng
+        // FIX: CÂU TRUY VẤN SQL BỔ SUNG CỘT GIẢM GIÁ & THỰC THU CHO BẢNG LỊCH SỬ
         // =========================================================================
         private void LoadLichSuHoaDon(bool filter = false)
         {
@@ -346,9 +375,9 @@ namespace Thinh_QLNhasach.Views
                 try
                 {
                     conn.Open();
-                    // Câu lệnh JOIN 4 bảng để lấy trọn bộ thông tin
                     string sql = @"SELECT h.MaHD, h.NgayLap, n.HoTen as NhanVien, h.TenKhachHang, 
-                                          s.TenSach, ct.SoLuong, ct.DonGia, ct.ThanhTien, h.TongTien 
+                                          s.TenSach, ct.SoLuong, ct.DonGia, ct.ThanhTien, 
+                                          h.TongTien, h.GiamGia, h.ThanhTien as ThucThu 
                                    FROM HoaDon h 
                                    JOIN NguoiDung n ON h.MaND = n.MaND 
                                    JOIN ChiTietHoaDon ct ON h.MaHD = ct.MaHD
@@ -359,7 +388,6 @@ namespace Thinh_QLNhasach.Views
                     {
                         sql += " AND h.NgayLap BETWEEN @tuNgay AND @denNgay";
                         if (!string.IsNullOrWhiteSpace(txtSearch.Text))
-                            // Cho phép tìm luôn bằng Tên Khách, Mã HD hoặc Tên Sách
                             sql += " AND (h.MaHD LIKE @search OR h.TenKhachHang LIKE @search OR s.TenSach LIKE @search)";
                     }
 
@@ -384,26 +412,31 @@ namespace Thinh_QLNhasach.Views
             }
         }
 
-        // =========================================================================
-        // ĐIỂM NÂNG CẤP: Bốc thẳng dữ liệu từ Bảng sang Textbox, tối ưu tốc độ
-        // =========================================================================
         private void dgvHoaDon_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
             {
-                // Thay vì đâm xuống SQL, ta bốc thẳng từ lưới DGV lên Textbox
                 DataGridViewRow row = dgvHoaDon.Rows[e.RowIndex];
 
-                textBox1.Text = row.Cells["TenSach"].Value.ToString();
-                textBox2.Text = row.Cells["SoLuong"].Value.ToString();
+                if (row.IsNewRow || row.Cells["MaHD"].Value == null) return;
 
-                // Format lại tiền cho có dấu phẩy cho đẹp
-                textBox3.Text = Convert.ToDouble(row.Cells["DonGia"].Value).ToString("N0");
-                textBox4.Text = Convert.ToDouble(row.Cells["ThanhTien"].Value).ToString("N0");
+                textBox1.Text = row.Cells["TenSach"].Value?.ToString() ?? "";
+                textBox2.Text = row.Cells["SoLuong"].Value?.ToString() ?? "0";
+
+                double donGia = 0;
+                double thanhTienSach = 0;
+
+                if (row.Cells["DonGia"].Value != null) double.TryParse(row.Cells["DonGia"].Value.ToString(), out donGia);
+
+                // Lấy tiền của cuốc sách đó thôi (Cột ThanhTien của ChiTietHoaDon)
+                if (row.Cells["ThanhTien"].Value != null) double.TryParse(row.Cells["ThanhTien"].Value.ToString(), out thanhTienSach);
+
+                textBox3.Text = donGia.ToString("N0");
+                textBox4.Text = thanhTienSach.ToString("N0");
             }
         }
 
-        private void BtnSearch_Click(object sender, EventArgs e) { LoadLichSuHoaDon(true); } // Truyền true để kích hoạt bộ lọc
+        private void BtnSearch_Click(object sender, EventArgs e) { LoadLichSuHoaDon(true); }
 
         private void btnResetFilter_Click(object sender, EventArgs e)
         {
@@ -415,8 +448,13 @@ namespace Thinh_QLNhasach.Views
 
         private void btnHuy_Click(object sender, EventArgs e)
         {
-            if (dgvHoaDon.CurrentRow == null) return;
-            string maHD = dgvHoaDon.CurrentRow.Cells["MaHD"].Value.ToString();
+            if (dgvHoaDon.CurrentRow == null || dgvHoaDon.CurrentRow.IsNewRow) return;
+
+            var cellMaHD = dgvHoaDon.CurrentRow.Cells["MaHD"].Value;
+            if (cellMaHD == null) return;
+
+            string maHD = cellMaHD.ToString();
+
             if (MessageBox.Show($"Xác nhận HỦY TOÀN BỘ hóa đơn {maHD} và HOÀN KHO?", "Cảnh báo", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 using (SqlConnection conn = new SqlConnection(connectionString))
@@ -426,35 +464,183 @@ namespace Thinh_QLNhasach.Views
                     try
                     {
                         DataTable dt = new DataTable();
-                        SqlDataAdapter da = new SqlDataAdapter("SELECT MaSach, SoLuong FROM ChiTietHoaDon WHERE MaHD=@ma", conn);
-                        da.SelectCommand.Transaction = trans; da.SelectCommand.Parameters.AddWithValue("@ma", maHD);
+                        SqlCommand cmdLayCT = new SqlCommand("SELECT MaSach, SoLuong FROM ChiTietHoaDon WHERE MaHD=@ma", conn, trans);
+                        cmdLayCT.Parameters.AddWithValue("@ma", maHD);
+                        SqlDataAdapter da = new SqlDataAdapter(cmdLayCT);
                         da.Fill(dt);
+
                         foreach (DataRow r in dt.Rows)
                         {
-                            new SqlCommand($"UPDATE Sach SET SoLuongTon = SoLuongTon + {r["SoLuong"]} WHERE MaSach='{r["MaSach"]}'", conn, trans).ExecuteNonQuery();
+                            SqlCommand cmdUp = new SqlCommand("UPDATE Sach SET SoLuongTon = SoLuongTon + @sl WHERE MaSach=@ms", conn, trans);
+                            cmdUp.Parameters.AddWithValue("@sl", r["SoLuong"]);
+                            cmdUp.Parameters.AddWithValue("@ms", r["MaSach"]);
+                            cmdUp.ExecuteNonQuery();
                         }
-                        new SqlCommand($"DELETE FROM ChiTietHoaDon WHERE MaHD='{maHD}'", conn, trans).ExecuteNonQuery();
-                        new SqlCommand($"DELETE FROM HoaDon WHERE MaHD='{maHD}'", conn, trans).ExecuteNonQuery();
+
+                        SqlCommand cmdDelCT = new SqlCommand("DELETE FROM ChiTietHoaDon WHERE MaHD=@ma", conn, trans);
+                        cmdDelCT.Parameters.AddWithValue("@ma", maHD);
+                        cmdDelCT.ExecuteNonQuery();
+
+                        SqlCommand cmdDelHD = new SqlCommand("DELETE FROM HoaDon WHERE MaHD=@ma", conn, trans);
+                        cmdDelHD.Parameters.AddWithValue("@ma", maHD);
+                        cmdDelHD.ExecuteNonQuery();
 
                         trans.Commit();
                         MessageBox.Show("Hủy hóa đơn thành công!");
 
-                        // ========================================================
-                        // GHI LOG HỦY HÓA ĐƠN VÀO NHẬT KÝ (LẤY TỪ SESSION)
-                        // ========================================================
                         AppLogger.GhiLog(Session.Username, "Hủy Hóa Đơn", $"Đã hủy hóa đơn {maHD} và hoàn lại sách vào kho");
 
-                        LoadLichSuHoaDon(); LoadComboBoxSach();
+                        LoadLichSuHoaDon();
+                        LoadComboBoxSach();
                     }
                     catch (Exception ex) { trans.Rollback(); MessageBox.Show("Lỗi: " + ex.Message); }
                 }
             }
         }
 
+        // =========================================================================
+        // HÀM IN HÓA ĐƠN PDF CẬP NHẬT GIAO DIỆN 3 DÒNG: TỔNG GỐC - GIẢM - THỰC THU
+        // =========================================================================
         private void btnIn_Click(object sender, EventArgs e)
         {
-            if (dgvHoaDon.CurrentRow != null)
-                MessageBox.Show("Đang in lại hóa đơn: " + dgvHoaDon.CurrentRow.Cells["MaHD"].Value.ToString());
+            if (dgvHoaDon.CurrentRow == null || dgvHoaDon.CurrentRow.IsNewRow || dgvHoaDon.CurrentRow.Cells["MaHD"].Value == null)
+            {
+                MessageBox.Show("Vui lòng click chọn một hóa đơn hợp lệ trong bảng Lịch sử Hóa đơn để in!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string maHD = dgvHoaDon.CurrentRow.Cells["MaHD"].Value.ToString();
+            if (string.IsNullOrWhiteSpace(maHD)) return;
+
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Filter = "PDF Document (*.pdf)|*.pdf";
+            sfd.FileName = "HoaDon_" + maHD + "_" + DateTime.Now.ToString("ddMMyyyy_HHmm") + ".pdf";
+
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    string fontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "arial.ttf");
+                    if (!File.Exists(fontPath)) fontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "times.ttf");
+
+                    if (!File.Exists(fontPath))
+                    {
+                        MessageBox.Show("Máy tính của bạn thiếu Font hệ thống để in tiếng Việt!", "Lỗi Font", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    iTextSharp.text.pdf.BaseFont bf = iTextSharp.text.pdf.BaseFont.CreateFont(fontPath, iTextSharp.text.pdf.BaseFont.IDENTITY_H, iTextSharp.text.pdf.BaseFont.EMBEDDED);
+                    iTextSharp.text.Font fontTitle = new iTextSharp.text.Font(bf, 18, iTextSharp.text.Font.BOLD);
+                    iTextSharp.text.Font fontBold = new iTextSharp.text.Font(bf, 11, iTextSharp.text.Font.BOLD);
+                    iTextSharp.text.Font fontNormal = new iTextSharp.text.Font(bf, 11, iTextSharp.text.Font.NORMAL);
+
+                    using (FileStream fs = new FileStream(sfd.FileName, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        iTextSharp.text.Rectangle pageSizeA5 = new iTextSharp.text.Rectangle(420f, 595f);
+                        iTextSharp.text.Document doc = new iTextSharp.text.Document(pageSizeA5, 20f, 20f, 30f, 20f);
+
+                        iTextSharp.text.pdf.PdfWriter.GetInstance(doc, fs);
+                        doc.Open();
+
+                        var rowHD = dgvHoaDon.CurrentRow;
+                        string ngayLap = "";
+                        if (rowHD.Cells["NgayLap"].Value != null)
+                        {
+                            DateTime dtNgayLap;
+                            if (DateTime.TryParse(rowHD.Cells["NgayLap"].Value.ToString(), out dtNgayLap))
+                                ngayLap = dtNgayLap.ToString("dd/MM/yyyy HH:mm");
+                        }
+
+                        string nhanVien = rowHD.Cells["NhanVien"].Value?.ToString() ?? "";
+                        string khachHang = rowHD.Cells["TenKhachHang"].Value?.ToString() ?? "Khách lẻ";
+
+                        // Lấy 3 thông số tiền
+                        double tongTienNum = 0, giamGiaNum = 0, thucThuNum = 0;
+                        if (rowHD.Cells["TongTien"].Value != null) double.TryParse(rowHD.Cells["TongTien"].Value.ToString(), out tongTienNum);
+                        if (rowHD.Cells["GiamGia"].Value != null) double.TryParse(rowHD.Cells["GiamGia"].Value.ToString(), out giamGiaNum);
+                        if (rowHD.Cells["ThucThu"].Value != null) double.TryParse(rowHD.Cells["ThucThu"].Value.ToString(), out thucThuNum);
+
+                        iTextSharp.text.Paragraph shopName = new iTextSharp.text.Paragraph("CỬA HÀNG SÁCH DT STORE", fontBold) { Alignment = iTextSharp.text.Element.ALIGN_CENTER };
+                        iTextSharp.text.Paragraph title = new iTextSharp.text.Paragraph("HÓA ĐƠN THANH TOÁN", fontTitle) { Alignment = iTextSharp.text.Element.ALIGN_CENTER };
+                        title.SpacingAfter = 15;
+                        doc.Add(shopName);
+                        doc.Add(title);
+
+                        doc.Add(new iTextSharp.text.Paragraph($"Mã HĐ: {maHD}", fontNormal));
+                        doc.Add(new iTextSharp.text.Paragraph($"Ngày lập: {ngayLap}", fontNormal));
+                        doc.Add(new iTextSharp.text.Paragraph($"Thu ngân: {nhanVien}", fontNormal));
+                        doc.Add(new iTextSharp.text.Paragraph($"Khách hàng: {khachHang}", fontNormal));
+                        doc.Add(new iTextSharp.text.Paragraph("----------------------------------------------------------------------", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_CENTER, SpacingAfter = 10 });
+
+                        iTextSharp.text.pdf.PdfPTable table = new iTextSharp.text.pdf.PdfPTable(4);
+                        table.WidthPercentage = 100;
+                        table.SetWidths(new float[] { 4.5f, 1f, 2.5f, 2.5f });
+
+                        table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("Tên sách", fontBold)) { Border = 0, PaddingBottom = 5 });
+                        table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("SL", fontBold)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER });
+                        table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("Đơn giá", fontBold)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT });
+                        table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("Tiền sách", fontBold)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT });
+
+                        foreach (DataGridViewRow r in dgvHoaDon.Rows)
+                        {
+                            if (r.IsNewRow) continue;
+
+                            var cellMaHD = r.Cells["MaHD"].Value;
+                            if (cellMaHD != null && cellMaHD.ToString() == maHD)
+                            {
+                                string tenSach = r.Cells["TenSach"].Value?.ToString() ?? "";
+                                string soLuong = r.Cells["SoLuong"].Value?.ToString() ?? "0";
+
+                                double donGia = 0;
+                                if (r.Cells["DonGia"].Value != null) double.TryParse(r.Cells["DonGia"].Value.ToString(), out donGia);
+
+                                double tienSach = 0;
+                                if (r.Cells["ThanhTien"].Value != null) double.TryParse(r.Cells["ThanhTien"].Value.ToString(), out tienSach);
+
+                                table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(tenSach, fontNormal)) { Border = 0, PaddingBottom = 5 });
+                                table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(soLuong, fontNormal)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER });
+                                table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(donGia.ToString("N0"), fontNormal)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT });
+                                table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(tienSach.ToString("N0"), fontNormal)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT });
+                            }
+                        }
+
+                        doc.Add(table);
+                        doc.Add(new iTextSharp.text.Paragraph("----------------------------------------------------------------------", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_CENTER });
+
+                        // THAY ĐỔI ĐỂ IN 3 DÒNG RÕ RÀNG
+                        iTextSharp.text.Paragraph txtTongTien = new iTextSharp.text.Paragraph($"TỔNG TIỀN GỐC: {tongTienNum.ToString("N0")} VNĐ", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_RIGHT, SpacingBefore = 5 };
+                        iTextSharp.text.Paragraph txtGiamGia = new iTextSharp.text.Paragraph($"GIẢM GIÁ: -{giamGiaNum.ToString("N0")} VNĐ", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_RIGHT };
+                        iTextSharp.text.Paragraph txtThucThu = new iTextSharp.text.Paragraph($"THỰC THU (KHÁCH TRẢ): {thucThuNum.ToString("N0")} VNĐ", fontBold) { Alignment = iTextSharp.text.Element.ALIGN_RIGHT, SpacingAfter = 20 };
+
+                        doc.Add(txtTongTien);
+                        doc.Add(txtGiamGia);
+                        doc.Add(txtThucThu);
+
+                        iTextSharp.text.Paragraph footer = new iTextSharp.text.Paragraph("Cảm ơn Quý Khách & Hẹn gặp lại!", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_CENTER };
+                        doc.Add(footer);
+
+                        doc.Close();
+                    }
+
+                    MessageBox.Show("Đã xuất Hóa đơn PDF thành công xuất sắc!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    try
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                        {
+                            FileName = sfd.FileName,
+                            UseShellExecute = true
+                        });
+                    }
+                    catch
+                    {
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi trong quá trình tạo PDF:\n" + ex.Message, "Lỗi Hệ Thống", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
         private void btnPrint_Click(object sender, EventArgs e)
@@ -473,7 +659,9 @@ namespace Thinh_QLNhasach.Views
             cboMaSach.SelectedIndex = -1;
             nudSoLuong.Value = 1;
             txtDonGia.Clear();
-            txtGiamGia.Clear();
+
+            if (cboGiamGia != null && cboGiamGia.Items.Count > 0) cboGiamGia.SelectedIndex = 0;
+
             txtTongTien.Text = "0";
             txtThanhTien.Text = "0";
             dtGioHang.Clear();

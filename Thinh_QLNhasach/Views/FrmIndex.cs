@@ -14,8 +14,7 @@ namespace Thinh_QLNhasach.Views
         public FrmIndex()
         {
             InitializeComponent();
-            // Đăng ký sự kiện Resize để form con luôn nằm giữa khi ông phóng to/thu nhỏ màn hình
-            panelMain.Resize += panelMain_Resize;
+            // Đã xóa sự kiện Resize vì dùng DockStyle.Fill nó tự động giãn nở rồi, không cần tính toán tay nữa!
         }
 
         /// <summary>
@@ -23,11 +22,12 @@ namespace Thinh_QLNhasach.Views
         /// </summary>
         private void FrmIndex_Load(object sender, EventArgs e)
         {
-            // 1. HIỂN THỊ THÔNG TIN NGƯỜI DÙNG (Phần ông vừa làm giao diện)
+            // 1. HIỂN THỊ THÔNG TIN NGƯỜI DÙNG
             // Lấy dữ liệu từ Session đã lưu lúc Đăng nhập
             lblNguoiDung.Text = Session.Username;
             lblRole.Text = Session.Role;
-            // 3. PHÂN QUYỀN NGƯỜI DÙNG
+
+            // 2. PHÂN QUYỀN NGƯỜI DÙNG
             if (string.IsNullOrEmpty(Role))
             {
                 Role = Session.Role;
@@ -66,35 +66,18 @@ namespace Thinh_QLNhasach.Views
             // Thiết lập Form con
             frm.TopLevel = false;
             frm.FormBorderStyle = FormBorderStyle.None;
-            frm.Dock = DockStyle.None; // Để None mới dùng hàm CenterForm được
+
+            // ======================================================
+            // CHÌA KHÓA LÀ ĐÂY: Ép form con phóng to lấp đầy Panel
+            frm.Dock = DockStyle.Fill;
+            // ======================================================
 
             panelMain.Controls.Add(frm);
-            frm.Show();
-
-            // Gọi hàm căn giữa Form con trong lòng Panel chính
-            CenterForm(frm);
             frm.BringToFront();
+            frm.Show();
         }
 
-        private void CenterForm(Form frm)
-        {
-            if (frm == null || panelMain == null) return;
-
-            // Tính toán tọa độ X, Y để đặt Form vào chính giữa Panel
-            int x = (panelMain.Width - frm.Width) / 2;
-            int y = (panelMain.Height - frm.Height) / 2;
-
-            frm.Location = new System.Drawing.Point(Math.Max(x, 0), Math.Max(y, 0));
-        }
-
-        private void panelMain_Resize(object sender, EventArgs e)
-        {
-            // Khi kích thước FrmIndex thay đổi, ép Form con tính lại vị trí chính giữa
-            if (panelMain.Controls.Count > 0 && panelMain.Controls[0] is Form)
-            {
-                CenterForm(panelMain.Controls[0] as Form);
-            }
-        }
+        // Đã xóa hàm CenterForm() và panelMain_Resize() vì dư thừa!
 
         // ================= CÁC SỰ KIỆN CLICK NÚT SIDEBAR =================
 
@@ -108,7 +91,7 @@ namespace Thinh_QLNhasach.Views
         // Quản lý Tác giả
         private void btnAuthor_Click(object sender, EventArgs e)
         {
-            FrmTacGia frm = new FrmTacGia(); // Nhớ check đúng tên class FrmAuthor hay FrmTacGia
+            FrmTacGia frm = new FrmTacGia();
             OpenFormInPanel(frm);
         }
 
@@ -133,6 +116,18 @@ namespace Thinh_QLNhasach.Views
             OpenFormInPanel(frm);
         }
 
+        private void btnThongKe_Click(object sender, EventArgs e)
+        {
+            FrmThongKe frm = new FrmThongKe();
+            OpenFormInPanel(frm);
+        }
+
+        private void btnNhatKy_Click(object sender, EventArgs e)
+        {
+            FrmNhatKy frm = new FrmNhatKy();
+            OpenFormInPanel(frm);
+        }
+
         // Nút Đăng xuất
         private void btnLogout_Click(object sender, EventArgs e)
         {
@@ -146,16 +141,16 @@ namespace Thinh_QLNhasach.Views
             }
         }
 
-        private void btnThongKe_Click(object sender, EventArgs e)
+        private void btnTaiKhoan_Click(object sender, EventArgs e)
         {
-            FrmThongKe frm = new FrmThongKe();
-            OpenFormInPanel(frm);
-
+            string userHienTai = "admin";
+            FrmTaiKhoan frm = new FrmTaiKhoan(userHienTai);
+            frm.ShowDialog();
         }
 
-        private void btnNhatKy_Click(object sender, EventArgs e)
+        private void btnTrangchu_Click(object sender, EventArgs e)
         {
-            FrmNhatKy frm = new FrmNhatKy();
+            FrmDashboard frm = new FrmDashboard();
             OpenFormInPanel(frm);
         }
     }
