@@ -417,4 +417,3 @@ NhatKyHoatDong (ghi log độc lập)
 
 ---
 
-*README này được tạo tự động dựa trên phân tích file `Thinh_QLNhaSach.sql` và `Thinh_QLNhasach.slnx`.*
