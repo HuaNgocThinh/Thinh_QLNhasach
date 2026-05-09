@@ -1,19 +1,18 @@
 ﻿using OfficeOpenXml;        // Thêm thư viện EPPlus Xuất Excel
 using OfficeOpenXml.Style;  // Thêm thư viện Trang trí Excel
 using System;
-using System.Collections.Generic; // Thêm thư viện Dictionary để lưu cache ảnh
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.IO;            // Thêm thư viện xử lý File
+using System.IO;
 using System.Windows.Forms;
 
 namespace Thinh_QLNhasach
 {
     public partial class FrmThongKe : Form
     {
-        // TẠO BỘ NHỚ ĐỆM (CACHE) ẢNH ĐỂ CUỘN CHUỘT KHÔNG BỊ GIẬT LAG
         private Dictionary<string, Image> imageCache = new Dictionary<string, Image>();
 
         public FrmThongKe()
@@ -30,7 +29,6 @@ namespace Thinh_QLNhasach
         {
             dtpThang.Value = DateTime.Now;
 
-            // Xóa mọi đường viền mặc định
             dgvTopSach.CellBorderStyle = DataGridViewCellBorderStyle.None;
             dgvTopSach.AdvancedCellBorderStyle.All = DataGridViewAdvancedCellBorderStyle.None;
             dgvTopSach.GridColor = Color.White;
@@ -41,6 +39,9 @@ namespace Thinh_QLNhasach
             dgvTopSach.AllowUserToResizeRows = false;
             dgvTopSach.RowHeadersVisible = false;
             dgvTopSach.ColumnHeadersVisible = false;
+
+            // ĐÃ FIX: Tắt hoàn toàn thanh cuộn, chơi hệ Dashboard
+            dgvTopSach.ScrollBars = ScrollBars.None;
 
             ThucHienThongKe();
         }
@@ -124,7 +125,6 @@ namespace Thinh_QLNhasach
                     da.Fill(dt);
                     dgvTopSach.DataSource = dt;
 
-                    // Ẩn đi các cột phụ trợ
                     if (dgvTopSach.Columns.Contains("STT")) dgvTopSach.Columns["STT"].Visible = false;
                     if (dgvTopSach.Columns.Contains("MaSach")) dgvTopSach.Columns["MaSach"].Visible = false;
                     if (dgvTopSach.Columns.Contains("TacGia")) dgvTopSach.Columns["TacGia"].Visible = false;
@@ -181,9 +181,14 @@ namespace Thinh_QLNhasach
                 if (e.ColumnIndex == colTenSach)
                 {
                     // =========================================================
-                    // SỬA Ở ĐÂY: TĂNG KÍCH THƯỚC ẢNH LÊN 80 PIXEL
+                    // ĐÃ FIX: TỰ ĐỘNG CO GIÃN ẢNH VÀ CHỮ THEO CHIỀU CAO THỰC TẾ
                     // =========================================================
-                    int imgSize = 120;
+
+                    int padding = 12; // Chừa khoảng lề trên/dưới 6px
+                    int imgSize = e.CellBounds.Height - padding;
+                    if (imgSize > 80) imgSize = 80; // To tối đa 80px để không bị vỡ ảnh
+                    if (imgSize < 30) imgSize = 30; // Nhỏ tối đa 30px để còn nhìn thấy
+
                     int imgX = e.CellBounds.X + 20;
                     int imgY = e.CellBounds.Y + (e.CellBounds.Height - imgSize) / 2;
 
@@ -228,15 +233,18 @@ namespace Thinh_QLNhasach
                         e.Graphics.DrawRectangle(Pens.LightGray, imgX, imgY, imgSize, imgSize);
                     }
 
-                    // VẼ TÊN SÁCH VÀ TÁC GIẢ
-                    Font titleFont = new Font("Segoe UI", 12, FontStyle.Bold);
-                    Font authorFont = new Font("Segoe UI", 10, FontStyle.Regular);
+                    // TÍNH TOÁN FONT CHỮ TO NHỎ THEO CỠ ẢNH
+                    int fontSizeTitle = imgSize >= 60 ? 12 : (imgSize >= 45 ? 11 : 9);
+                    int fontSizeAuthor = imgSize >= 60 ? 10 : 8;
+
+                    Font titleFont = new Font("Segoe UI", fontSizeTitle, FontStyle.Bold);
+                    Font authorFont = new Font("Segoe UI", fontSizeAuthor, FontStyle.Regular);
 
                     string titleText = $"{drv["STT"]}. {drv["TenSach"]}";
                     string authorText = drv["TacGia"].ToString();
 
-                    int textX = imgX + imgSize + 15; // Chữ tự động lùi ra theo độ to của ảnh
-                    int totalTextHeight = titleFont.Height + 5 + authorFont.Height;
+                    int textX = imgX + imgSize + 15;
+                    int totalTextHeight = titleFont.Height + 4 + authorFont.Height;
                     int startY = e.CellBounds.Y + (e.CellBounds.Height - totalTextHeight) / 2;
 
                     e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
@@ -244,17 +252,20 @@ namespace Thinh_QLNhasach
 
                     using (SolidBrush authorBrush = new SolidBrush(Color.Gray))
                     {
-                        e.Graphics.DrawString(authorText, authorFont, authorBrush, textX, startY + titleFont.Height + 5);
+                        e.Graphics.DrawString(authorText, authorFont, authorBrush, textX, startY + titleFont.Height + 4);
                     }
                 }
                 else if (e.ColumnIndex == colSoLuong)
                 {
                     string text = drv["SoLuongBan"].ToString() + " quyển";
-                    Font badgeFont = new Font("Segoe UI", 10, FontStyle.Bold);
+
+                    // Giãn chữ Huy Hiệu theo độ cao dòng
+                    int badgeFontSize = e.CellBounds.Height >= 70 ? 10 : 9;
+                    Font badgeFont = new Font("Segoe UI", badgeFontSize, FontStyle.Bold);
                     SizeF textSize = e.Graphics.MeasureString(text, badgeFont);
 
                     int width = (int)textSize.Width + 24;
-                    int height = (int)textSize.Height + 12;
+                    int height = (int)textSize.Height + 10;
 
                     int x = e.CellBounds.Right - width - 20;
                     int y = e.CellBounds.Top + (e.CellBounds.Height - height) / 2;
@@ -291,25 +302,35 @@ namespace Thinh_QLNhasach
             }
         }
 
+        // =========================================================
+        // ĐÃ FIX: CHIA ĐỀU CHIỀU CAO KHÔNG BỊ HỞ HAY CẮT MẨU
+        // =========================================================
         private void DanDeuDongDGV(DataGridView dgv)
         {
             if (dgv != null && dgv.Rows.Count > 0)
             {
                 dgv.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
-                int totalHeight = dgv.ClientSize.Height;
 
+                int totalHeight = dgv.ClientSize.Height;
                 if (dgv.ColumnHeadersVisible) totalHeight -= dgv.ColumnHeadersHeight;
 
+                // Chia đều phần nguyên và giữ lại phần dư
                 int rowHeight = totalHeight / dgv.Rows.Count;
+                int remainder = totalHeight % dgv.Rows.Count;
 
-                // =========================================================
-                // SỬA Ở ĐÂY: TĂNG CHIỀU CAO DÒNG LÊN 100 PIXEL ĐỂ ĐỰNG VỪA ẢNH MỚI
-                // =========================================================
-                if (rowHeight < 100) rowHeight = 100;
+                if (rowHeight < 30) rowHeight = 30; // Chỉ khóa min 30px để chống sập UI
 
-                foreach (DataGridViewRow row in dgv.Rows)
+                for (int i = 0; i < dgv.Rows.Count; i++)
                 {
-                    row.Height = rowHeight;
+                    // Dòng cuối cùng gánh thêm phần lẻ dư để lấp đầy 100% khe hở dưới cùng
+                    if (i == dgv.Rows.Count - 1 && totalHeight >= 30 * dgv.Rows.Count)
+                    {
+                        dgv.Rows[i].Height = rowHeight + remainder;
+                    }
+                    else
+                    {
+                        dgv.Rows[i].Height = rowHeight;
+                    }
                 }
             }
         }
