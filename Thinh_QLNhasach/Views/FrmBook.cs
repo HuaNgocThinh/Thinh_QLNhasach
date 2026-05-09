@@ -2,10 +2,10 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
-using System.IO; // Thêm thư viện này để xử lý Copy File Ảnh
+using System.IO;
 using System.Windows.Forms;
 using Thinh_QLNhasach.Database;
-using Thinh_QLNhasach.Utility; // Thêm thư viện này để gọi biến Session
+using Thinh_QLNhasach.Utility;
 
 namespace Thinh_QLNhasach.Views
 {
@@ -20,10 +20,8 @@ namespace Thinh_QLNhasach.Views
         // Biến kiểm soát vùng chờ cho TAB SÁCH
         private int indexChonSach = -1;
         private bool isEditingSach = false;
-
-        // Biến xử lý Ảnh
-        private string duongDanAnhTam = ""; // Nhớ đường dẫn file ảnh vừa chọn trên máy
-        private string tenAnhHienTai = "";  // Nhớ tên ảnh đang lưu trong Database
+        private string duongDanAnhTam = "";
+        private string tenAnhHienTai = "";
 
         // Biến kiểm soát vùng chờ cho TAB THỂ LOẠI
         private int indexChonTL = -1;
@@ -49,26 +47,61 @@ namespace Thinh_QLNhasach.Views
 
             LoadComboBoxData();
             ApplyCustomInterface();
+
+            // MẶC ĐỊNH MỞ LÊN LÀ KHÓA CHẶT CẢ 3 TAB (Chỉ cho phép nhập khi bấm Thêm/Sửa)
+            KhoaFormSach(true);
+            KhoaFormTL(true);
+            KhoaFormNXB(true);
+        }
+
+        // ==============================================================================
+        // BỘ HÀM KHÓA/MỞ GIAO DIỆN CHUYÊN NGHIỆP CHO 3 TAB
+        // ==============================================================================
+        private void KhoaFormSach(bool isLocked)
+        {
+            txtMasach.ReadOnly = true; // Mã lúc nào cũng khóa
+            txtTensach.ReadOnly = isLocked;
+            txtTonKho.ReadOnly = isLocked;
+            txtMoTa.ReadOnly = isLocked;
+
+            cboMaTG.Enabled = !isLocked;
+            cboMaTL.Enabled = !isLocked;
+            cboMaNXB.Enabled = !isLocked;
+            btnChonAnh.Enabled = !isLocked; // Khóa luôn nút chọn ảnh
+        }
+
+        private void KhoaFormTL(bool isLocked)
+        {
+            txtMaTL.ReadOnly = true; // Mã lúc nào cũng khóa
+            txtTenTL.ReadOnly = isLocked;
+            textMoTa.ReadOnly = isLocked;
+        }
+
+        private void KhoaFormNXB(bool isLocked)
+        {
+            txtMaNXB.ReadOnly = true; // Mã lúc nào cũng khóa
+            txtTenNXB.ReadOnly = isLocked;
+            txtDiachi.ReadOnly = isLocked;
+            txtSdt.ReadOnly = isLocked;
+            txtEmail.ReadOnly = isLocked;
         }
 
         // ==================== 1. VÙNG GIAO DIỆN (LÀM ĐẸP GRID) ====================
         private void ApplyCustomInterface()
         {
-            // --- GIAO DIỆN BẢNG SÁCH (DGVBOOK) ---
+            // --- GIAO DIỆN BẢNG SÁCH ---
             dgvBook.Theme = Guna.UI2.WinForms.Enums.DataGridViewPresetThemes.Default;
             dgvBook.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvBook.RowHeadersVisible = false;
             dgvBook.CellBorderStyle = DataGridViewCellBorderStyle.Single;
             dgvBook.GridColor = Color.FromArgb(231, 229, 255);
             dgvBook.BorderStyle = BorderStyle.FixedSingle;
-
             dgvBook.EnableHeadersVisualStyles = false;
             dgvBook.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvBook.ColumnHeadersHeight = 45;
             dgvBook.ColumnHeadersDefaultCellStyle.BackColor = Color.Gray;
             dgvBook.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
             dgvBook.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 12, FontStyle.Bold);
-
             dgvBook.DefaultCellStyle.BackColor = Color.White;
             dgvBook.DefaultCellStyle.ForeColor = Color.Black;
             dgvBook.DefaultCellStyle.Font = new Font("Segoe UI", 11);
@@ -84,16 +117,12 @@ namespace Thinh_QLNhasach.Views
                 dgvBook.Columns["TenTG"].HeaderText = "Tác Giả";
                 dgvBook.Columns["TenTL"].HeaderText = "Thể Loại";
                 dgvBook.Columns["TenNXB"].HeaderText = "Nhà XB";
-
-                // Ẩn các cột không cần thiết để giao diện gọn gàng
                 if (dgvBook.Columns.Contains("NamXuatBan")) dgvBook.Columns["NamXuatBan"].Visible = false;
                 if (dgvBook.Columns.Contains("GiaNhap")) dgvBook.Columns["GiaNhap"].Visible = false;
                 if (dgvBook.Columns.Contains("GiaBan")) dgvBook.Columns["GiaBan"].Visible = false;
                 if (dgvBook.Columns.Contains("HinhAnh")) dgvBook.Columns["HinhAnh"].Visible = false;
-
                 dgvBook.Columns["SoLuongTon"].HeaderText = "Tồn Kho";
                 dgvBook.Columns["MoTa"].HeaderText = "Mô Tả";
-
                 dgvBook.Columns["MaSach"].FillWeight = 40;
                 dgvBook.Columns["TenSach"].FillWeight = 160;
                 dgvBook.Columns["TenTG"].FillWeight = 110;
@@ -103,21 +132,19 @@ namespace Thinh_QLNhasach.Views
                 dgvBook.Columns["MoTa"].FillWeight = 120;
             }
 
-            // --- GIAO DIỆN BẢNG THỂ LOẠI (DGVTHELOAI) ---
+            // --- GIAO DIỆN BẢNG THỂ LOẠI ---
             dgvTheLoai.Theme = Guna.UI2.WinForms.Enums.DataGridViewPresetThemes.Default;
             dgvTheLoai.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvTheLoai.RowHeadersVisible = false;
             dgvTheLoai.CellBorderStyle = DataGridViewCellBorderStyle.Single;
             dgvTheLoai.GridColor = Color.FromArgb(231, 229, 255);
             dgvTheLoai.BorderStyle = BorderStyle.FixedSingle;
-
             dgvTheLoai.EnableHeadersVisualStyles = false;
             dgvTheLoai.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvTheLoai.ColumnHeadersHeight = 45;
             dgvTheLoai.ColumnHeadersDefaultCellStyle.BackColor = Color.Gray;
             dgvTheLoai.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
             dgvTheLoai.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 12, FontStyle.Bold);
-
             dgvTheLoai.DefaultCellStyle.Font = new Font("Segoe UI", 11);
             dgvTheLoai.DefaultCellStyle.SelectionBackColor = Color.FromArgb(231, 229, 255);
             dgvTheLoai.DefaultCellStyle.SelectionForeColor = Color.Black;
@@ -134,21 +161,19 @@ namespace Thinh_QLNhasach.Views
                 dgvTheLoai.Columns["MoTa"].FillWeight = 200;
             }
 
-            // --- GIAO DIỆN BẢNG NHÀ XUẤT BẢN (DGVNXB) ---
+            // --- GIAO DIỆN BẢNG NHÀ XUẤT BẢN ---
             dgvNXB.Theme = Guna.UI2.WinForms.Enums.DataGridViewPresetThemes.Default;
             dgvNXB.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvNXB.RowHeadersVisible = false;
             dgvNXB.CellBorderStyle = DataGridViewCellBorderStyle.Single;
             dgvNXB.GridColor = Color.FromArgb(231, 229, 255);
             dgvNXB.BorderStyle = BorderStyle.FixedSingle;
-
             dgvNXB.EnableHeadersVisualStyles = false;
             dgvNXB.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvNXB.ColumnHeadersHeight = 45;
             dgvNXB.ColumnHeadersDefaultCellStyle.BackColor = Color.Gray;
             dgvNXB.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
             dgvNXB.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 12, FontStyle.Bold);
-
             dgvNXB.DefaultCellStyle.Font = new Font("Segoe UI", 11);
             dgvNXB.DefaultCellStyle.SelectionBackColor = Color.FromArgb(231, 229, 255);
             dgvNXB.DefaultCellStyle.SelectionForeColor = Color.Black;
@@ -165,8 +190,7 @@ namespace Thinh_QLNhasach.Views
             }
         }
 
-        // ==================== 2. TAB SÁCH (LOGIC VÙNG CHỜ & ẢNH) ====================
-
+        // ==================== 2. TAB SÁCH ====================
         private void BocDuLieuSach(int index)
         {
             DataRow dr = dtSachTam.Rows[index];
@@ -175,22 +199,17 @@ namespace Thinh_QLNhasach.Views
             cboMaTG.Text = dr["TenTG"].ToString();
             cboMaTL.Text = dr["TenTL"].ToString();
             cboMaNXB.Text = dr["TenNXB"].ToString();
-
             txtTonKho.Text = dr["SoLuongTon"].ToString();
             txtMoTa.Text = dr["MoTa"].ToString();
 
-            // XỬ LÝ HIỂN THỊ ẢNH
             tenAnhHienTai = dr["HinhAnh"].ToString();
-            duongDanAnhTam = ""; // Trả về rỗng để biết chưa có ảnh mới
+            duongDanAnhTam = "";
 
             if (!string.IsNullOrEmpty(tenAnhHienTai))
             {
                 string duongDanAnhCu = Path.Combine(Application.StartupPath, "Images", tenAnhHienTai);
-                if (File.Exists(duongDanAnhCu))
-                {
-                    picHinhAnh.ImageLocation = duongDanAnhCu;
-                }
-                else picHinhAnh.ImageLocation = null; // Mất file thì xóa trắng
+                if (File.Exists(duongDanAnhCu)) picHinhAnh.ImageLocation = duongDanAnhCu;
+                else picHinhAnh.ImageLocation = null;
             }
             else picHinhAnh.ImageLocation = null;
         }
@@ -199,42 +218,40 @@ namespace Thinh_QLNhasach.Views
         {
             if (e.RowIndex < 0) return;
             indexChonSach = e.RowIndex;
-            // Chỉ bốc dữ liệu lên form khi đang bật công tắc Sửa
-            if (isEditingSach) BocDuLieuSach(indexChonSach);
+
+            // LUÔN LUÔN bốc dữ liệu lên để xem
+            BocDuLieuSach(indexChonSach);
+
+            // Nếu chưa bấm nút Cờ Lê (Sửa) thì ép khóa lại không cho táy máy gõ bậy
+            if (!isEditingSach) KhoaFormSach(true);
         }
 
-        // SỰ KIỆN NÚT CHỌN ẢNH
         private void btnChonAnh_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.gif";
             ofd.Title = "Chọn ảnh bìa sách";
-
             if (ofd.ShowDialog() == DialogResult.OK)
             {
                 duongDanAnhTam = ofd.FileName;
-                picHinhAnh.ImageLocation = duongDanAnhTam; // Nạp ảnh lên khung
+                picHinhAnh.ImageLocation = duongDanAnhTam;
             }
         }
 
-        // ======================================================
-        // NÚT CỜ LÊ: HOẠT ĐỘNG NHƯ MỘT CÔNG TẮC BẬT / TẮT
-        // ======================================================
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            isEditingSach = !isEditingSach; // Đảo trạng thái
+            isEditingSach = !isEditingSach;
 
             if (isEditingSach)
             {
-                MessageBox.Show("Đã BẬT chế độ Sửa!\nBây giờ bạn cứ việc click chọn sách, đổi ảnh và Save liên tục mà không cần bật lại nút này.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                // Nếu đang chọn sẵn dòng dưới bảng thì bốc nó lên luôn
+                KhoaFormSach(false); // MỞ KHÓA CHO SỬA
+                MessageBox.Show("Đã BẬT chế độ Sửa!\nBạn có thể sửa thông tin của cuốn sách đang chọn.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 if (indexChonSach != -1) BocDuLieuSach(indexChonSach);
             }
             else
             {
                 MessageBox.Show("Đã TẮT chế độ Sửa.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                btnReset_Click(null, null); // Tắt thì dọn dẹp
+                btnReset_Click(null, null);
             }
         }
 
@@ -244,21 +261,15 @@ namespace Thinh_QLNhasach.Views
             {
                 DataRowView drv = (DataRowView)dgvBook.CurrentRow.DataBoundItem;
                 drv.Row.Delete();
-
                 indexChonSach = -1;
             }
         }
 
-        // ======================================================
-        // NÚT SAVE SÁCH: LƯU ẢNH SIÊU TỐC VÀ BẢO LƯU CÔNG TẮC SỬA
-        // ======================================================
         private void btnSave_Click(object sender, EventArgs e)
         {
             if (isEditingSach && indexChonSach != -1)
             {
                 DataRow dr = dtSachTam.Rows[indexChonSach];
-
-                // Gom thông tin mới trên form đè vào bảng tạm
                 dr["TenSach"] = txtTensach.Text.Trim();
                 dr["TenTG"] = cboMaTG.Text;
                 dr["TenTL"] = cboMaTL.Text;
@@ -266,7 +277,6 @@ namespace Thinh_QLNhasach.Views
                 dr["SoLuongTon"] = txtTonKho.Text;
                 dr["MoTa"] = txtMoTa.Text.Trim();
 
-                // Xử lý lưu ảnh
                 if (duongDanAnhTam != "")
                 {
                     string thuMucAnh = Path.Combine(Application.StartupPath, "Images");
@@ -275,21 +285,17 @@ namespace Thinh_QLNhasach.Views
                     string tenAnhMoi = DateTime.Now.Ticks + Path.GetExtension(duongDanAnhTam);
                     File.Copy(duongDanAnhTam, Path.Combine(thuMucAnh, tenAnhMoi), true);
 
-                    dr["HinhAnh"] = tenAnhMoi; // Gài tên file mới
-                    duongDanAnhTam = ""; // Dọn dẹp
+                    dr["HinhAnh"] = tenAnhMoi;
+                    duongDanAnhTam = "";
                 }
             }
 
-            // Chốt hạ đẩy xuống SQL
             dgvBook.EndEdit();
             LuuDatabase("Sach");
 
-            // Bảo lưu trạng thái công tắc Sửa
             bool dangBatSua = isEditingSach;
-
-            btnReset_Click(null, null); // Dọn trắng màn hình
-
-            isEditingSach = dangBatSua; // Bật lại công tắc cho thao tác tiếp theo
+            btnReset_Click(null, null);
+            isEditingSach = dangBatSua;
         }
 
         private void btnSearch_Click(object sender, EventArgs e)
@@ -306,7 +312,7 @@ namespace Thinh_QLNhasach.Views
             txtMoTa.Clear();
             txtSearch.Clear();
 
-            picHinhAnh.ImageLocation = null; // Xóa trắng hình
+            picHinhAnh.ImageLocation = null;
             duongDanAnhTam = "";
             tenAnhHienTai = "";
 
@@ -318,10 +324,11 @@ namespace Thinh_QLNhasach.Views
 
             indexChonSach = -1;
             isEditingSach = false;
+
+            KhoaFormSach(false); // ĐÁNH TRẮNG FORM VÀ MỞ KHÓA ĐỂ SẴN SÀNG THÊM SÁCH MỚI
         }
 
         // ==================== 3. TAB THỂ LOẠI ====================
-
         private void BocDuLieuTheLoai(int index)
         {
             DataRow dr = dtTLTam.Rows[index];
@@ -334,7 +341,9 @@ namespace Thinh_QLNhasach.Views
         {
             if (e.RowIndex < 0) return;
             indexChonTL = e.RowIndex;
-            if (isEditingTL) BocDuLieuTheLoai(indexChonTL);
+
+            BocDuLieuTheLoai(indexChonTL); // Bốc lên xem
+            if (!isEditingTL) KhoaFormTL(true); // Chưa ấn Cờ lê thì khóa
         }
 
         private void btnAddTL_Click(object sender, EventArgs e)
@@ -358,16 +367,19 @@ namespace Thinh_QLNhasach.Views
             if (!isEditingTL)
             {
                 isEditingTL = true;
+                KhoaFormTL(false); // MỞ KHÓA
                 BocDuLieuTheLoai(indexChonTL);
-                MessageBox.Show("Chế độ Sửa bật! Click dòng nào bốc dòng đó.");
+                MessageBox.Show("Đã bật chế độ sửa.");
             }
             else
             {
                 DataRow dr = dtTLTam.Rows[indexChonTL];
                 dr["TenTL"] = txtTenTL.Text.Trim();
                 dr["MoTa"] = textMoTa.Text.Trim();
-
                 MessageBox.Show("Cập nhật danh sách chờ thành công!");
+
+                isEditingTL = false;
+                KhoaFormTL(true);
             }
         }
 
@@ -377,7 +389,6 @@ namespace Thinh_QLNhasach.Views
             {
                 DataRowView drv = (DataRowView)dgvTheLoai.CurrentRow.DataBoundItem;
                 drv.Row.Delete();
-
                 indexChonTL = -1;
             }
         }
@@ -405,10 +416,11 @@ namespace Thinh_QLNhasach.Views
 
             indexChonTL = -1;
             isEditingTL = false;
+
+            KhoaFormTL(false); // MỞ KHÓA CHO PHÉP THÊM MỚI
         }
 
         // ==================== 4. TAB NHÀ XUẤT BẢN ====================
-
         private void BocDuLieuNXB(int index)
         {
             DataRow dr = dtNXBTam.Rows[index];
@@ -423,7 +435,9 @@ namespace Thinh_QLNhasach.Views
         {
             if (e.RowIndex < 0) return;
             indexChonNXB = e.RowIndex;
-            if (isEditingNXB) BocDuLieuNXB(indexChonNXB);
+
+            BocDuLieuNXB(indexChonNXB); // Bốc lên xem
+            if (!isEditingNXB) KhoaFormNXB(true); // Chưa ấn Cờ lê thì khóa
         }
 
         private void btnAddNXB_Click(object sender, EventArgs e)
@@ -449,6 +463,7 @@ namespace Thinh_QLNhasach.Views
             if (!isEditingNXB)
             {
                 isEditingNXB = true;
+                KhoaFormNXB(false); // MỞ KHÓA
                 BocDuLieuNXB(indexChonNXB);
                 MessageBox.Show("Đã bật chế độ sửa.");
             }
@@ -459,8 +474,10 @@ namespace Thinh_QLNhasach.Views
                 dr["DiaChi"] = txtDiachi.Text.Trim();
                 dr["SoDienThoai"] = txtSdt.Text.Trim();
                 dr["Email"] = txtEmail.Text.Trim();
-
                 MessageBox.Show("Cập nhật danh sách chờ thành công!");
+
+                isEditingNXB = false;
+                KhoaFormNXB(true);
             }
         }
 
@@ -470,7 +487,6 @@ namespace Thinh_QLNhasach.Views
             {
                 DataRowView drv = (DataRowView)dgvNXB.CurrentRow.DataBoundItem;
                 drv.Row.Delete();
-
                 indexChonNXB = -1;
             }
         }
@@ -500,10 +516,11 @@ namespace Thinh_QLNhasach.Views
 
             indexChonNXB = -1;
             isEditingNXB = false;
+
+            KhoaFormNXB(false); // MỞ KHÓA CHO PHÉP THÊM MỚI
         }
 
         // ==================== 5. LOGIC LƯU DATABASE (TRANSACTION) ====================
-
         private void LuuDatabase(string loai)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
@@ -525,7 +542,6 @@ namespace Thinh_QLNhasach.Views
                                 continue;
                             }
 
-                            // Câu SQL UPDATE đã được bổ sung HinhAnh=@ha
                             string sql = @"UPDATE Sach SET TenSach=@ten, MaTG=(SELECT TOP 1 MaTG FROM TacGia WHERE TenTG=@tg), 
                             MaTL=(SELECT TOP 1 MaTL FROM TheLoai WHERE TenTL=@tl), MaNXB=(SELECT TOP 1 MaNXB FROM NhaXuatBan WHERE TenNXB=@nxb), 
                             SoLuongTon=@sl, MoTa=@mt, HinhAnh=@ha WHERE MaSach=@ma";
@@ -539,7 +555,6 @@ namespace Thinh_QLNhasach.Views
                             cmd.Parameters.AddWithValue("@sl", dr["SoLuongTon"]);
                             cmd.Parameters.AddWithValue("@mt", dr["MoTa"]);
 
-                            // Lưu HinhAnh, nếu rỗng thì ghi NULL vào SQL
                             if (dr["HinhAnh"] == DBNull.Value || string.IsNullOrEmpty(dr["HinhAnh"].ToString()))
                             {
                                 cmd.Parameters.AddWithValue("@ha", DBNull.Value);
@@ -616,7 +631,7 @@ namespace Thinh_QLNhasach.Views
                 dtSachTam.Columns.Add("GiaNhap");
                 dtSachTam.Columns.Add("GiaBan");
                 dtSachTam.Columns.Add("SoLuongTon");
-                dtSachTam.Columns.Add("HinhAnh"); // Bổ sung cột HinhAnh
+                dtSachTam.Columns.Add("HinhAnh");
                 dtSachTam.Columns.Add("MoTa");
             }
             if (dtTLTam.Columns.Count == 0) { dtTLTam.Columns.Add("MaTL", typeof(int)); dtTLTam.Columns.Add("TenTL"); dtTLTam.Columns.Add("MoTa"); }
@@ -627,7 +642,6 @@ namespace Thinh_QLNhasach.Views
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                // Bổ sung s.HinhAnh vào câu truy vấn
                 SqlDataAdapter daS = new SqlDataAdapter(@"SELECT s.MaSach, s.TenSach, tg.TenTG, tl.TenTL, nxb.TenNXB, 
                     s.NamXuatBan, s.GiaNhap, s.GiaBan, s.SoLuongTon, s.HinhAnh, s.MoTa 
                     FROM Sach s 

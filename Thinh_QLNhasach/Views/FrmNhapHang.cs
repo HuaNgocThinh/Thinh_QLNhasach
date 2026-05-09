@@ -123,12 +123,14 @@ namespace Thinh_QLNhasach
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
+                // ĐÃ FIX: Thêm LEFT JOIN sang bảng NguoiDung để lấy HoTen (đặt tên bí danh là NguoiLap)
                 string sql = @"SELECT ct.MaPN, ct.MaSach, s.TenSach, ct.SoLuong, ct.DonGiaNhap, ct.ThanhTien, 
-                               pn.NgayNhap, pn.GhiChu, pn.MaNCC, pn.MaND, pn.TongTien 
-                       FROM ChiTietPhieuNhap ct
-                       JOIN PhieuNhap pn ON ct.MaPN = pn.MaPN
-                       JOIN Sach s ON ct.MaSach = s.MaSach
-                       ORDER BY pn.NgayNhap DESC";
+                                      pn.NgayNhap, pn.GhiChu, pn.MaNCC, pn.MaND, nd.HoTen AS NguoiLap, pn.TongTien 
+                               FROM ChiTietPhieuNhap ct
+                               JOIN PhieuNhap pn ON ct.MaPN = pn.MaPN
+                               JOIN Sach s ON ct.MaSach = s.MaSach
+                               LEFT JOIN NguoiDung nd ON pn.MaND = nd.MaND
+                               ORDER BY pn.NgayNhap DESC";
 
                 SqlDataAdapter da = new SqlDataAdapter(sql, conn);
                 DataTable dt = new DataTable();
@@ -137,20 +139,28 @@ namespace Thinh_QLNhasach
 
                 if (dgvPhieuNhap.Columns.Count > 0)
                 {
+                    // Ẩn các cột chứa ID thừa thãi
                     if (dgvPhieuNhap.Columns.Contains("MaSach")) dgvPhieuNhap.Columns["MaSach"].Visible = false;
                     if (dgvPhieuNhap.Columns.Contains("MaNCC")) dgvPhieuNhap.Columns["MaNCC"].Visible = false;
                     if (dgvPhieuNhap.Columns.Contains("MaND")) dgvPhieuNhap.Columns["MaND"].Visible = false;
                     if (dgvPhieuNhap.Columns.Contains("TongTien")) dgvPhieuNhap.Columns["TongTien"].Visible = false;
 
+                    // Đổi tên cột cho đẹp
                     dgvPhieuNhap.Columns["MaPN"].HeaderText = "Mã Phiếu";
                     dgvPhieuNhap.Columns["TenSach"].HeaderText = "Tên Sách";
                     dgvPhieuNhap.Columns["SoLuong"].HeaderText = "SL";
                     dgvPhieuNhap.Columns["DonGiaNhap"].HeaderText = "Đơn Giá Nhập";
                     dgvPhieuNhap.Columns["ThanhTien"].HeaderText = "Thành Tiền";
                     dgvPhieuNhap.Columns["NgayNhap"].HeaderText = "Ngày Nhập";
+
+                    // HIỂN THỊ THÊM CỘT NGƯỜI LẬP
+                    if (dgvPhieuNhap.Columns.Contains("NguoiLap")) dgvPhieuNhap.Columns["NguoiLap"].HeaderText = "Người Lập";
+
                     if (dgvPhieuNhap.Columns.Contains("GhiChu")) dgvPhieuNhap.Columns["GhiChu"].HeaderText = "Ghi Chú";
 
+                    // Format lại tiền tệ cho dễ nhìn
                     dgvPhieuNhap.Columns["ThanhTien"].DefaultCellStyle.Format = "N0";
+                    dgvPhieuNhap.Columns["DonGiaNhap"].DefaultCellStyle.Format = "N0";
                 }
             }
         }
@@ -602,10 +612,11 @@ namespace Thinh_QLNhasach
             // Ép người lập phiếu là người đang đăng nhập (nếu có Session)
             if (cboMaND.Items.Count > 0)
             {
-                // Nếu ông có Session.Username, hãy dùng dòng này (tùy vào cách ông lưu Tên hay Mã)
-                // cboMaND.Text = Session.Username; 
-                cboMaND.SelectedIndex = 0; // Tạm thời chọn người đầu tiên
-                cboMaND.Enabled = false; // Khóa mồm lại, cấm chọn người khác
+                // Bắt đúng tên người dùng hiện tại đang đăng nhập
+                cboMaND.Text = Session.Username;
+
+                // Khóa mồm lại, cấm nhân viên (staff) tự ý chọn tên người khác để đổ vỏ
+                cboMaND.Enabled = false;
             }
 
             txtDongianhap.Clear();

@@ -38,17 +38,31 @@ namespace Thinh_QLNhasach.Views
         // ================= PHÂN QUYỀN LẢ LƯỚT =================
         void PhanQuyen()
         {
-            // Nếu là admin (không phân biệt hoa thường) thì mới hiện nút Nhân viên
+            // Nếu là admin (không phân biệt hoa thường) thì mới hiện các nút nhạy cảm
             if (Role != null && Role.ToLower() == "admin")
             {
                 btnUser.Enabled = true;
                 btnUser.Visible = true;
+
+                // THÊM: Hiện nút Thống kê và Nhật ký cho Admin
+                btnChart.Enabled = true;
+                btnChart.Visible = true;
+
+                btnNhatKy.Enabled = true;
+                btnNhatKy.Visible = true;
             }
             else
             {
-                // Nếu là Staff/Nhân viên thì ẩn nút quản lý Nhân viên đi cho bảo mật
+                // Nếu là Staff/Nhân viên thì ẩn các nút quản lý cấp cao đi cho bảo mật
                 btnUser.Enabled = false;
                 btnUser.Visible = false;
+
+                // THÊM: Ẩn luôn 2 nút này nếu không phải Admin
+                btnChart.Enabled = false;
+                btnChart.Visible = false;
+
+                btnNhatKy.Enabled = false;
+                btnNhatKy.Visible = false;
             }
         }
 
@@ -116,12 +130,14 @@ namespace Thinh_QLNhasach.Views
             OpenFormInPanel(frm);
         }
 
+        // Thống kê (Chỉ Admin thấy)
         private void btnThongKe_Click(object sender, EventArgs e)
         {
             FrmThongKe frm = new FrmThongKe();
             OpenFormInPanel(frm);
         }
 
+        // Nhật ký hoạt động (Chỉ Admin thấy)
         private void btnNhatKy_Click(object sender, EventArgs e)
         {
             FrmNhatKy frm = new FrmNhatKy();
@@ -143,7 +159,8 @@ namespace Thinh_QLNhasach.Views
 
         private void btnTaiKhoan_Click(object sender, EventArgs e)
         {
-            string userHienTai = "admin";
+            // ĐÃ FIX: Không fix cứng chữ "admin" nữa, lấy chuẩn tên từ Session ra
+            string userHienTai = Session.Username;
             FrmTaiKhoan frm = new FrmTaiKhoan(userHienTai);
             frm.ShowDialog();
         }
