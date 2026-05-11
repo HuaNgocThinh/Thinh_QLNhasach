@@ -173,22 +173,6 @@ Mở file cấu hình kết nối trong project (thường là `App.config` ho�
 
 ---
 
-## 🔑 Tài khoản mặc định
-
-Sau khi import database, hệ thống có sẵn các tài khoản sau:
-
-| Tên đăng nhập | Mật khẩu | Vai trò | Họ tên |
-|---|---|---|---|
-| `admin` | `1` | Admin | Đào Ngọc Thịnh |
-| `staff` | `1` | Staff | Quách Thị Tố Tâm |
-| `staff2` | `1` | Staff | Nguyễn Quang Toàn |
-| `nvien` | `1` | Nhân viên | Lưu Đức Hòa |
-| `nvien3` | `1` | Nhân viên | Hoàng Văn Trường |
-
-> 💡 Mật khẩu được lưu dưới dạng **MD5 hash**. Mật khẩu mặc định cho tất cả tài khoản là `1`.
-
----
-
 ## ⚙️ Chức năng hệ thống
 
 Hệ thống phân quyền theo 3 vai trò: **Admin**, **Staff** và **Nhân viên**. Dưới đây là toàn bộ chức năng hiện có.
