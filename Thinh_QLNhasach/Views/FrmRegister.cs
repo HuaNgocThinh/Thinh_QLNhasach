@@ -16,7 +16,7 @@ namespace Thinh_QLNhasach
             InitializeComponent();
 
             conn = new SqlConnection(
-                @"Data Source=THINHLALUOT\SQLEXPRESS01;
+                @"Data Source=.\SQLEXPRESS01;
                   Initial Catalog=BookShop;
                   Integrated Security=True");
         }
@@ -117,7 +117,7 @@ namespace Thinh_QLNhasach
 
                     cmd.ExecuteNonQuery();
 
-                    MessageBox.Show("Đăng ký thành công lả lướt rồi Thịnh ơi!");
+                    MessageBox.Show("Đăng ký thành công!");
 
                     // Chuyển về trang Login
                     FrmLogin frm = new FrmLogin();

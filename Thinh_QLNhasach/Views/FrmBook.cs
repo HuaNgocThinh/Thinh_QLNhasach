@@ -601,7 +601,7 @@ namespace Thinh_QLNhasach.Views
                     }
 
                     trans.Commit();
-                    MessageBox.Show("Đã lưu cứng lả lướt vào Database!");
+                    MessageBox.Show("Đã lưu vào Database!");
 
                     if (loai == "Sach") AppLogger.GhiLog(Session.Username, "Cập nhật Sách", "Đã lưu thay đổi danh sách Sách vào hệ thống");
                     else if (loai == "TheLoai") AppLogger.GhiLog(Session.Username, "Cập nhật Thể Loại", "Đã lưu thay đổi danh sách Thể Loại vào hệ thống");

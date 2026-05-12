@@ -9,7 +9,7 @@ namespace Thinh_QLNhasach
 {
     public partial class FrmNhapHang : Form
     {
-        string connectionString = @"Data Source=THINHLALUOT\SQLEXPRESS01;Initial Catalog=BookShop;Integrated Security=True";
+        string connectionString = @"Data Source=.\SQLEXPRESS01;Initial Catalog=BookShop;Integrated Security=True";
 
         DataTable dtGioHang = new DataTable();
         private bool isEditingPhieu = false;

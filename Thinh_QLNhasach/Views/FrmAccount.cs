@@ -38,7 +38,7 @@ namespace Thinh_QLNhasach
             if (cboTrangthai.Items.Count > 0) cboTrangthai.SelectedIndex = 0;
 
             cboRole.Items.Clear();
-            cboRole.Items.AddRange(new object[] { "Admin", "Staff", "Nhân viên" });
+            cboRole.Items.AddRange(new object[] { "Admin", "Nhân viên" });
             if (cboRole.Items.Count > 0) cboRole.SelectedIndex = 0;
         }
 
@@ -171,7 +171,7 @@ namespace Thinh_QLNhasach
         {
             if (currentMaND == -1 || dgvAccount.CurrentRow == null)
             {
-                MessageBox.Show("Đại ca phải chọn một dòng ở bảng dưới trước khi bấm Sửa chứ!", "Nhắc nhở");
+                MessageBox.Show("Chọn một dòng sau đó bấm sửa", "Thông báo");
                 return;
             }
 
@@ -202,7 +202,7 @@ namespace Thinh_QLNhasach
                 MessageBox.Show("Chọn một tài khoản để xóa!", "Cảnh báo"); return;
             }
 
-            if (MessageBox.Show("Ông có chắc chắn muốn xóa tài khoản này khỏi hệ thống không?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            if (MessageBox.Show("Bạn có muốn xóa tài khoản này không?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 using (SqlConnection conn = new SqlConnection(connStr))
                 {
@@ -228,7 +228,7 @@ namespace Thinh_QLNhasach
         {
             if (!isAdding && !isEditing)
             {
-                MessageBox.Show("Phải bấm nút 'Thêm' hoặc 'Sửa' trước khi Lưu đại ca ơi!", "Thông báo");
+                MessageBox.Show("Phải bấm nút 'Thêm' hoặc 'Sửa' trước khi Lưu!", "Thông báo");
                 return;
             }
 

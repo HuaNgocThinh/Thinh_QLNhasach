@@ -8,7 +8,7 @@
         public partial class FrmTaoSachMoi : Form
         {
             // Chuỗi kết nối Database
-            string connectionString = @"Data Source=THINHLALUOT\SQLEXPRESS01;Initial Catalog=BookShop;Integrated Security=True";
+            string connectionString = @"Data Source=.\SQLEXPRESS01;Initial Catalog=BookShop;Integrated Security=True";
 
             // Biến Public này giống như cái "túi" để tuồn Mã Sách vừa tạo về lại trang Nhập Hàng
             public int MaSachVuaTao { get; set; } = -1;

@@ -13,7 +13,7 @@ namespace Thinh_QLNhasach.Views
 {
     public partial class FrmHoaDon : Form
     {
-        string connectionString = @"Data Source=THINHLALUOT\SQLEXPRESS01;Initial Catalog=BookShop;Integrated Security=True";
+        string connectionString = @"Data Source=.\SQLEXPRESS01;Initial Catalog=BookShop;Integrated Security=True";
         DataTable dtGioHang = new DataTable();
         bool isProcessing = false;
 
@@ -356,7 +356,7 @@ namespace Thinh_QLNhasach.Views
         {
             if (dtGioHang.Rows.Count > 0)
             {
-                DialogResult result = MessageBox.Show("Đại ca có chắc chắn muốn hủy toàn bộ đơn hàng đang tạo này không?", "Xác nhận hủy", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                DialogResult result = MessageBox.Show("Bạn có chắc muốn hủy đơn hàng đang tạo này không?", "Xác nhận hủy", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (result == DialogResult.Yes) ResetForm();
             }
             else ResetForm();

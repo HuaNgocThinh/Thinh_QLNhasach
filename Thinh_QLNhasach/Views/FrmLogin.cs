@@ -56,7 +56,7 @@ namespace Thinh_QLNhasach.Views
                     Session.Username = user.HoTen;
                     Session.Role = user.VaiTro;
 
-                    MessageBox.Show("Đăng nhập lả lướt thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Đăng nhập thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     // Mở Form chính (FrmIndex)
                     FrmIndex frm = new FrmIndex();
@@ -67,7 +67,7 @@ namespace Thinh_QLNhasach.Views
                 }
                 else
                 {
-                    MessageBox.Show("Sai tài khoản hoặc mật khẩu rồi Thịnh ơi!", "Thất bại", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Sai tài khoản hoặc mật khẩu!", "Thất bại", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     txtPass.Clear();
                     txtPass.Focus();
                 }
@@ -81,7 +81,7 @@ namespace Thinh_QLNhasach.Views
         // Nút Thoát (btnThoat)
         private void btnThoat_Click(object sender, EventArgs e)
         {
-            DialogResult result = MessageBox.Show("Ông muốn thoát hệ thống hả?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            DialogResult result = MessageBox.Show("Bạn muốn thoát hệ thống?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (result == DialogResult.Yes)
             {
                 Application.Exit();

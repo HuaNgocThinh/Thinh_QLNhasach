@@ -70,7 +70,7 @@ namespace Thinh_QLNhasach.Views
 
                         cmdUpdate.ExecuteNonQuery();
 
-                        MessageBox.Show("Đổi mật khẩu thành công! Tuyệt vời đại ca!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("Đổi mật khẩu thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         this.Close(); // Đổi xong tự đóng form
                     }
                     else
@@ -92,7 +92,7 @@ namespace Thinh_QLNhasach.Views
         private void btnHuy_Click(object sender, EventArgs e)
         {
             // Hỏi nhẹ một câu trước khi đóng cho chắc cốp
-            DialogResult rs = MessageBox.Show("Ông có chắc muốn hủy bỏ việc đổi mật khẩu không?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            DialogResult rs = MessageBox.Show("Bạn muốn hủy đổi mật khẩu?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (rs == DialogResult.Yes)
             {
                 this.Close();
