@@ -36,7 +36,6 @@
             this.btnReset = new FontAwesome.Sharp.IconButton();
             this.btnDel = new FontAwesome.Sharp.IconButton();
             this.btnEdit = new FontAwesome.Sharp.IconButton();
-            this.btnAdd = new FontAwesome.Sharp.IconButton();
             this.BtnSearch = new FontAwesome.Sharp.IconButton();
             this.txtSearch = new System.Windows.Forms.TextBox();
             this.dtpNgaysinh = new System.Windows.Forms.DateTimePicker();
@@ -44,7 +43,6 @@
             this.cboRole = new System.Windows.Forms.ComboBox();
             this.txtSdt = new System.Windows.Forms.TextBox();
             this.txtHoten = new System.Windows.Forms.TextBox();
-            this.txtPass = new System.Windows.Forms.TextBox();
             this.txtUser = new System.Windows.Forms.TextBox();
             this.txtMand = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
@@ -52,7 +50,6 @@
             this.label6 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.dgvAccount = new Guna.UI2.WinForms.Guna2DataGridView();
@@ -68,7 +65,6 @@
             this.groupBox1.Controls.Add(this.btnReset);
             this.groupBox1.Controls.Add(this.btnDel);
             this.groupBox1.Controls.Add(this.btnEdit);
-            this.groupBox1.Controls.Add(this.btnAdd);
             this.groupBox1.Controls.Add(this.BtnSearch);
             this.groupBox1.Controls.Add(this.txtSearch);
             this.groupBox1.Controls.Add(this.dtpNgaysinh);
@@ -76,7 +72,6 @@
             this.groupBox1.Controls.Add(this.cboRole);
             this.groupBox1.Controls.Add(this.txtSdt);
             this.groupBox1.Controls.Add(this.txtHoten);
-            this.groupBox1.Controls.Add(this.txtPass);
             this.groupBox1.Controls.Add(this.txtUser);
             this.groupBox1.Controls.Add(this.txtMand);
             this.groupBox1.Controls.Add(this.label8);
@@ -84,7 +79,6 @@
             this.groupBox1.Controls.Add(this.label6);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.label4);
-            this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -102,7 +96,7 @@
             this.btnSave.IconColor = System.Drawing.Color.Black;
             this.btnSave.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnSave.IconSize = 32;
-            this.btnSave.Location = new System.Drawing.Point(1463, 416);
+            this.btnSave.Location = new System.Drawing.Point(1463, 337);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(176, 46);
             this.btnSave.TabIndex = 62;
@@ -118,7 +112,7 @@
             this.btnReset.IconColor = System.Drawing.Color.Black;
             this.btnReset.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnReset.IconSize = 32;
-            this.btnReset.Location = new System.Drawing.Point(1463, 327);
+            this.btnReset.Location = new System.Drawing.Point(1463, 237);
             this.btnReset.Name = "btnReset";
             this.btnReset.Size = new System.Drawing.Size(176, 46);
             this.btnReset.TabIndex = 20;
@@ -134,7 +128,7 @@
             this.btnDel.IconColor = System.Drawing.Color.Black;
             this.btnDel.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnDel.IconSize = 32;
-            this.btnDel.Location = new System.Drawing.Point(1463, 232);
+            this.btnDel.Location = new System.Drawing.Point(1463, 137);
             this.btnDel.Name = "btnDel";
             this.btnDel.Size = new System.Drawing.Size(176, 46);
             this.btnDel.TabIndex = 19;
@@ -150,7 +144,7 @@
             this.btnEdit.IconColor = System.Drawing.Color.Black;
             this.btnEdit.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnEdit.IconSize = 32;
-            this.btnEdit.Location = new System.Drawing.Point(1463, 137);
+            this.btnEdit.Location = new System.Drawing.Point(1463, 41);
             this.btnEdit.Name = "btnEdit";
             this.btnEdit.Size = new System.Drawing.Size(176, 46);
             this.btnEdit.TabIndex = 18;
@@ -158,22 +152,6 @@
             this.btnEdit.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
             this.btnEdit.UseVisualStyleBackColor = true;
             this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
-            // 
-            // btnAdd
-            // 
-            this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAdd.IconChar = FontAwesome.Sharp.IconChar.Plus;
-            this.btnAdd.IconColor = System.Drawing.Color.Black;
-            this.btnAdd.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.btnAdd.IconSize = 32;
-            this.btnAdd.Location = new System.Drawing.Point(1463, 44);
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(176, 46);
-            this.btnAdd.TabIndex = 17;
-            this.btnAdd.Text = "Thêm";
-            this.btnAdd.TextImageRelation = System.Windows.Forms.TextImageRelation.TextBeforeImage;
-            this.btnAdd.UseVisualStyleBackColor = true;
-            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
             // BtnSearch
             // 
@@ -223,7 +201,7 @@
             // cboRole
             // 
             this.cboRole.FormattingEnabled = true;
-            this.cboRole.Location = new System.Drawing.Point(270, 327);
+            this.cboRole.Location = new System.Drawing.Point(270, 249);
             this.cboRole.Name = "cboRole";
             this.cboRole.Size = new System.Drawing.Size(368, 39);
             this.cboRole.TabIndex = 1;
@@ -245,13 +223,6 @@
             this.txtHoten.Name = "txtHoten";
             this.txtHoten.Size = new System.Drawing.Size(368, 38);
             this.txtHoten.TabIndex = 11;
-            // 
-            // txtPass
-            // 
-            this.txtPass.Location = new System.Drawing.Point(270, 237);
-            this.txtPass.Name = "txtPass";
-            this.txtPass.Size = new System.Drawing.Size(368, 38);
-            this.txtPass.TabIndex = 10;
             // 
             // txtUser
             // 
@@ -283,7 +254,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(33, 327);
+            this.label7.Location = new System.Drawing.Point(33, 252);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(99, 31);
             this.label7.TabIndex = 6;
@@ -321,15 +292,6 @@
             this.label4.Size = new System.Drawing.Size(100, 31);
             this.label4.TabIndex = 3;
             this.label4.Text = "Họ tên";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(33, 237);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(133, 31);
-            this.label3.TabIndex = 2;
-            this.label3.Text = "Mật khẩu";
             // 
             // label2
             // 
@@ -427,12 +389,10 @@
 
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox txtSdt;
         private System.Windows.Forms.TextBox txtHoten;
-        private System.Windows.Forms.TextBox txtPass;
         private System.Windows.Forms.TextBox txtUser;
         private System.Windows.Forms.TextBox txtMand;
         private System.Windows.Forms.Label label8;
@@ -445,7 +405,6 @@
         private FontAwesome.Sharp.IconButton BtnSearch;
         private System.Windows.Forms.TextBox txtSearch;
         private FontAwesome.Sharp.IconButton btnEdit;
-        private FontAwesome.Sharp.IconButton btnAdd;
         private FontAwesome.Sharp.IconButton btnReset;
         private FontAwesome.Sharp.IconButton btnDel;
         private Guna.UI2.WinForms.Guna2DataGridView dgvAccount;

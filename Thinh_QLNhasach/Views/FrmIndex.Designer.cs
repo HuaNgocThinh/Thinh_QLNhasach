@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.panelMenu = new System.Windows.Forms.Panel();
             this.btnTaiKhoan = new FontAwesome.Sharp.IconButton();
             this.btnNhatKy = new FontAwesome.Sharp.IconButton();
@@ -40,13 +41,15 @@
             this.btnBook = new FontAwesome.Sharp.IconButton();
             this.btnTrangchu = new FontAwesome.Sharp.IconButton();
             this.panelTop = new System.Windows.Forms.Panel();
-            this.label2 = new System.Windows.Forms.Label();
+            this.lblTitle = new System.Windows.Forms.Label();
             this.lblRole = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.lblNguoiDung = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.lblUser = new System.Windows.Forms.Label();
             this.panelMain = new System.Windows.Forms.Panel();
+            this.lblThoiGian = new System.Windows.Forms.Label();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.panelMenu.SuspendLayout();
             this.panelTop.SuspendLayout();
             this.SuspendLayout();
@@ -79,7 +82,7 @@
             this.btnTaiKhoan.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnTaiKhoan.Font = new System.Drawing.Font("Segoe UI", 10.875F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnTaiKhoan.ForeColor = System.Drawing.Color.White;
-            this.btnTaiKhoan.IconChar = FontAwesome.Sharp.IconChar.User;
+            this.btnTaiKhoan.IconChar = FontAwesome.Sharp.IconChar.Key;
             this.btnTaiKhoan.IconColor = System.Drawing.Color.White;
             this.btnTaiKhoan.IconFont = FontAwesome.Sharp.IconFont.Auto;
             this.btnTaiKhoan.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -88,7 +91,7 @@
             this.btnTaiKhoan.Padding = new System.Windows.Forms.Padding(0, 0, 20, 0);
             this.btnTaiKhoan.Size = new System.Drawing.Size(386, 96);
             this.btnTaiKhoan.TabIndex = 18;
-            this.btnTaiKhoan.Text = "Tài Khoản";
+            this.btnTaiKhoan.Text = "Đổi mật khẩu";
             this.btnTaiKhoan.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnTaiKhoan.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnTaiKhoan.UseVisualStyleBackColor = true;
@@ -297,7 +300,8 @@
             // panelTop
             // 
             this.panelTop.BackColor = System.Drawing.Color.DarkGray;
-            this.panelTop.Controls.Add(this.label2);
+            this.panelTop.Controls.Add(this.lblThoiGian);
+            this.panelTop.Controls.Add(this.lblTitle);
             this.panelTop.Controls.Add(this.lblRole);
             this.panelTop.Controls.Add(this.label3);
             this.panelTop.Controls.Add(this.lblNguoiDung);
@@ -306,19 +310,19 @@
             this.panelTop.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelTop.Location = new System.Drawing.Point(0, 0);
             this.panelTop.Name = "panelTop";
-            this.panelTop.Size = new System.Drawing.Size(1979, 145);
+            this.panelTop.Size = new System.Drawing.Size(2371, 145);
             this.panelTop.TabIndex = 4;
             // 
-            // label2
+            // lblTitle
             // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.ForeColor = System.Drawing.Color.White;
-            this.label2.Location = new System.Drawing.Point(1414, 38);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(534, 65);
-            this.label2.TabIndex = 5;
-            this.label2.Text = "Quản lý cửa hàng sách";
+            this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblTitle.ForeColor = System.Drawing.Color.White;
+            this.lblTitle.Location = new System.Drawing.Point(1189, 38);
+            this.lblTitle.Name = "lblTitle";
+            this.lblTitle.Size = new System.Drawing.Size(842, 65);
+            this.lblTitle.TabIndex = 5;
+            this.lblTitle.Text = "Quản lý cửa hàng sách";
+            this.lblTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lblRole
             // 
@@ -378,14 +382,31 @@
             this.panelMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelMain.Location = new System.Drawing.Point(386, 145);
             this.panelMain.Name = "panelMain";
-            this.panelMain.Size = new System.Drawing.Size(1593, 1031);
+            this.panelMain.Size = new System.Drawing.Size(1985, 1031);
             this.panelMain.TabIndex = 5;
+            // 
+            // lblThoiGian
+            // 
+            this.lblThoiGian.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblThoiGian.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblThoiGian.ForeColor = System.Drawing.Color.White;
+            this.lblThoiGian.Location = new System.Drawing.Point(2000, 60);
+            this.lblThoiGian.Name = "lblThoiGian";
+            this.lblThoiGian.Size = new System.Drawing.Size(359, 37);
+            this.lblThoiGian.TabIndex = 6;
+            this.lblThoiGian.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Interval = 1000;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // FrmIndex
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1979, 1176);
+            this.ClientSize = new System.Drawing.Size(2371, 1176);
             this.Controls.Add(this.panelMain);
             this.Controls.Add(this.panelMenu);
             this.Controls.Add(this.panelTop);
@@ -419,7 +440,9 @@
         private System.Windows.Forms.Label lblNguoiDung;
         private System.Windows.Forms.Label lblRole;
         private FontAwesome.Sharp.IconButton btnNhatKy;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label lblTitle;
         private FontAwesome.Sharp.IconButton btnTaiKhoan;
+        private System.Windows.Forms.Label lblThoiGian;
+        private System.Windows.Forms.Timer timer1;
     }
 }

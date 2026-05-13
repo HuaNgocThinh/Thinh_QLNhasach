@@ -46,10 +46,16 @@ namespace Thinh_QLNhasach.Views
 
             if (cboGiamGia != null)
             {
+                // ĐÃ FIX: Bắt cứng sự kiện thay đổi Giảm Giá bằng Code để đảm bảo 100% luôn chạy
+                cboGiamGia.SelectedIndexChanged -= cboGiamGia_SelectedIndexChanged;
+
                 cboGiamGia.Items.Clear();
                 cboGiamGia.Items.AddRange(new string[] { "0%", "5%", "10%", "15%" });
                 cboGiamGia.DropDownStyle = ComboBoxStyle.DropDownList;
                 cboGiamGia.SelectedIndex = 0;
+
+                // Nối lại sự kiện sau khi set Value để sẵn sàng bắt tương tác của User
+                cboGiamGia.SelectedIndexChanged += cboGiamGia_SelectedIndexChanged;
             }
 
             LoadComboBoxNguoiDung();
@@ -88,12 +94,12 @@ namespace Thinh_QLNhasach.Views
                 if (e.Column.Name == "DonGia" && dgv.Name == "dgvGioHang") { e.Column.HeaderText = "Đơn Giá"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
                 if (e.Column.Name == "ThanhTien" && dgv.Name == "dgvGioHang") { e.Column.HeaderText = "Thành Tiền"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
 
-                // BẢNG LỊCH SỬ HÓA ĐƠN ĐÃ GỘP (Bỏ các cột Đơn Giá, Tiền Sách lẻ tẻ)
+                // BẢNG LỊCH SỬ HÓA ĐƠN ĐÃ GỘP
                 if (e.Column.Name == "MaHD") { e.Column.HeaderText = "Mã HD"; e.Column.FillWeight = 80; }
                 if (e.Column.Name == "NgayLap") { e.Column.HeaderText = "Ngày Lập"; e.Column.DefaultCellStyle.Format = "dd/MM/yyyy HH:mm"; }
                 if (e.Column.Name == "NhanVien") { e.Column.HeaderText = "Nhân Viên"; e.Column.FillWeight = 120; }
                 if (e.Column.Name == "TenKhachHang") { e.Column.HeaderText = "Khách Hàng"; e.Column.FillWeight = 120; }
-                if (e.Column.Name == "TenSach" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Sách Đã Mua"; e.Column.FillWeight = 220; } // Cho cột này rộng ra vì chứa chuỗi nhiều sách
+                if (e.Column.Name == "TenSach" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Sách Đã Mua"; e.Column.FillWeight = 220; }
                 if (e.Column.Name == "SoLuong" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Tổng SL"; e.Column.FillWeight = 50; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; }
 
                 if (e.Column.Name == "TongTien" && dgv.Name == "dgvHoaDon") { e.Column.HeaderText = "Tổng Tiền Gốc"; e.Column.DefaultCellStyle.Format = "N0"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
@@ -356,15 +362,12 @@ namespace Thinh_QLNhasach.Views
         {
             if (dtGioHang.Rows.Count > 0)
             {
-                DialogResult result = MessageBox.Show("Bạn có chắc muốn hủy đơn hàng đang tạo này không?", "Xác nhận hủy", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                DialogResult result = MessageBox.Show("Bạn có chắc muốn hủy đơn hàng đang tạo này không?", "Xác nhận hủy", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (result == DialogResult.Yes) ResetForm();
             }
             else ResetForm();
         }
 
-        // =========================================================================
-        // ĐÃ FIX: TRUY VẤN GỘP DÒNG HÓA ĐƠN. 1 HÓA ĐƠN = 1 DÒNG DUY NHẤT
-        // =========================================================================
         private void LoadLichSuHoaDon(bool filter = false)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -378,9 +381,7 @@ namespace Thinh_QLNhasach.Views
                             h.NgayLap, 
                             n.HoTen as NhanVien, 
                             h.TenKhachHang, 
-                            -- Tuyệt chiêu gộp tên nhiều sách thành 1 dải chữ cách nhau bằng dấu phẩy
                             STUFF((SELECT ', ' + s.TenSach FROM ChiTietHoaDon ct JOIN Sach s ON ct.MaSach = s.MaSach WHERE ct.MaHD = h.MaHD FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS TenSach,
-                            -- Tính tổng số lượng của tất cả sách trong hóa đơn đó
                             (SELECT SUM(SoLuong) FROM ChiTietHoaDon WHERE MaHD = h.MaHD) AS SoLuong,
                             h.TongTien, h.GiamGia, h.ThanhTien as ThucThu 
                         FROM HoaDon h 
@@ -392,7 +393,6 @@ namespace Thinh_QLNhasach.Views
                         sql += " AND h.NgayLap BETWEEN @tuNgay AND @denNgay";
                         if (!string.IsNullOrWhiteSpace(txtSearch.Text))
                         {
-                            // Tìm kiếm thông minh: Tìm theo Mã HĐ, Tên KH, hoặc bất cứ Tên Sách nào nằm trong HĐ đó
                             sql += " AND (h.MaHD LIKE @search OR h.TenKhachHang LIKE @search OR (SELECT COUNT(*) FROM ChiTietHoaDon ct JOIN Sach s ON ct.MaSach=s.MaSach WHERE ct.MaHD=h.MaHD AND s.TenSach LIKE @search) > 0)";
                         }
                     }
@@ -426,11 +426,9 @@ namespace Thinh_QLNhasach.Views
 
                 if (row.IsNewRow || row.Cells["MaHD"].Value == null) return;
 
-                // Hiển thị dải tên sách (Nhiều quyển cách nhau bằng dấu phẩy)
                 textBox1.Text = row.Cells["TenSach"].Value?.ToString() ?? "";
                 textBox2.Text = row.Cells["SoLuong"].Value?.ToString() ?? "0";
 
-                // Vì 1 hóa đơn gộp nhiều sách nên đơn giá lẻ không còn ý nghĩa -> Hiển thị "---"
                 textBox3.Text = "---";
 
                 double tongTienHD = 0;
@@ -501,9 +499,6 @@ namespace Thinh_QLNhasach.Views
             }
         }
 
-        // =========================================================================
-        // ĐÃ FIX: IN HÓA ĐƠN PDF TỰ CHẠY NGẦM VÀO SQL KÉO CHI TIẾT TỪNG QUYỂN SÁCH
-        // =========================================================================
         private void btnIn_Click(object sender, EventArgs e)
         {
             if (dgvHoaDon.CurrentRow == null || dgvHoaDon.CurrentRow.IsNewRow || dgvHoaDon.CurrentRow.Cells["MaHD"].Value == null)
@@ -583,7 +578,6 @@ namespace Thinh_QLNhasach.Views
                         table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("Đơn giá", fontBold)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT });
                         table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("Tiền sách", fontBold)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT });
 
-                        // CHỌC THẲNG VÀO DATABASE ĐỂ KÉO CHI TIẾT TỪNG QUYỂN RA VẼ LÊN PDF
                         using (SqlConnection conn = new SqlConnection(connectionString))
                         {
                             conn.Open();
@@ -611,13 +605,13 @@ namespace Thinh_QLNhasach.Views
                         doc.Add(table);
                         doc.Add(new iTextSharp.text.Paragraph("----------------------------------------------------------------------", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_CENTER });
 
-                        iTextSharp.text.Paragraph txtTongTien = new iTextSharp.text.Paragraph($"TỔNG TIỀN GỐC: {tongTienNum.ToString("N0")} VNĐ", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_RIGHT, SpacingBefore = 5 };
-                        iTextSharp.text.Paragraph txtGiamGia = new iTextSharp.text.Paragraph($"GIẢM GIÁ: -{giamGiaNum.ToString("N0")} VNĐ", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_RIGHT };
-                        iTextSharp.text.Paragraph txtThucThu = new iTextSharp.text.Paragraph($"THỰC THU (KHÁCH TRẢ): {thucThuNum.ToString("N0")} VNĐ", fontBold) { Alignment = iTextSharp.text.Element.ALIGN_RIGHT, SpacingAfter = 20 };
+                        iTextSharp.text.Paragraph pTongTien = new iTextSharp.text.Paragraph($"TỔNG TIỀN GỐC: {tongTienNum.ToString("N0")} VNĐ", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_RIGHT, SpacingBefore = 5 };
+                        iTextSharp.text.Paragraph pGiamGia = new iTextSharp.text.Paragraph($"GIẢM GIÁ: -{giamGiaNum.ToString("N0")} VNĐ", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_RIGHT };
+                        iTextSharp.text.Paragraph pThucThu = new iTextSharp.text.Paragraph($"THỰC THU (KHÁCH TRẢ): {thucThuNum.ToString("N0")} VNĐ", fontBold) { Alignment = iTextSharp.text.Element.ALIGN_RIGHT, SpacingAfter = 20 };
 
-                        doc.Add(txtTongTien);
-                        doc.Add(txtGiamGia);
-                        doc.Add(txtThucThu);
+                        doc.Add(pTongTien);
+                        doc.Add(pGiamGia);
+                        doc.Add(pThucThu);
 
                         iTextSharp.text.Paragraph footer = new iTextSharp.text.Paragraph("Cảm ơn Quý Khách & Hẹn gặp lại!", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_CENTER };
                         doc.Add(footer);
@@ -663,11 +657,13 @@ namespace Thinh_QLNhasach.Views
             nudSoLuong.Value = 1;
             txtDonGia.Clear();
 
-            if (cboGiamGia != null && cboGiamGia.Items.Count > 0) cboGiamGia.SelectedIndex = 0;
-
-            txtTongTien.Text = "0";
-            txtThanhTien.Text = "0";
+            // ĐÃ FIX: Clear giỏ hàng trước, set Combobox sau, rồi chốt gọi tính tiền cuối cùng
             dtGioHang.Clear();
+
+            if (cboGiamGia != null && cboGiamGia.Items.Count > 0)
+                cboGiamGia.SelectedIndex = 0;
+
+            CapNhatTien(); // Chốt lại tiền lần cuối cho chắc chắn = 0
         }
 
         private void guna2TabControl1_SelectedIndexChanged(object sender, EventArgs e)

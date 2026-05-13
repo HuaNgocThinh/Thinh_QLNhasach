@@ -108,6 +108,7 @@ namespace Thinh_QLNhasach
             dgv.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(231, 229, 255);
             dgv.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.Black;
             dgv.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgv.RowTemplate.Height = 33;
 
             if (dgv.Name == "dgvPhieuNhap")
             {
@@ -335,17 +336,6 @@ namespace Thinh_QLNhasach
                 MessageBox.Show("Đã tắt chế độ sửa.");
                 ResetTabLapPhieu();
             }
-        }
-
-        private void btnDel_Click(object sender, EventArgs e)
-        {
-            if (dgvPhieuNhap.CurrentRow == null) return;
-            if (dgvPhieuNhap.DataSource == dtGioHang)
-            {
-                dtGioHang.Rows.RemoveAt(dgvPhieuNhap.CurrentRow.Index);
-                CapNhatTongTien();
-            }
-            else MessageBox.Show("Hàng đã lưu DB, dùng SQL xóa!");
         }
 
         private void btnReset_Click(object sender, EventArgs e)

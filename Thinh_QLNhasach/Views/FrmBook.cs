@@ -39,9 +39,10 @@ namespace Thinh_QLNhasach.Views
         private void FrmBook_Load(object sender, EventArgs e)
         {
             SetupDataTableTam();
+
+            // Load dữ liệu từ CSDL vào các bảng
             LoadDataTuDatabase();
 
-            dgvBook.DataSource = dtSachTam;
             dgvTheLoai.DataSource = dtTLTam;
             dgvNXB.DataSource = dtNXBTam;
 
@@ -52,6 +53,31 @@ namespace Thinh_QLNhasach.Views
             KhoaFormSach(true);
             KhoaFormTL(true);
             KhoaFormNXB(true);
+
+            // ==============================================================================
+            // ĐÃ FIX: TỰ ĐỘNG BỐC DỮ LIỆU DÒNG ĐẦU TIÊN LÊN FORM NGAY KHI VỪA MỞ
+            // ==============================================================================
+
+            // Tab Sách
+            if (dtSachTam.Rows.Count > 0)
+            {
+                indexChonSach = 0;
+                BocDuLieuSach(0); // Bốc dòng 0 lên form
+            }
+
+            // Tab Thể Loại
+            if (dtTLTam.Rows.Count > 0)
+            {
+                indexChonTL = 0;
+                BocDuLieuTheLoai(0);
+            }
+
+            // Tab Nhà Xuất Bản
+            if (dtNXBTam.Rows.Count > 0)
+            {
+                indexChonNXB = 0;
+                BocDuLieuNXB(0);
+            }
         }
 
         // ==============================================================================
@@ -118,16 +144,21 @@ namespace Thinh_QLNhasach.Views
                 dgvBook.Columns["TenTL"].HeaderText = "Thể Loại";
                 dgvBook.Columns["TenNXB"].HeaderText = "Nhà XB";
                 if (dgvBook.Columns.Contains("NamXuatBan")) dgvBook.Columns["NamXuatBan"].Visible = false;
+
+                // ẨN CỘT GIÁ NHẬP, ĐẢM BẢO CỘT GIÁ BÁN HIỂN THỊ
                 if (dgvBook.Columns.Contains("GiaNhap")) dgvBook.Columns["GiaNhap"].Visible = false;
-                if (dgvBook.Columns.Contains("GiaBan")) dgvBook.Columns["GiaBan"].Visible = false;
+                if (dgvBook.Columns.Contains("GiaBan")) dgvBook.Columns["GiaBan"].Visible = true;
+
                 if (dgvBook.Columns.Contains("HinhAnh")) dgvBook.Columns["HinhAnh"].Visible = false;
                 dgvBook.Columns["SoLuongTon"].HeaderText = "Tồn Kho";
                 dgvBook.Columns["MoTa"].HeaderText = "Mô Tả";
+
                 dgvBook.Columns["MaSach"].FillWeight = 40;
                 dgvBook.Columns["TenSach"].FillWeight = 160;
                 dgvBook.Columns["TenTG"].FillWeight = 110;
                 dgvBook.Columns["TenTL"].FillWeight = 90;
                 dgvBook.Columns["TenNXB"].FillWeight = 100;
+                if (dgvBook.Columns.Contains("GiaBan")) dgvBook.Columns["GiaBan"].FillWeight = 80;
                 dgvBook.Columns["SoLuongTon"].FillWeight = 60;
                 dgvBook.Columns["MoTa"].FillWeight = 120;
             }
@@ -638,26 +669,52 @@ namespace Thinh_QLNhasach.Views
             if (dtNXBTam.Columns.Count == 0) { dtNXBTam.Columns.Add("MaNXB", typeof(int)); dtNXBTam.Columns.Add("TenNXB"); dtNXBTam.Columns.Add("DiaChi"); dtNXBTam.Columns.Add("SoDienThoai"); dtNXBTam.Columns.Add("Email"); }
         }
 
-        private void LoadDataTuDatabase()
+        private void LoadDataTuDatabase(string searchKw = "")
         {
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                SqlDataAdapter daS = new SqlDataAdapter(@"SELECT s.MaSach, s.TenSach, tg.TenTG, tl.TenTL, nxb.TenNXB, 
-                    s.NamXuatBan, s.GiaNhap, s.GiaBan, s.SoLuongTon, s.HinhAnh, s.MoTa 
-                    FROM Sach s 
-                    LEFT JOIN TacGia tg ON s.MaTG = tg.MaTG 
-                    LEFT JOIN TheLoai tl ON s.MaTL = tl.MaTL 
-                    LEFT JOIN NhaXuatBan nxb ON s.MaNXB = nxb.MaNXB", conn);
-                dtSachTam.Clear();
-                daS.Fill(dtSachTam);
+                try
+                {
+                    // Lấy chính xác các cột cần thiết cho dtSachTam
+                    string sql = @"SELECT s.MaSach, s.TenSach, tg.TenTG, tl.TenTL, nxb.TenNXB, 
+                                          s.NamXuatBan, s.GiaNhap, s.GiaBan, s.SoLuongTon, s.HinhAnh, s.MoTa 
+                                   FROM Sach s
+                                   LEFT JOIN TheLoai tl ON s.MaTL = tl.MaTL
+                                   LEFT JOIN TacGia tg ON s.MaTG = tg.MaTG
+                                   LEFT JOIN NhaXuatBan nxb ON s.MaNXB = nxb.MaNXB";
 
-                SqlDataAdapter daT = new SqlDataAdapter("SELECT MaTL, TenTL, MoTa FROM TheLoai", conn);
-                dtTLTam.Clear();
-                daT.Fill(dtTLTam);
+                    if (!string.IsNullOrEmpty(searchKw))
+                    {
+                        sql += " WHERE s.TenSach LIKE @kw OR tg.TenTG LIKE @kw";
+                    }
 
-                SqlDataAdapter daNXB = new SqlDataAdapter("SELECT MaNXB, TenNXB, DiaChi, SoDienThoai, Email FROM NhaXuatBan", conn);
-                dtNXBTam.Clear();
-                daNXB.Fill(dtNXBTam);
+                    SqlCommand cmd = new SqlCommand(sql, conn);
+                    if (!string.IsNullOrEmpty(searchKw))
+                    {
+                        cmd.Parameters.AddWithValue("@kw", "%" + searchKw + "%");
+                    }
+
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+
+                    // CHỐT HẠ: Dọn sạch bảng tạm rồi đổ dữ liệu thẳng vào dtSachTam
+                    dtSachTam.Clear();
+                    da.Fill(dtSachTam);
+                    dgvBook.DataSource = dtSachTam; // Gán DataSource 1 lần duy nhất ở đây!
+
+                    // ĐỔI TÊN TIÊU ĐỀ CHO CỘT GIÁ BÁN, XÓA TOÀN BỘ FORMAT MÀU MÈ
+                    if (dgvBook.Columns.Count > 0)
+                    {
+                        if (dgvBook.Columns.Contains("GiaBan"))
+                        {
+                            dgvBook.Columns["GiaBan"].HeaderText = "Giá Bán";
+                            // Cột Giá Bán bây giờ sẽ có định dạng mặc định (mộc mạc) giống y hệt cột Tồn Kho
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi tải dữ liệu Sách: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 

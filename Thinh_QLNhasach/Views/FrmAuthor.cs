@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using Thinh_QLNhasach.Utility;
 
@@ -16,6 +17,10 @@ namespace Thinh_QLNhasach
         DataTable dtTemp = new DataTable();
         int editingRowIndex = -1;
         bool isEditing = false; // CÔNG TẮC: Bật/Tắt chế độ sửa thủ công
+
+        // BIẾN XỬ LÝ ẢNH
+        string duongDanAnhTam = "";
+        string tenAnhHienTai = "";
 
         public FrmTacGia()
         {
@@ -51,6 +56,10 @@ namespace Thinh_QLNhasach
                 if (!dtTemp.Columns.Contains("_Status"))
                     dtTemp.Columns.Add("_Status", typeof(string));
 
+                // Đề phòng DB chưa chạy lệnh ALTER TABLE thì thêm cột tạm để không lỗi
+                if (!dtTemp.Columns.Contains("HinhAnh"))
+                    dtTemp.Columns.Add("HinhAnh", typeof(string));
+
                 foreach (DataRow r in dtTemp.Rows)
                     r["_Status"] = "none";
 
@@ -66,6 +75,8 @@ namespace Thinh_QLNhasach
 
             if (dgvTacGia.Columns.Contains("_Status"))
                 dgvTacGia.Columns["_Status"].Visible = false;
+            if (dgvTacGia.Columns.Contains("HinhAnh"))
+                dgvTacGia.Columns["HinhAnh"].Visible = false; // Ẩn cột link ảnh
 
             dgvTacGia.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvTacGia.RowHeadersVisible = false;
@@ -137,9 +148,69 @@ namespace Thinh_QLNhasach
                 if (DateTime.TryParse(row["NamMat"].ToString(), out DateTime nm))
                     dtpNgayMat.Value = nm;
             }
+
+            // BỐC ẢNH
+            tenAnhHienTai = row["HinhAnh"]?.ToString() ?? "";
+            duongDanAnhTam = "";
+
+            if (!string.IsNullOrEmpty(tenAnhHienTai))
+            {
+                // Nếu là ảnh mới thêm thủ công (chứa đường dẫn d:\...)
+                if (tenAnhHienTai.Contains(":\\"))
+                {
+                    if (File.Exists(tenAnhHienTai))
+                    {
+                        using (FileStream fs = new FileStream(tenAnhHienTai, FileMode.Open, FileAccess.Read))
+                        {
+                            picHinhAnh.Image = Image.FromStream(fs);
+                        }
+                    }
+                    else picHinhAnh.Image = null;
+                }
+                else // Nếu là ảnh load từ CSDL
+                {
+                    string duongDanAnhCu = Path.Combine(Application.StartupPath, "Images", tenAnhHienTai);
+                    if (File.Exists(duongDanAnhCu))
+                    {
+                        using (FileStream fs = new FileStream(duongDanAnhCu, FileMode.Open, FileAccess.Read))
+                        {
+                            picHinhAnh.Image = Image.FromStream(fs);
+                        }
+                    }
+                    else picHinhAnh.Image = null;
+                }
+            }
+            else picHinhAnh.Image = null;
         }
 
-        // ===== CLICK DGV → BỐC DỮ LIỆU BẤT CHẤP (KHÔNG TẮT CÔNG TẮC NỮA) =====
+        // ===== CHỌN ẢNH TỪ MÁY TÍNH =====
+        private void btnChonAnh_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.gif;*.bmp";
+            ofd.Title = "Chọn ảnh tác giả";
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                duongDanAnhTam = ofd.FileName;
+                try
+                {
+                    using (FileStream fs = new FileStream(duongDanAnhTam, FileMode.Open, FileAccess.Read))
+                    {
+                        picHinhAnh.Image = Image.FromStream(fs);
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("File này bị lỗi định dạng hoặc là ảnh WebP thế hệ mới (bị đổi đuôi thành .jpeg).\n\nĐại ca vui lòng chọn ảnh khác, hoặc mở ảnh này bằng Paint rồi Save As lại thành .png nhé!",
+                                    "Lỗi đọc ảnh", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    duongDanAnhTam = "";
+                    picHinhAnh.Image = null;
+                }
+            }
+        }
+
+        // ===== CLICK DGV → BỐC DỮ LIỆU BẤT CHẤP =====
         private void dgvTacGia_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0) return;
@@ -158,6 +229,7 @@ namespace Thinh_QLNhasach
             newRow["QueQuan"] = txtQuequan.Text.Trim();
             newRow["NamSinh"] = dtpNgaySinh.Value;
             newRow["NamMat"] = chkDamat.Checked ? (object)dtpNgayMat.Value : DBNull.Value;
+            newRow["HinhAnh"] = duongDanAnhTam; // Gắn tạm đường dẫn ảnh
             newRow["_Status"] = "add";
 
             dtTemp.Rows.Add(newRow);
@@ -166,7 +238,7 @@ namespace Thinh_QLNhasach
             MessageBox.Show("Đã thêm vào bảng chờ. Nhấn [Save] để chốt vào Database!");
         }
 
-        // ===== NÚT SỬA LÀ CÔNG TẮC DUY NHẤT (Chỉ tắt/bật khi chính tay ông nhấn vào) =====
+        // ===== NÚT SỬA LÀ CÔNG TẮC DUY NHẤT =====
         private void btnEdit_Click(object sender, EventArgs e)
         {
             isEditing = !isEditing;
@@ -176,7 +248,7 @@ namespace Thinh_QLNhasach
                 btnEdit.Text = "Đang Sửa ✏️";
                 btnEdit.BackColor = Color.Orange;
                 if (editingRowIndex >= 0) BocDuLieuTacGia(editingRowIndex);
-                MessageBox.Show("Đã bật chế độ sửa!");
+                MessageBox.Show("Đã bật chế độ sửa!");
             }
             else
             {
@@ -226,7 +298,6 @@ namespace Thinh_QLNhasach
                 finally { if (conn.State == ConnectionState.Open) conn.Close(); }
             }
 
-            // Xóa xong chỉ clear ô nhập liệu, CÔNG TẮC SỬA VẪN BẬT NẾU TRƯỚC ĐÓ ĐANG BẬT
             ClearInputs();
             editingRowIndex = -1;
         }
@@ -256,6 +327,10 @@ namespace Thinh_QLNhasach
                 int addCount = 0;
                 int editCount = 0;
 
+                // THIẾT LẬP THƯ MỤC ẢNH
+                string thuMucAnh = Path.Combine(Application.StartupPath, "Images");
+                if (!Directory.Exists(thuMucAnh)) Directory.CreateDirectory(thuMucAnh);
+
                 // 1. CHỐT SỬA VÀO DATABASE
                 if (isEditing && editingRowIndex >= 0)
                 {
@@ -269,18 +344,30 @@ namespace Thinh_QLNhasach
                         row["QueQuan"] = txtQuequan.Text.Trim();
                         row["NamSinh"] = dtpNgaySinh.Value;
                         row["NamMat"] = chkDamat.Checked ? (object)dtpNgayMat.Value : DBNull.Value;
+                        if (duongDanAnhTam != "") row["HinhAnh"] = duongDanAnhTam; // Cập nhật lại đường dẫn ảnh tạm
                         row.EndEdit();
                     }
                     else
                     {
+                        // XỬ LÝ ẢNH KHI SỬA
+                        string hinhAnhUpdate = tenAnhHienTai;
+                        if (duongDanAnhTam != "")
+                        {
+                            string tenAnhMoi = DateTime.Now.Ticks + Path.GetExtension(duongDanAnhTam);
+                            File.Copy(duongDanAnhTam, Path.Combine(thuMucAnh, tenAnhMoi), true);
+                            hinhAnhUpdate = tenAnhMoi;
+                        }
+
                         // UPDATE thẳng vào Database
                         SqlCommand cmdEdit = new SqlCommand(
-                            "UPDATE TacGia SET TenTG=@ten, NamSinh=@ns, NamMat=@nm, QueQuan=@qq WHERE MaTG=@id", conn);
+                            "UPDATE TacGia SET TenTG=@ten, NamSinh=@ns, NamMat=@nm, QueQuan=@qq, HinhAnh=@ha WHERE MaTG=@id", conn);
                         cmdEdit.Parameters.AddWithValue("@id", row["MaTG"]);
                         cmdEdit.Parameters.AddWithValue("@ten", txtTenTG.Text.Trim());
                         cmdEdit.Parameters.AddWithValue("@ns", dtpNgaySinh.Value);
                         cmdEdit.Parameters.AddWithValue("@nm", chkDamat.Checked ? (object)dtpNgayMat.Value : DBNull.Value);
                         cmdEdit.Parameters.AddWithValue("@qq", txtQuequan.Text.Trim());
+                        cmdEdit.Parameters.AddWithValue("@ha", string.IsNullOrEmpty(hinhAnhUpdate) ? DBNull.Value : (object)hinhAnhUpdate);
+
                         cmdEdit.ExecuteNonQuery();
                         editCount++;
                     }
@@ -291,12 +378,24 @@ namespace Thinh_QLNhasach
                 {
                     if (row["_Status"].ToString() == "add")
                     {
+                        // XỬ LÝ LƯU ẢNH HÀNG LOẠT
+                        string hinhAnhInsert = row["HinhAnh"]?.ToString() ?? "";
+                        if (!string.IsNullOrEmpty(hinhAnhInsert) && File.Exists(hinhAnhInsert))
+                        {
+                            string tenAnhMoi = DateTime.Now.Ticks + Path.GetExtension(hinhAnhInsert);
+                            File.Copy(hinhAnhInsert, Path.Combine(thuMucAnh, tenAnhMoi), true);
+                            hinhAnhInsert = tenAnhMoi; // Đổi thành tên file ngắn gọn để lưu DB
+                        }
+                        else hinhAnhInsert = "";
+
                         SqlCommand cmdAdd = new SqlCommand(
-                            "INSERT INTO TacGia (TenTG, NamSinh, NamMat, QueQuan) VALUES (@ten, @ns, @nm, @qq)", conn);
+                            "INSERT INTO TacGia (TenTG, NamSinh, NamMat, QueQuan, HinhAnh) VALUES (@ten, @ns, @nm, @qq, @ha)", conn);
                         cmdAdd.Parameters.AddWithValue("@ten", row["TenTG"]);
                         cmdAdd.Parameters.AddWithValue("@ns", row["NamSinh"]);
                         cmdAdd.Parameters.AddWithValue("@nm", row["NamMat"] == DBNull.Value ? (object)DBNull.Value : row["NamMat"]);
                         cmdAdd.Parameters.AddWithValue("@qq", row["QueQuan"]);
+                        cmdAdd.Parameters.AddWithValue("@ha", string.IsNullOrEmpty(hinhAnhInsert) ? DBNull.Value : (object)hinhAnhInsert);
+
                         cmdAdd.ExecuteNonQuery();
                         addCount++;
                     }
@@ -333,6 +432,7 @@ namespace Thinh_QLNhasach
             isEditing = false;
             btnEdit.Text = "Sửa ";
             btnEdit.UseVisualStyleBackColor = true;
+            btnEdit.BackColor = Color.White; // Trả lại màu gốc cho nút sửa
 
             LoadDataFromDB();
         }
@@ -346,6 +446,10 @@ namespace Thinh_QLNhasach
             dtpNgayMat.Value = DateTime.Now;
             dtpNgaySinh.Value = DateTime.Now;
             chkDamat.Checked = false;
+
+            picHinhAnh.Image = null;
+            duongDanAnhTam = "";
+            tenAnhHienTai = "";
         }
     }
 }

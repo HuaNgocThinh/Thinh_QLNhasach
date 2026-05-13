@@ -2,6 +2,7 @@
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
+using FontAwesome.Sharp;
 using Thinh_QLNhasach.Utility; // Quan trọng: Để lấy class Session
 
 namespace Thinh_QLNhasach.Views
@@ -22,6 +23,7 @@ namespace Thinh_QLNhasach.Views
         /// </summary>
         private void FrmIndex_Load(object sender, EventArgs e)
         {
+            ApplyMenuTheme();
             // 1. HIỂN THỊ THÔNG TIN NGƯỜI DÙNG
             // Lấy dữ liệu từ Session đã lưu lúc Đăng nhập
             lblNguoiDung.Text = Session.Username;
@@ -33,6 +35,49 @@ namespace Thinh_QLNhasach.Views
                 Role = Session.Role;
             }
             PhanQuyen();
+
+            // =========================================================
+            // 3. ĐÃ FIX: TỰ ĐỘNG BẤM NÚT "TRANG CHỦ" ĐỂ HIỆN TỔNG QUAN LUN
+            // =========================================================
+            btnTrangchu.PerformClick();
+        }
+
+        private void ApplyMenuTheme()
+        {
+            panelMenu.BackColor = Color.FromArgb(26, 95, 122);
+            panelTop.BackColor = Color.FromArgb(24, 83, 108);
+
+            IconButton[] menuButtons =
+            {
+                btnTrangchu, btnBook, btnTacgia, btnUser, btnBan, btnNhap, btnChart, btnNhatKy, btnTaiKhoan, btnLogout
+            };
+
+            for (int i = 0; i < menuButtons.Length; i++)
+            {
+                IconButton button = menuButtons[i];
+                Color baseColor = GetMenuColor(i);
+
+                button.BackColor = baseColor;
+                button.ForeColor = Color.White;
+                button.IconColor = Color.White;
+                button.FlatStyle = FlatStyle.Flat;
+                button.FlatAppearance.BorderSize = 0;
+                button.FlatAppearance.MouseOverBackColor = Color.FromArgb(30, 116, 150);
+                button.FlatAppearance.MouseDownBackColor = Color.FromArgb(0, 168, 150);
+                button.TextAlign = ContentAlignment.MiddleLeft;
+                button.TextImageRelation = TextImageRelation.ImageBeforeText;
+                button.Padding = new Padding(16, 0, 12, 0);
+            }
+        }
+
+        private Color GetMenuColor(int index)
+        {
+            int baseR = 26;
+            int baseG = 95;
+            int baseB = 122;
+            int step = 8;
+            int offset = Math.Min(index * step, 48);
+            return Color.FromArgb(baseR + offset, baseG + offset, baseB + offset);
         }
 
         // ================= PHÂN QUYỀN LẢ LƯỚT =================
@@ -98,6 +143,7 @@ namespace Thinh_QLNhasach.Views
         // Quản lý Nhân viên (Chỉ Admin thấy)
         private void btnUser_Click(object sender, EventArgs e)
         {
+            lblTitle.Text = "QUẢN LÝ NHÂN VIÊN";
             FrmAccount frm = new FrmAccount();
             OpenFormInPanel(frm);
         }
@@ -105,6 +151,7 @@ namespace Thinh_QLNhasach.Views
         // Quản lý Tác giả
         private void btnAuthor_Click(object sender, EventArgs e)
         {
+            lblTitle.Text = "QUẢN LÝ TÁC GIẢ";
             FrmTacGia frm = new FrmTacGia();
             OpenFormInPanel(frm);
         }
@@ -112,6 +159,7 @@ namespace Thinh_QLNhasach.Views
         // Quản lý Sách
         private void btnBook_Click(object sender, EventArgs e)
         {
+            lblTitle.Text = "QUẢN LÝ SÁCH";
             FrmBook frm = new FrmBook();
             OpenFormInPanel(frm);
         }
@@ -119,6 +167,7 @@ namespace Thinh_QLNhasach.Views
         // Quản lý Hóa đơn (Bán hàng)
         private void btnHoaDon_Click(object sender, EventArgs e)
         {
+            lblTitle.Text = "QUẢN LÝ HÓA ĐƠN BÁN HÀNG";
             FrmHoaDon frm = new FrmHoaDon();
             OpenFormInPanel(frm);
         }
@@ -126,6 +175,7 @@ namespace Thinh_QLNhasach.Views
         // Quản lý Nhập hàng
         private void btnNhapHang_Click(object sender, EventArgs e)
         {
+            lblTitle.Text = "QUẢN LÝ NHẬP HÀNG";
             FrmNhapHang frm = new FrmNhapHang();
             OpenFormInPanel(frm);
         }
@@ -133,6 +183,7 @@ namespace Thinh_QLNhasach.Views
         // Thống kê (Chỉ Admin thấy)
         private void btnThongKe_Click(object sender, EventArgs e)
         {
+            lblTitle.Text = "BÁO CÁO THỐNG KÊ";
             FrmThongKe frm = new FrmThongKe();
             OpenFormInPanel(frm);
         }
@@ -140,6 +191,7 @@ namespace Thinh_QLNhasach.Views
         // Nhật ký hoạt động (Chỉ Admin thấy)
         private void btnNhatKy_Click(object sender, EventArgs e)
         {
+            lblTitle.Text = "NHẬT KÝ HOẠT ĐỘNG HỆ THỐNG";
             FrmNhatKy frm = new FrmNhatKy();
             OpenFormInPanel(frm);
         }
@@ -147,7 +199,7 @@ namespace Thinh_QLNhasach.Views
         // Nút Đăng xuất
         private void btnLogout_Click(object sender, EventArgs e)
         {
-            DialogResult dr = MessageBox.Show("Ông muốn đăng xuất và quay lại màn hình Login hả Thịnh?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            DialogResult dr = MessageBox.Show("Bạn muốn đăng xuất khỏi hệ thống?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (dr == DialogResult.Yes)
             {
                 // Đóng form hiện tại và mở lại form đăng nhập (giả sử tên là FrmLogin)
@@ -167,8 +219,14 @@ namespace Thinh_QLNhasach.Views
 
         private void btnTrangchu_Click(object sender, EventArgs e)
         {
+            lblTitle.Text = "TỔNG QUAN HỆ THỐNG";
             FrmDashboard frm = new FrmDashboard();
             OpenFormInPanel(frm);
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            lblThoiGian.Text = DateTime.Now.ToString("HH:mm:ss | dd/MM/yyyy");
         }
     }
 }

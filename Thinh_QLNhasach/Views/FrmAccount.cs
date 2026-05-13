@@ -14,7 +14,6 @@ namespace Thinh_QLNhasach
         // CÁC BIẾN KIỂM SOÁT TRẠNG THÁI
         int currentMaND = -1;   // Lưu mã người dùng đang được click chọn
         bool isEditing = false; // Công tắc chế độ Sửa
-        bool isAdding = false;  // Công tắc chế độ Thêm mới
 
         public FrmAccount()
         {
@@ -51,7 +50,8 @@ namespace Thinh_QLNhasach
             {
                 try
                 {
-                    string sql = "SELECT MaND, TenDangNhap, HoTen, NgaySinh, SoDienThoai, VaiTro, TrangThai, MatKhau FROM NguoiDung";
+                    // ĐÃ FIX: Xóa cột MatKhau khỏi câu truy vấn
+                    string sql = "SELECT MaND, TenDangNhap, HoTen, NgaySinh, SoDienThoai, VaiTro, TrangThai FROM NguoiDung";
 
                     if (!string.IsNullOrEmpty(searchKw))
                     {
@@ -107,7 +107,6 @@ namespace Thinh_QLNhasach
                 dgvAccount.Columns["MaND"].HeaderText = "Mã";
                 dgvAccount.Columns["MaND"].FillWeight = 50;
                 dgvAccount.Columns["TenDangNhap"].HeaderText = "Tên Đăng Nhập";
-                dgvAccount.Columns["MatKhau"].Visible = false; // Luôn ẩn cột mật khẩu
                 dgvAccount.Columns["HoTen"].HeaderText = "Họ Tên";
                 dgvAccount.Columns["NgaySinh"].HeaderText = "Ngày Sinh";
                 dgvAccount.Columns["NgaySinh"].DefaultCellStyle.Format = "dd/MM/yyyy";
@@ -123,7 +122,6 @@ namespace Thinh_QLNhasach
         private void BocDuLieuLenForm(DataGridViewRow row)
         {
             txtUser.Text = row.Cells["TenDangNhap"].Value.ToString();
-            txtPass.Text = ""; // Giấu pass để bảo mật
             txtHoten.Text = row.Cells["HoTen"].Value.ToString();
             txtSdt.Text = row.Cells["SoDienThoai"].Value.ToString();
 
@@ -158,20 +156,14 @@ namespace Thinh_QLNhasach
         }
 
         // =========================================================
-        // CÁC NÚT ĐIỀU KHIỂN CHỨC NĂNG (THÊM / SỬA / XÓA)
+        // CÁC NÚT ĐIỀU KHIỂN CHỨC NĂNG (SỬA / XÓA)
         // =========================================================
-        private void btnAdd_Click(object sender, EventArgs e)
-        {
-            ClearForm();
-            isAdding = true; // Bật cờ Thêm
-            MessageBox.Show("Chế độ THÊM MỚI đã bật.\nVui lòng nhập thông tin rồi nhấn 'Save'!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
             if (currentMaND == -1 || dgvAccount.CurrentRow == null)
             {
-                MessageBox.Show("Chọn một dòng sau đó bấm sửa", "Thông báo");
+                MessageBox.Show("Chọn một dòng sau đó bấm sửa", "Thông báo");
                 return;
             }
 
@@ -180,7 +172,6 @@ namespace Thinh_QLNhasach
 
             if (isEditing)
             {
-                isAdding = false; // Tắt chế độ thêm
                 btnEdit.Text = "[Đang Sửa]"; // Đổi chữ để báo hiệu
 
                 // Bốc dữ liệu của dòng ĐANG ĐƯỢC CHỌN lên form
@@ -202,7 +193,7 @@ namespace Thinh_QLNhasach
                 MessageBox.Show("Chọn một tài khoản để xóa!", "Cảnh báo"); return;
             }
 
-            if (MessageBox.Show("Bạn có muốn xóa tài khoản này không?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+            if (MessageBox.Show("Bạn có muốn xóa tài khoản này không?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
             {
                 using (SqlConnection conn = new SqlConnection(connStr))
                 {
@@ -222,13 +213,13 @@ namespace Thinh_QLNhasach
         }
 
         // =========================================================
-        // LƯU DỮ LIỆU (INSERT HOẶC UPDATE) VÀO DATABASE
+        // LƯU DỮ LIỆU (UPDATE) VÀO DATABASE
         // =========================================================
         private void btnSave_Click(object sender, EventArgs e)
         {
-            if (!isAdding && !isEditing)
+            if (!isEditing)
             {
-                MessageBox.Show("Phải bấm nút 'Thêm' hoặc 'Sửa' trước khi Lưu!", "Thông báo");
+                MessageBox.Show("Phải bấm nút 'Sửa' trước khi Lưu!", "Thông báo");
                 return;
             }
 
@@ -246,31 +237,10 @@ namespace Thinh_QLNhasach
                     SqlCommand cmd = new SqlCommand();
                     cmd.Connection = conn;
 
-                    if (isAdding)
+                    if (isEditing)
                     {
-                        if (string.IsNullOrWhiteSpace(txtPass.Text))
-                        {
-                            MessageBox.Show("Tạo tài khoản mới thì phải có mật khẩu nhé!", "Lỗi"); return;
-                        }
-
-                        sql = "INSERT INTO NguoiDung (TenDangNhap, MatKhau, HoTen, NgaySinh, SoDienThoai, VaiTro, TrangThai) " +
-                              "VALUES (@u, HASHBYTES('MD5', CAST(@p AS VARCHAR(100))), @t, @n, @s, @r, @tt)";
-                        cmd.Parameters.AddWithValue("@p", txtPass.Text.Trim());
-                    }
-                    else if (isEditing)
-                    {
-                        if (!string.IsNullOrWhiteSpace(txtPass.Text))
-                        {
-                            // Cập nhật cả Mật khẩu
-                            sql = "UPDATE NguoiDung SET TenDangNhap=@u, MatKhau=HASHBYTES('MD5', CAST(@p AS VARCHAR(100))), " +
-                                  "HoTen=@t, NgaySinh=@n, SoDienThoai=@s, VaiTro=@r, TrangThai=@tt WHERE MaND=@ma";
-                            cmd.Parameters.AddWithValue("@p", txtPass.Text.Trim());
-                        }
-                        else
-                        {
-                            // Giữ nguyên Mật khẩu cũ
-                            sql = "UPDATE NguoiDung SET TenDangNhap=@u, HoTen=@t, NgaySinh=@n, SoDienThoai=@s, VaiTro=@r, TrangThai=@tt WHERE MaND=@ma";
-                        }
+                        // ĐÃ FIX: Update thuần túy các thông tin, hoàn toàn không đụng chạm mật khẩu
+                        sql = "UPDATE NguoiDung SET TenDangNhap=@u, HoTen=@t, NgaySinh=@n, SoDienThoai=@s, VaiTro=@r, TrangThai=@tt WHERE MaND=@ma";
                         cmd.Parameters.AddWithValue("@ma", currentMaND);
                     }
 
@@ -284,7 +254,7 @@ namespace Thinh_QLNhasach
                     cmd.CommandText = sql;
                     cmd.ExecuteNonQuery();
 
-                    MessageBox.Show(isAdding ? "Thêm mới tài khoản thành công!" : "Cập nhật thông tin thành công!", "Thông báo");
+                    MessageBox.Show("Cập nhật thông tin thành công!", "Thông báo");
                     LoadDataTuDatabase();
                 }
                 catch (Exception ex) { MessageBox.Show("Lỗi lưu dữ liệu: " + ex.Message, "Lỗi SQL"); }
@@ -309,10 +279,9 @@ namespace Thinh_QLNhasach
         // =========================================================
         private void ClearForm()
         {
-            txtUser.Clear(); txtPass.Clear(); txtHoten.Clear(); txtSdt.Clear(); txtSearch.Clear();
+            txtUser.Clear(); txtHoten.Clear(); txtSdt.Clear(); txtSearch.Clear();
             currentMaND = -1;
             isEditing = false;
-            isAdding = false;
             btnEdit.Text = "Sửa";
         }
     }
