@@ -85,7 +85,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1932, 205);
+            this.panel1.Size = new System.Drawing.Size(1572, 205);
             this.panel1.TabIndex = 12;
             // 
             // label3
@@ -95,7 +95,7 @@
             this.label3.ForeColor = System.Drawing.Color.White;
             this.label3.Location = new System.Drawing.Point(0, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(1932, 205);
+            this.label3.Size = new System.Drawing.Size(1572, 205);
             this.label3.TabIndex = 0;
             this.label3.Text = "Hệ thống quản lý nhà sách";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -132,7 +132,7 @@
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.125F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(221, 892);
+            this.label4.Location = new System.Drawing.Point(382, 892);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(647, 31);
             this.label4.TabIndex = 22;
@@ -143,7 +143,7 @@
             this.btnReg.IconChar = FontAwesome.Sharp.IconChar.UserPlus;
             this.btnReg.IconColor = System.Drawing.Color.Black;
             this.btnReg.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.btnReg.Location = new System.Drawing.Point(874, 875);
+            this.btnReg.Location = new System.Drawing.Point(1051, 875);
             this.btnReg.Name = "btnReg";
             this.btnReg.Size = new System.Drawing.Size(167, 70);
             this.btnReg.TabIndex = 23;
@@ -156,7 +156,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1932, 975);
+            this.ClientSize = new System.Drawing.Size(1572, 975);
             this.Controls.Add(this.btnReg);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.btnThoat);

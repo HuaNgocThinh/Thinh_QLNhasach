@@ -2,12 +2,12 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.Drawing.Printing; // Thư viện in ấn gốc của WinForms
 using System.Windows.Forms;
 using FontAwesome.Sharp;
 using Thinh_QLNhasach.Utility;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
 using System.IO;
+using System.Net; // Thư viện dùng để tải ảnh VietQR từ Internet
 
 namespace Thinh_QLNhasach.Views
 {
@@ -46,7 +46,7 @@ namespace Thinh_QLNhasach.Views
 
             if (cboGiamGia != null)
             {
-                // ĐÃ FIX: Bắt cứng sự kiện thay đổi Giảm Giá bằng Code để đảm bảo 100% luôn chạy
+                // Bắt cứng sự kiện thay đổi Giảm Giá bằng Code để đảm bảo 100% luôn chạy
                 cboGiamGia.SelectedIndexChanged -= cboGiamGia_SelectedIndexChanged;
 
                 cboGiamGia.Items.Clear();
@@ -59,6 +59,10 @@ namespace Thinh_QLNhasach.Views
             }
 
             LoadComboBoxNguoiDung();
+
+            // ĐÃ THÊM: Tải Thể Loại trước
+            LoadComboBoxTheLoai();
+
             LoadComboBoxSach();
             ResetForm();
             LoadLichSuHoaDon();
@@ -153,17 +157,99 @@ namespace Thinh_QLNhasach.Views
             }
         }
 
-        private void LoadComboBoxSach()
+        // =========================================================================
+        // ĐÃ THÊM: HÀM LOAD COMBOBOX THỂ LOẠI (LỌC SÁCH LÚC BÁN HÀNG)
+        // =========================================================================
+        private void LoadComboBoxTheLoai()
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                SqlDataAdapter da = new SqlDataAdapter("SELECT MaSach, TenSach, GiaBan, SoLuongTon FROM Sach WHERE SoLuongTon > 0", conn);
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-                cboMaSach.DataSource = dt;
-                cboMaSach.DisplayMember = "TenSach";
-                cboMaSach.ValueMember = "MaSach";
-                cboMaSach.SelectedIndex = -1;
+                try
+                {
+                    SqlDataAdapter da = new SqlDataAdapter("SELECT MaTL, TenTL FROM TheLoai", conn);
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+
+                    // Chèn thêm dòng Tất cả sách lên đầu
+                    DataRow row = dt.NewRow();
+                    row["MaTL"] = 0;
+                    row["TenTL"] = "--- Tất cả sách ---";
+                    dt.Rows.InsertAt(row, 0);
+
+                    if (this.Controls.Find("cboTheLoai", true).Length > 0)
+                    {
+                        ComboBox cboTL = (ComboBox)this.Controls.Find("cboTheLoai", true)[0];
+
+                        // Tắt event trước khi đổ data để tránh lỗi
+                        cboTL.SelectedIndexChanged -= cboTheLoai_SelectedIndexChanged;
+
+                        cboTL.DataSource = dt;
+                        cboTL.DisplayMember = "TenTL";
+                        cboTL.ValueMember = "MaTL";
+                        cboTL.SelectedIndex = 0;
+
+                        // Bật lại event
+                        cboTL.SelectedIndexChanged += cboTheLoai_SelectedIndexChanged;
+                    }
+                }
+                catch (Exception ex) { MessageBox.Show("Lỗi load Thể loại: " + ex.Message); }
+            }
+        }
+
+        // =========================================================================
+        // ĐÃ SỬA: LOAD SÁCH THEO THỂ LOẠI (CHỈ LOAD SÁCH CÒN TỒN KHO > 0)
+        // =========================================================================
+        private void LoadComboBoxSach(int maTL = 0)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                try
+                {
+                    conn.Open();
+                    // Khi bán hàng, chỉ lấy sách có số lượng > 0
+                    string sql = "SELECT MaSach, TenSach, GiaBan, SoLuongTon FROM Sach WHERE SoLuongTon > 0";
+
+                    if (maTL > 0)
+                    {
+                        sql += " AND MaTL = " + maTL;
+                    }
+
+                    SqlDataAdapter da = new SqlDataAdapter(sql, conn);
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+
+                    cboMaSach.SelectedIndexChanged -= cboMaSach_SelectedIndexChanged;
+
+                    cboMaSach.DataSource = null;
+                    this.BindingContext = new BindingContext();
+                    cboMaSach.DataSource = dt;
+                    cboMaSach.DisplayMember = "TenSach";
+                    cboMaSach.ValueMember = "MaSach";
+
+                    if (cboMaSach.Items.Count > 0) cboMaSach.SelectedIndex = -1;
+
+                    cboMaSach.SelectedIndexChanged += cboMaSach_SelectedIndexChanged;
+                }
+                catch (Exception ex) { MessageBox.Show("Lỗi tải danh sách sách: " + ex.Message); }
+            }
+        }
+
+        // =========================================================================
+        // ĐÃ THÊM: SỰ KIỆN KHI ĐỔI THỂ LOẠI THÌ LỌC LẠI SÁCH
+        // =========================================================================
+        private void cboTheLoai_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ComboBox cboTL = sender as ComboBox;
+            if (cboTL != null && cboTL.SelectedValue != null)
+            {
+                int maTL = 0;
+                int.TryParse(cboTL.SelectedValue.ToString(), out maTL);
+
+                LoadComboBoxSach(maTL);
+
+                // Khi vừa đổi thể loại thì xóa trắng ô đơn giá
+                txtDonGia.Clear();
+                nudSoLuong.Value = 1;
             }
         }
 
@@ -345,7 +431,7 @@ namespace Thinh_QLNhasach.Views
                         AppLogger.GhiLog(Session.Username, "Tạo Hóa Đơn", $"Lập thành công hóa đơn {txtMaHD.Text} - Tổng tiền: {thanhTien.ToString("N0")} VNĐ");
 
                         ResetForm();
-                        LoadComboBoxSach();
+                        LoadComboBoxSach(); // Tải lại giỏ sách để cập nhật Tồn kho
                         LoadLichSuHoaDon();
                     }
                     catch (Exception ex)
@@ -507,137 +593,148 @@ namespace Thinh_QLNhasach.Views
                 return;
             }
 
-            string maHD = dgvHoaDon.CurrentRow.Cells["MaHD"].Value.ToString();
-            if (string.IsNullOrWhiteSpace(maHD)) return;
+            PrintPreviewDialog ppd = new PrintPreviewDialog();
+            PrintDocument pd = new PrintDocument();
 
-            SaveFileDialog sfd = new SaveFileDialog();
-            sfd.Filter = "PDF Document (*.pdf)|*.pdf";
-            sfd.FileName = "HoaDon_" + maHD + "_" + DateTime.Now.ToString("ddMMyyyy_HHmm") + ".pdf";
+            pd.PrintPage += new PrintPageEventHandler(InHoaDon_PrintPage);
 
-            if (sfd.ShowDialog() == DialogResult.OK)
+            ppd.Document = pd;
+            ppd.Width = 800;
+            ppd.Height = 1000;
+            ppd.ShowDialog();
+        }
+
+        private void InHoaDon_PrintPage(object sender, PrintPageEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            Font fontTitle = new Font("Segoe UI", 22, FontStyle.Bold);
+            Font fontHeader = new Font("Segoe UI", 12, FontStyle.Bold);
+            Font fontNormal = new Font("Segoe UI", 12, FontStyle.Regular);
+            Font fontItalic = new Font("Segoe UI", 11, FontStyle.Italic);
+            Font fontTongTien = new Font("Segoe UI", 16, FontStyle.Bold);
+
+            StringFormat centerFormat = new StringFormat();
+            centerFormat.Alignment = StringAlignment.Center;
+            int centerX = e.PageBounds.Width / 2;
+
+            int y = 50;
+            int left = 50;
+
+            g.DrawString("CỬA HÀNG SÁCH DT STORE", fontHeader, Brushes.Black, left, y);
+            y += 25;
+            g.DrawString("Địa chỉ: Hà Nội - Điện thoại: 0987.654.321", fontNormal, Brushes.Black, left, y);
+            y += 60;
+
+            g.DrawString("HÓA ĐƠN BÁN HÀNG", fontTitle, Brushes.Black, centerX, y, centerFormat);
+            y += 50;
+
+            DataGridViewRow rowHD = dgvHoaDon.CurrentRow;
+            string maHD = rowHD.Cells["MaHD"].Value.ToString();
+
+            string ngayLap = "";
+            if (rowHD.Cells["NgayLap"].Value != null)
             {
-                try
+                DateTime dtNgayLap;
+                if (DateTime.TryParse(rowHD.Cells["NgayLap"].Value.ToString(), out dtNgayLap))
+                    ngayLap = dtNgayLap.ToString("dd/MM/yyyy HH:mm");
+            }
+
+            string nhanVien = rowHD.Cells["NhanVien"].Value?.ToString() ?? "";
+            string khachHang = rowHD.Cells["TenKhachHang"].Value?.ToString() ?? "Khách lẻ";
+
+            g.DrawString("Mã HĐ: " + maHD, fontNormal, Brushes.Black, left, y);
+            y += 25;
+            g.DrawString("Ngày lập: " + ngayLap, fontNormal, Brushes.Black, left, y);
+            y += 25;
+            g.DrawString("Thu ngân: " + nhanVien, fontNormal, Brushes.Black, left, y);
+            y += 25;
+            g.DrawString("Khách hàng: " + khachHang, fontNormal, Brushes.Black, left, y);
+            y += 40;
+
+            g.DrawLine(Pens.Black, left, y, 780, y);
+            y += 10;
+            g.DrawString("STT", fontHeader, Brushes.Black, left, y);
+            g.DrawString("Tên Sách", fontHeader, Brushes.Black, left + 50, y);
+            g.DrawString("SL", fontHeader, Brushes.Black, left + 400, y);
+            g.DrawString("Đơn Giá", fontHeader, Brushes.Black, left + 480, y);
+            g.DrawString("Thành Tiền", fontHeader, Brushes.Black, left + 620, y);
+            y += 25;
+            g.DrawLine(Pens.Black, left, y, 780, y);
+            y += 15;
+
+            int stt = 1;
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                string sqlCT = "SELECT s.TenSach, ct.SoLuong, ct.DonGia, ct.ThanhTien FROM ChiTietHoaDon ct JOIN Sach s ON ct.MaSach = s.MaSach WHERE ct.MaHD = @maHD";
+                SqlCommand cmdCT = new SqlCommand(sqlCT, conn);
+                cmdCT.Parameters.AddWithValue("@maHD", maHD);
+
+                using (SqlDataReader reader = cmdCT.ExecuteReader())
                 {
-                    string fontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "arial.ttf");
-                    if (!File.Exists(fontPath)) fontPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "times.ttf");
-
-                    if (!File.Exists(fontPath))
+                    while (reader.Read())
                     {
-                        MessageBox.Show("Máy tính của bạn thiếu Font hệ thống để in tiếng Việt!", "Lỗi Font", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
+                        g.DrawString(stt.ToString(), fontNormal, Brushes.Black, left, y);
+
+                        string tenSach = reader["TenSach"].ToString();
+                        if (tenSach.Length > 35) tenSach = tenSach.Substring(0, 35) + "...";
+                        g.DrawString(tenSach, fontNormal, Brushes.Black, left + 50, y);
+
+                        g.DrawString(reader["SoLuong"].ToString(), fontNormal, Brushes.Black, left + 400, y);
+                        g.DrawString(Convert.ToDouble(reader["DonGia"]).ToString("N0"), fontNormal, Brushes.Black, left + 480, y);
+                        g.DrawString(Convert.ToDouble(reader["ThanhTien"]).ToString("N0"), fontNormal, Brushes.Black, left + 620, y);
+
+                        stt++;
+                        y += 30;
                     }
-
-                    iTextSharp.text.pdf.BaseFont bf = iTextSharp.text.pdf.BaseFont.CreateFont(fontPath, iTextSharp.text.pdf.BaseFont.IDENTITY_H, iTextSharp.text.pdf.BaseFont.EMBEDDED);
-                    iTextSharp.text.Font fontTitle = new iTextSharp.text.Font(bf, 18, iTextSharp.text.Font.BOLD);
-                    iTextSharp.text.Font fontBold = new iTextSharp.text.Font(bf, 11, iTextSharp.text.Font.BOLD);
-                    iTextSharp.text.Font fontNormal = new iTextSharp.text.Font(bf, 11, iTextSharp.text.Font.NORMAL);
-
-                    using (FileStream fs = new FileStream(sfd.FileName, FileMode.Create, FileAccess.Write, FileShare.None))
-                    {
-                        iTextSharp.text.Rectangle pageSizeA5 = new iTextSharp.text.Rectangle(420f, 595f);
-                        iTextSharp.text.Document doc = new iTextSharp.text.Document(pageSizeA5, 20f, 20f, 30f, 20f);
-
-                        iTextSharp.text.pdf.PdfWriter.GetInstance(doc, fs);
-                        doc.Open();
-
-                        var rowHD = dgvHoaDon.CurrentRow;
-                        string ngayLap = "";
-                        if (rowHD.Cells["NgayLap"].Value != null)
-                        {
-                            DateTime dtNgayLap;
-                            if (DateTime.TryParse(rowHD.Cells["NgayLap"].Value.ToString(), out dtNgayLap))
-                                ngayLap = dtNgayLap.ToString("dd/MM/yyyy HH:mm");
-                        }
-
-                        string nhanVien = rowHD.Cells["NhanVien"].Value?.ToString() ?? "";
-                        string khachHang = rowHD.Cells["TenKhachHang"].Value?.ToString() ?? "Khách lẻ";
-
-                        double tongTienNum = 0, giamGiaNum = 0, thucThuNum = 0;
-                        if (rowHD.Cells["TongTien"].Value != null) double.TryParse(rowHD.Cells["TongTien"].Value.ToString(), out tongTienNum);
-                        if (rowHD.Cells["GiamGia"].Value != null) double.TryParse(rowHD.Cells["GiamGia"].Value.ToString(), out giamGiaNum);
-                        if (rowHD.Cells["ThucThu"].Value != null) double.TryParse(rowHD.Cells["ThucThu"].Value.ToString(), out thucThuNum);
-
-                        iTextSharp.text.Paragraph shopName = new iTextSharp.text.Paragraph("CỬA HÀNG SÁCH DT STORE", fontBold) { Alignment = iTextSharp.text.Element.ALIGN_CENTER };
-                        iTextSharp.text.Paragraph title = new iTextSharp.text.Paragraph("HÓA ĐƠN THANH TOÁN", fontTitle) { Alignment = iTextSharp.text.Element.ALIGN_CENTER };
-                        title.SpacingAfter = 15;
-                        doc.Add(shopName);
-                        doc.Add(title);
-
-                        doc.Add(new iTextSharp.text.Paragraph($"Mã HĐ: {maHD}", fontNormal));
-                        doc.Add(new iTextSharp.text.Paragraph($"Ngày lập: {ngayLap}", fontNormal));
-                        doc.Add(new iTextSharp.text.Paragraph($"Thu ngân: {nhanVien}", fontNormal));
-                        doc.Add(new iTextSharp.text.Paragraph($"Khách hàng: {khachHang}", fontNormal));
-                        doc.Add(new iTextSharp.text.Paragraph("----------------------------------------------------------------------", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_CENTER, SpacingAfter = 10 });
-
-                        iTextSharp.text.pdf.PdfPTable table = new iTextSharp.text.pdf.PdfPTable(4);
-                        table.WidthPercentage = 100;
-                        table.SetWidths(new float[] { 4.5f, 1f, 2.5f, 2.5f });
-
-                        table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("Tên sách", fontBold)) { Border = 0, PaddingBottom = 5 });
-                        table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("SL", fontBold)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER });
-                        table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("Đơn giá", fontBold)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT });
-                        table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("Tiền sách", fontBold)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT });
-
-                        using (SqlConnection conn = new SqlConnection(connectionString))
-                        {
-                            conn.Open();
-                            string sqlCT = "SELECT s.TenSach, ct.SoLuong, ct.DonGia, ct.ThanhTien FROM ChiTietHoaDon ct JOIN Sach s ON ct.MaSach = s.MaSach WHERE ct.MaHD = @maHD";
-                            SqlCommand cmdCT = new SqlCommand(sqlCT, conn);
-                            cmdCT.Parameters.AddWithValue("@maHD", maHD);
-
-                            using (SqlDataReader reader = cmdCT.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    string tenSach = reader["TenSach"].ToString();
-                                    string soLuong = reader["SoLuong"].ToString();
-                                    double donGia = Convert.ToDouble(reader["DonGia"]);
-                                    double tienSach = Convert.ToDouble(reader["ThanhTien"]);
-
-                                    table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(tenSach, fontNormal)) { Border = 0, PaddingBottom = 5 });
-                                    table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(soLuong, fontNormal)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER });
-                                    table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(donGia.ToString("N0"), fontNormal)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT });
-                                    table.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(tienSach.ToString("N0"), fontNormal)) { Border = 0, HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT });
-                                }
-                            }
-                        }
-
-                        doc.Add(table);
-                        doc.Add(new iTextSharp.text.Paragraph("----------------------------------------------------------------------", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_CENTER });
-
-                        iTextSharp.text.Paragraph pTongTien = new iTextSharp.text.Paragraph($"TỔNG TIỀN GỐC: {tongTienNum.ToString("N0")} VNĐ", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_RIGHT, SpacingBefore = 5 };
-                        iTextSharp.text.Paragraph pGiamGia = new iTextSharp.text.Paragraph($"GIẢM GIÁ: -{giamGiaNum.ToString("N0")} VNĐ", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_RIGHT };
-                        iTextSharp.text.Paragraph pThucThu = new iTextSharp.text.Paragraph($"THỰC THU (KHÁCH TRẢ): {thucThuNum.ToString("N0")} VNĐ", fontBold) { Alignment = iTextSharp.text.Element.ALIGN_RIGHT, SpacingAfter = 20 };
-
-                        doc.Add(pTongTien);
-                        doc.Add(pGiamGia);
-                        doc.Add(pThucThu);
-
-                        iTextSharp.text.Paragraph footer = new iTextSharp.text.Paragraph("Cảm ơn Quý Khách & Hẹn gặp lại!", fontNormal) { Alignment = iTextSharp.text.Element.ALIGN_CENTER };
-                        doc.Add(footer);
-
-                        doc.Close();
-                    }
-
-                    MessageBox.Show("Đã xuất Hóa đơn PDF thành công xuất sắc!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    try
-                    {
-                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
-                        {
-                            FileName = sfd.FileName,
-                            UseShellExecute = true
-                        });
-                    }
-                    catch
-                    {
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Lỗi trong quá trình tạo PDF:\n" + ex.Message, "Lỗi Hệ Thống", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+
+            y += 10;
+            g.DrawLine(Pens.Black, left, y, 780, y);
+            y += 20;
+
+            double tongTienNum = 0, giamGiaNum = 0, thucThuNum = 0;
+            if (rowHD.Cells["TongTien"].Value != null) double.TryParse(rowHD.Cells["TongTien"].Value.ToString(), out tongTienNum);
+            if (rowHD.Cells["GiamGia"].Value != null) double.TryParse(rowHD.Cells["GiamGia"].Value.ToString(), out giamGiaNum);
+            if (rowHD.Cells["ThucThu"].Value != null) double.TryParse(rowHD.Cells["ThucThu"].Value.ToString(), out thucThuNum);
+
+            g.DrawString("Tổng tiền gốc: " + tongTienNum.ToString("N0") + " VNĐ", fontNormal, Brushes.Black, left + 420, y);
+            y += 25;
+            g.DrawString("Giảm giá: -" + giamGiaNum.ToString("N0") + " VNĐ", fontNormal, Brushes.Black, left + 420, y);
+            y += 35;
+            g.DrawString("THỰC THU: " + thucThuNum.ToString("N0") + " VNĐ", fontTongTien, Brushes.Black, left + 400, y);
+            y += 60;
+
+            try
+            {
+                string soTienNguyen = Math.Round(thucThuNum).ToString("0");
+
+                string urlQR = $"https://img.vietqr.io/image/TCB-8888332999-compact2.png?amount={soTienNguyen}&addInfo=THANH TOAN HD {maHD}";
+
+                using (WebClient wc = new WebClient())
+                {
+                    byte[] bytes = wc.DownloadData(urlQR);
+                    using (MemoryStream ms = new MemoryStream(bytes))
+                    {
+                        Image imgQR = Image.FromStream(ms);
+
+                        g.DrawString("--- QUÉT MÃ ĐỂ THANH TOÁN ---", fontItalic, Brushes.Black, centerX, y, centerFormat);
+                        y += 30;
+
+                        int qrSize = 280;
+                        g.DrawImage(imgQR, centerX - (qrSize / 2), y, qrSize, qrSize);
+
+                        y += qrSize + 25;
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            g.DrawString("Cảm ơn Quý Khách & Hẹn gặp lại!", fontItalic, Brushes.Black, centerX, y, centerFormat);
         }
 
         private void btnPrint_Click(object sender, EventArgs e)
@@ -653,17 +750,24 @@ namespace Thinh_QLNhasach.Views
             txtMaHD.Text = TuSinhMaHD();
             txtTenKH.Clear();
             cboMaNV.SelectedIndex = -1;
+
+            // ĐÃ THÊM: Khi tạo phiếu mới thì mặc định nhảy về "Tất cả sách" để khỏi bị lọc sai
+            if (this.Controls.Find("cboTheLoai", true).Length > 0)
+            {
+                ComboBox cboTL = (ComboBox)this.Controls.Find("cboTheLoai", true)[0];
+                if (cboTL.Items.Count > 0) cboTL.SelectedIndex = 0;
+            }
+
             cboMaSach.SelectedIndex = -1;
             nudSoLuong.Value = 1;
             txtDonGia.Clear();
 
-            // ĐÃ FIX: Clear giỏ hàng trước, set Combobox sau, rồi chốt gọi tính tiền cuối cùng
             dtGioHang.Clear();
 
             if (cboGiamGia != null && cboGiamGia.Items.Count > 0)
                 cboGiamGia.SelectedIndex = 0;
 
-            CapNhatTien(); // Chốt lại tiền lần cuối cho chắc chắn = 0
+            CapNhatTien();
         }
 
         private void guna2TabControl1_SelectedIndexChanged(object sender, EventArgs e)

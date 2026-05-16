@@ -28,10 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.guna2Panel1 = new Guna.UI2.WinForms.Guna2Panel();
+            this.btnXuatExcel = new Guna.UI2.WinForms.Guna2Button();
             this.btnThongKe = new Guna.UI2.WinForms.Guna2Button();
             this.dtpThang = new Guna.UI2.WinForms.Guna2DateTimePicker();
             this.guna2ComboBox1 = new Guna.UI2.WinForms.Guna2ComboBox();
@@ -46,7 +47,7 @@
             this.guna2Panel4 = new Guna.UI2.WinForms.Guna2Panel();
             this.dgvTopSach = new Guna.UI2.WinForms.Guna2DataGridView();
             this.guna2HtmlLabel4 = new Guna.UI2.WinForms.Guna2HtmlLabel();
-            this.btnXuatExcel = new Guna.UI2.WinForms.Guna2Button();
+            this.cboTheLoai = new Guna.UI2.WinForms.Guna2ComboBox();
             this.guna2Panel1.SuspendLayout();
             this.guna2Panel2.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -60,6 +61,7 @@
             this.guna2Panel1.BorderColor = System.Drawing.Color.LightGray;
             this.guna2Panel1.BorderRadius = 5;
             this.guna2Panel1.BorderThickness = 1;
+            this.guna2Panel1.Controls.Add(this.cboTheLoai);
             this.guna2Panel1.Controls.Add(this.btnXuatExcel);
             this.guna2Panel1.Controls.Add(this.btnThongKe);
             this.guna2Panel1.Controls.Add(this.dtpThang);
@@ -72,6 +74,25 @@
             this.guna2Panel1.Size = new System.Drawing.Size(1968, 200);
             this.guna2Panel1.TabIndex = 0;
             // 
+            // btnXuatExcel
+            // 
+            this.btnXuatExcel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnXuatExcel.BorderRadius = 7;
+            this.btnXuatExcel.BorderThickness = 1;
+            this.btnXuatExcel.DisabledState.BorderColor = System.Drawing.Color.DarkGray;
+            this.btnXuatExcel.DisabledState.CustomBorderColor = System.Drawing.Color.DarkGray;
+            this.btnXuatExcel.DisabledState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(169)))), ((int)(((byte)(169)))), ((int)(((byte)(169)))));
+            this.btnXuatExcel.DisabledState.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(141)))), ((int)(((byte)(141)))), ((int)(((byte)(141)))));
+            this.btnXuatExcel.FillColor = System.Drawing.Color.LimeGreen;
+            this.btnXuatExcel.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.btnXuatExcel.ForeColor = System.Drawing.Color.White;
+            this.btnXuatExcel.Location = new System.Drawing.Point(1683, 69);
+            this.btnXuatExcel.Name = "btnXuatExcel";
+            this.btnXuatExcel.Size = new System.Drawing.Size(223, 66);
+            this.btnXuatExcel.TabIndex = 4;
+            this.btnXuatExcel.Text = "Xuất báo cáo";
+            this.btnXuatExcel.Click += new System.EventHandler(this.btnXuatExcel_Click);
+            // 
             // btnThongKe
             // 
             this.btnThongKe.BorderRadius = 7;
@@ -83,7 +104,7 @@
             this.btnThongKe.FillColor = System.Drawing.Color.DodgerBlue;
             this.btnThongKe.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.btnThongKe.ForeColor = System.Drawing.Color.White;
-            this.btnThongKe.Location = new System.Drawing.Point(626, 69);
+            this.btnThongKe.Location = new System.Drawing.Point(987, 69);
             this.btnThongKe.Name = "btnThongKe";
             this.btnThongKe.Size = new System.Drawing.Size(223, 66);
             this.btnThongKe.TabIndex = 3;
@@ -256,27 +277,27 @@
             // dgvTopSach
             // 
             this.dgvTopSach.AllowUserToAddRows = false;
-            dataGridViewCellStyle7.BackColor = System.Drawing.Color.White;
-            this.dgvTopSach.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle7;
-            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle8.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(88)))), ((int)(((byte)(255)))));
-            dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.875F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle8.ForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dgvTopSach.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.White;
+            this.dgvTopSach.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(88)))), ((int)(((byte)(255)))));
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.875F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.White;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgvTopSach.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             this.dgvTopSach.ColumnHeadersHeight = 4;
             this.dgvTopSach.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.EnableResizing;
             this.dgvTopSach.ColumnHeadersVisible = false;
-            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle9.BackColor = System.Drawing.Color.White;
-            dataGridViewCellStyle9.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle9.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(69)))), ((int)(((byte)(94)))));
-            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(229)))), ((int)(((byte)(255)))));
-            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(69)))), ((int)(((byte)(94)))));
-            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvTopSach.DefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.Color.White;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(69)))), ((int)(((byte)(94)))));
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(229)))), ((int)(((byte)(255)))));
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(71)))), ((int)(((byte)(69)))), ((int)(((byte)(94)))));
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dgvTopSach.DefaultCellStyle = dataGridViewCellStyle3;
             this.dgvTopSach.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvTopSach.GridColor = System.Drawing.Color.Gainsboro;
             this.dgvTopSach.Location = new System.Drawing.Point(0, 39);
@@ -322,24 +343,25 @@
             this.guna2HtmlLabel4.TabIndex = 0;
             this.guna2HtmlLabel4.Text = "Top 10 sách bán chạy";
             // 
-            // btnXuatExcel
+            // cboTheLoai
             // 
-            this.btnXuatExcel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnXuatExcel.BorderRadius = 7;
-            this.btnXuatExcel.BorderThickness = 1;
-            this.btnXuatExcel.DisabledState.BorderColor = System.Drawing.Color.DarkGray;
-            this.btnXuatExcel.DisabledState.CustomBorderColor = System.Drawing.Color.DarkGray;
-            this.btnXuatExcel.DisabledState.FillColor = System.Drawing.Color.FromArgb(((int)(((byte)(169)))), ((int)(((byte)(169)))), ((int)(((byte)(169)))));
-            this.btnXuatExcel.DisabledState.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(141)))), ((int)(((byte)(141)))), ((int)(((byte)(141)))));
-            this.btnXuatExcel.FillColor = System.Drawing.Color.LimeGreen;
-            this.btnXuatExcel.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.btnXuatExcel.ForeColor = System.Drawing.Color.White;
-            this.btnXuatExcel.Location = new System.Drawing.Point(1683, 69);
-            this.btnXuatExcel.Name = "btnXuatExcel";
-            this.btnXuatExcel.Size = new System.Drawing.Size(223, 66);
-            this.btnXuatExcel.TabIndex = 4;
-            this.btnXuatExcel.Text = "Xuất báo cáo";
-            this.btnXuatExcel.Click += new System.EventHandler(this.btnXuatExcel_Click);
+            this.cboTheLoai.BackColor = System.Drawing.Color.Transparent;
+            this.cboTheLoai.BorderColor = System.Drawing.Color.LightGray;
+            this.cboTheLoai.BorderRadius = 7;
+            this.cboTheLoai.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.cboTheLoai.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboTheLoai.FocusedColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
+            this.cboTheLoai.FocusedState.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(148)))), ((int)(((byte)(255)))));
+            this.cboTheLoai.Font = new System.Drawing.Font("Segoe UI", 10.125F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cboTheLoai.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(68)))), ((int)(((byte)(88)))), ((int)(((byte)(112)))));
+            this.cboTheLoai.ItemHeight = 60;
+            this.cboTheLoai.Items.AddRange(new object[] {
+            "Theo Tháng",
+            "Theo Năm"});
+            this.cboTheLoai.Location = new System.Drawing.Point(630, 69);
+            this.cboTheLoai.Name = "cboTheLoai";
+            this.cboTheLoai.Size = new System.Drawing.Size(233, 66);
+            this.cboTheLoai.TabIndex = 5;
             // 
             // FrmThongKe
             // 
@@ -380,5 +402,6 @@
         private Guna.UI2.WinForms.Guna2DateTimePicker dtpThang;
         private Guna.UI2.WinForms.Guna2HtmlLabel lblCanhBao;
         private Guna.UI2.WinForms.Guna2Button btnXuatExcel;
+        private Guna.UI2.WinForms.Guna2ComboBox cboTheLoai;
     }
 }

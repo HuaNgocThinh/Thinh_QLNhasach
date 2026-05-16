@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.Drawing.Printing; // Thư viện dùng để in ấn
 using System.Windows.Forms;
 using Thinh_QLNhasach.Utility; // Khai báo để lấy tên người dùng từ Session
 
@@ -43,6 +44,7 @@ namespace Thinh_QLNhasach
 
             LoadData();
             LoadComboBoxNCC();
+            LoadComboBoxTheLoai(); // ĐÃ THÊM: Tải danh sách Thể loại trước
             LoadComboBoxSach();
             LoadComboBoxNguoiDung();
             LoadDataNhaCungCap();
@@ -124,14 +126,32 @@ namespace Thinh_QLNhasach
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // ĐÃ FIX: Thêm LEFT JOIN sang bảng NguoiDung để lấy HoTen (đặt tên bí danh là NguoiLap)
-                string sql = @"SELECT ct.MaPN, ct.MaSach, s.TenSach, ct.SoLuong, ct.DonGiaNhap, ct.ThanhTien, 
-                                      pn.NgayNhap, pn.GhiChu, pn.MaNCC, pn.MaND, nd.HoTen AS NguoiLap, pn.TongTien 
-                               FROM ChiTietPhieuNhap ct
-                               JOIN PhieuNhap pn ON ct.MaPN = pn.MaPN
-                               JOIN Sach s ON ct.MaSach = s.MaSach
-                               LEFT JOIN NguoiDung nd ON pn.MaND = nd.MaND
-                               ORDER BY pn.NgayNhap DESC";
+                // ======================================================================================
+                // ĐÃ FIX SQL: Dùng STUFF gom nhóm tất cả sách vào cột ChiTietSach, 1 Phiếu = 1 Dòng
+                // ======================================================================================
+                string sql = @"
+                    SELECT 
+                        pn.MaPN, 
+                        pn.NgayNhap, 
+                        ncc.TenNCC, 
+                        nd.HoTen AS NguoiLap,
+                        (
+                            SELECT STUFF((
+                                SELECT ', ' + s.TenSach + ' (SL: ' + CAST(ct.SoLuong AS VARCHAR) + ')'
+                                FROM ChiTietPhieuNhap ct
+                                JOIN Sach s ON ct.MaSach = s.MaSach
+                                WHERE ct.MaPN = pn.MaPN
+                                FOR XML PATH('')
+                            ), 1, 2, '')
+                        ) AS ChiTietSach,
+                        pn.TongTien, 
+                        pn.GhiChu, 
+                        pn.MaNCC, 
+                        pn.MaND 
+                    FROM PhieuNhap pn
+                    LEFT JOIN NguoiDung nd ON pn.MaND = nd.MaND
+                    LEFT JOIN NhaCungCap ncc ON pn.MaNCC = ncc.MaNCC
+                    ORDER BY pn.NgayNhap DESC";
 
                 SqlDataAdapter da = new SqlDataAdapter(sql, conn);
                 DataTable dt = new DataTable();
@@ -140,28 +160,27 @@ namespace Thinh_QLNhasach
 
                 if (dgvPhieuNhap.Columns.Count > 0)
                 {
-                    // Ẩn các cột chứa ID thừa thãi
-                    if (dgvPhieuNhap.Columns.Contains("MaSach")) dgvPhieuNhap.Columns["MaSach"].Visible = false;
+                    // Ẩn ID
                     if (dgvPhieuNhap.Columns.Contains("MaNCC")) dgvPhieuNhap.Columns["MaNCC"].Visible = false;
                     if (dgvPhieuNhap.Columns.Contains("MaND")) dgvPhieuNhap.Columns["MaND"].Visible = false;
-                    if (dgvPhieuNhap.Columns.Contains("TongTien")) dgvPhieuNhap.Columns["TongTien"].Visible = false;
 
-                    // Đổi tên cột cho đẹp
+                    // Đổi tên cột
                     dgvPhieuNhap.Columns["MaPN"].HeaderText = "Mã Phiếu";
-                    dgvPhieuNhap.Columns["TenSach"].HeaderText = "Tên Sách";
-                    dgvPhieuNhap.Columns["SoLuong"].HeaderText = "SL";
-                    dgvPhieuNhap.Columns["DonGiaNhap"].HeaderText = "Đơn Giá Nhập";
-                    dgvPhieuNhap.Columns["ThanhTien"].HeaderText = "Thành Tiền";
+                    dgvPhieuNhap.Columns["MaPN"].FillWeight = 50;
+
                     dgvPhieuNhap.Columns["NgayNhap"].HeaderText = "Ngày Nhập";
+                    dgvPhieuNhap.Columns["NgayNhap"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm";
+                    dgvPhieuNhap.Columns["NgayNhap"].FillWeight = 80;
 
-                    // HIỂN THỊ THÊM CỘT NGƯỜI LẬP
-                    if (dgvPhieuNhap.Columns.Contains("NguoiLap")) dgvPhieuNhap.Columns["NguoiLap"].HeaderText = "Người Lập";
+                    dgvPhieuNhap.Columns["TenNCC"].HeaderText = "Nhà Cung Cấp";
+                    dgvPhieuNhap.Columns["NguoiLap"].HeaderText = "Người Lập";
 
-                    if (dgvPhieuNhap.Columns.Contains("GhiChu")) dgvPhieuNhap.Columns["GhiChu"].HeaderText = "Ghi Chú";
+                    dgvPhieuNhap.Columns["ChiTietSach"].HeaderText = "Sách Đã Nhập (Gộp)";
+                    dgvPhieuNhap.Columns["ChiTietSach"].FillWeight = 150; // Cho cột này rộng ra để đọc được nhiều sách
 
-                    // Format lại tiền tệ cho dễ nhìn
-                    dgvPhieuNhap.Columns["ThanhTien"].DefaultCellStyle.Format = "N0";
-                    dgvPhieuNhap.Columns["DonGiaNhap"].DefaultCellStyle.Format = "N0";
+                    dgvPhieuNhap.Columns["TongTien"].HeaderText = "Tổng Tiền";
+                    dgvPhieuNhap.Columns["TongTien"].DefaultCellStyle.Format = "N0";
+                    dgvPhieuNhap.Columns["GhiChu"].HeaderText = "Ghi Chú";
                 }
             }
         }
@@ -173,6 +192,7 @@ namespace Thinh_QLNhasach
 
             if (dgvPhieuNhap.DataSource == dtGioHang)
             {
+                // Khi đang bốc dữ liệu từ Giỏ hàng tạm
                 cboMaSach.SelectedValue = r.Cells["MaSach"].Value.ToString();
                 nudSoLuong.Value = Convert.ToDecimal(r.Cells["SoLuong"].Value);
                 txtDongianhap.Text = r.Cells["DonGiaNhap"].Value.ToString();
@@ -180,6 +200,7 @@ namespace Thinh_QLNhasach
             }
             else
             {
+                // Khi click vào dòng Lịch sử (Đã gộp sách), chỉ bốc dữ liệu Master lên
                 string maPN = r.Cells["MaPN"].Value.ToString();
                 txtMaPN.Text = maPN;
                 dtpNgayNhap.Value = Convert.ToDateTime(r.Cells["NgayNhap"].Value);
@@ -190,15 +211,15 @@ namespace Thinh_QLNhasach
                 txtTongtien.Text = Convert.ToDouble(r.Cells["TongTien"].Value).ToString("N0");
                 txtGhichu.Text = r.Cells["GhiChu"].Value.ToString();
 
-                cboMaSach.Text = r.Cells["TenSach"].Value.ToString();
-                nudSoLuong.Value = Convert.ToDecimal(r.Cells["SoLuong"].Value);
-                txtDongianhap.Text = r.Cells["DonGiaNhap"].Value.ToString();
-                txtThanhTien.Text = Convert.ToDouble(r.Cells["ThanhTien"].Value).ToString("N0");
-
-                // Khi sửa phiếu cũ, ta giấu ô Giá Bán đi cho an toàn
+                // Xóa trắng ô sách vì dòng lịch sử hiện tại đại diện cho RẤT NHIỀU sách
+                cboMaSach.SelectedIndex = -1;
+                nudSoLuong.Value = 1;
+                txtDongianhap.Clear();
                 txtGiaBan.Clear();
+                txtThanhTien.Text = "0";
 
-                btnSave.Tag = new { Mode = "EDIT_LE", MaPN = maPN, MaSachCu = r.Cells["MaSach"].Value.ToString(), SoLuongCu = r.Cells["SoLuong"].Value };
+                // Chuyển Tag sang EDIT_MASTER để khi bấm Save nó chỉ update Ghi chú và NCC
+                btnSave.Tag = new { Mode = "EDIT_MASTER", MaPN = maPN };
             }
         }
 
@@ -221,39 +242,27 @@ namespace Thinh_QLNhasach
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            // === LOGIC SỬA PHIẾU CŨ ===
-            if (btnSave.Tag != null && btnSave.Tag.ToString().Contains("EDIT_LE"))
+            // === LOGIC SỬA PHIẾU CŨ (CHỈ SỬA MASTER VÌ ĐÃ GỘP PHIẾU) ===
+            if (btnSave.Tag != null && btnSave.Tag.ToString().Contains("EDIT_MASTER"))
             {
                 dynamic data = btnSave.Tag;
                 using (SqlConnection conn = new SqlConnection(connectionString))
                 {
                     conn.Open();
-                    SqlTransaction trans = conn.BeginTransaction();
                     try
                     {
-                        int slMoi = (int)nudSoLuong.Value;
-                        double dgMoi = Convert.ToDouble(txtDongianhap.Text);
-
-                        new SqlCommand($"UPDATE ChiTietPhieuNhap SET SoLuong={slMoi}, DonGiaNhap={dgMoi}, ThanhTien={slMoi * dgMoi} WHERE MaPN='{data.MaPN}' AND MaSach='{data.MaSachCu}'", conn, trans).ExecuteNonQuery();
-
-                        new SqlCommand($"UPDATE Sach SET SoLuongTon = SoLuongTon - {data.SoLuongCu} + {slMoi} WHERE MaSach='{data.MaSachCu}'", conn, trans).ExecuteNonQuery();
-
-                        string updatePN = "UPDATE PhieuNhap SET GhiChu = @ghi, MaNCC = @ncc, MaND = @nd WHERE MaPN = @ma";
-                        SqlCommand cmdPN = new SqlCommand(updatePN, conn, trans);
+                        string updatePN = "UPDATE PhieuNhap SET GhiChu = @ghi, MaNCC = @ncc WHERE MaPN = @ma";
+                        SqlCommand cmdPN = new SqlCommand(updatePN, conn);
                         cmdPN.Parameters.AddWithValue("@ghi", txtGhichu.Text);
                         cmdPN.Parameters.AddWithValue("@ncc", cboMaNCC.SelectedValue);
-                        cmdPN.Parameters.AddWithValue("@nd", cboMaND.SelectedValue);
                         cmdPN.Parameters.AddWithValue("@ma", data.MaPN);
                         cmdPN.ExecuteNonQuery();
 
-                        new SqlCommand($"UPDATE PhieuNhap SET TongTien = (SELECT SUM(ThanhTien) FROM ChiTietPhieuNhap WHERE MaPN='{data.MaPN}') WHERE MaPN='{data.MaPN}'", conn, trans).ExecuteNonQuery();
-
-                        trans.Commit();
                         btnSave.Tag = null;
                         isEditingPhieu = false;
 
-                        MessageBox.Show("Sửa phiếu thành công!");
-                        AppLogger.GhiLog(Session.Username, "Sửa Phiếu Nhập", $"Đã sửa thông tin phiếu nhập mã {data.MaPN}");
+                        MessageBox.Show("Cập nhật thôngত্তি phiếu thành công (Chỉ sửa Nhà Cung Cấp & Ghi Chú)!");
+                        AppLogger.GhiLog(Session.Username, "Sửa Phiếu Nhập", $"Đã sửa thông tin tổng quan phiếu nhập mã {data.MaPN}");
 
                         LoadData();
                         ResetTabLapPhieu();
@@ -261,7 +270,6 @@ namespace Thinh_QLNhasach
                     }
                     catch (Exception ex)
                     {
-                        trans.Rollback();
                         MessageBox.Show("Lỗi: " + ex.Message);
                         return;
                     }
@@ -327,7 +335,7 @@ namespace Thinh_QLNhasach
             if (!isEditingPhieu)
             {
                 isEditingPhieu = true;
-                MessageBox.Show("Đã bật chế độ Sửa! Click vào bất kỳ dòng nào dưới bảng để bốc thông tin lên sửa.");
+                MessageBox.Show("Đã bật chế độ Sửa! Click vào bất kỳ dòng nào dưới bảng để sửa (Chỉ sửa thông tin Nhà Cung Cấp và Ghi Chú).");
                 BocDuLieuPhieuNhap(dgvPhieuNhap.CurrentRow.Index);
             }
             else
@@ -348,9 +356,7 @@ namespace Thinh_QLNhasach
 
         private void btnSearch_Click(object sender, EventArgs e)
         {
-            // Lấy từ khóa và bọc thép chống lỗi ký tự nháy đơn (nhỡ tìm sách tên là Harry's)
             string keyword = txtSearch.Text.Trim().Replace("'", "''");
-
             DataTable dtCurrent = dgvPhieuNhap.DataSource as DataTable;
 
             if (dtCurrent != null)
@@ -359,25 +365,17 @@ namespace Thinh_QLNhasach
                 {
                     if (dtCurrent == dtGioHang)
                     {
-                        // Lọc trên Giỏ hàng
-                        if (string.IsNullOrEmpty(keyword))
-                            dtCurrent.DefaultView.RowFilter = "";
-                        else
-                            dtCurrent.DefaultView.RowFilter = string.Format("Convert(TenSach, 'System.String') LIKE '%{0}%'", keyword);
+                        if (string.IsNullOrEmpty(keyword)) dtCurrent.DefaultView.RowFilter = "";
+                        else dtCurrent.DefaultView.RowFilter = string.Format("Convert(TenSach, 'System.String') LIKE '%{0}%'", keyword);
                     }
                     else
                     {
-                        // Lọc trên Lịch sử DB (Dùng Convert để ép toàn bộ về chuỗi, né tuyệt đối lỗi Null và Data Type)
-                        if (string.IsNullOrEmpty(keyword))
-                            dtCurrent.DefaultView.RowFilter = "";
-                        else
-                            dtCurrent.DefaultView.RowFilter = string.Format("Convert(TenSach, 'System.String') LIKE '%{0}%' OR Convert(MaPN, 'System.String') LIKE '%{0}%'", keyword);
+                        // Đã thay 'TenSach' bằng 'ChiTietSach' do bảng đã gộp
+                        if (string.IsNullOrEmpty(keyword)) dtCurrent.DefaultView.RowFilter = "";
+                        else dtCurrent.DefaultView.RowFilter = string.Format("Convert(ChiTietSach, 'System.String') LIKE '%{0}%' OR Convert(MaPN, 'System.String') LIKE '%{0}%'", keyword);
                     }
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Lỗi cú pháp tìm kiếm: " + ex.Message);
-                }
+                catch (Exception ex) { MessageBox.Show("Lỗi cú pháp tìm kiếm: " + ex.Message); }
             }
         }
 
@@ -385,11 +383,7 @@ namespace Thinh_QLNhasach
         {
             if (e.RowIndex >= 0)
             {
-                if (isEditingPhieu)
-                {
-                    BocDuLieuPhieuNhap(e.RowIndex);
-                }
-                else if (dgvPhieuNhap.DataSource == dtGioHang)
+                if (isEditingPhieu || dgvPhieuNhap.DataSource == dtGioHang)
                 {
                     BocDuLieuPhieuNhap(e.RowIndex);
                 }
@@ -397,7 +391,7 @@ namespace Thinh_QLNhasach
         }
 
         // =========================================================================
-        // TAB NHÀ CUNG CẤP (GIỮ NGUYÊN HOÀN TOÀN TỪ CODE CỦA ÔNG)
+        // TAB NHÀ CUNG CẤP
         // =========================================================================
         private void SetupDataTableNCC()
         {
@@ -564,21 +558,102 @@ namespace Thinh_QLNhasach
             }
         }
 
-        private void LoadComboBoxSach()
+        // =========================================================================
+        // ĐÃ THÊM: HÀM LOAD COMBOBOX THỂ LOẠI
+        // =========================================================================
+        private void LoadComboBoxTheLoai()
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                try
+                {
+                    SqlDataAdapter da = new SqlDataAdapter("SELECT MaTL, TenTL FROM TheLoai", conn);
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+
+                    // Chèn thêm dòng Tất cả sách lên đầu để nếu thích thì xem full sách
+                    DataRow row = dt.NewRow();
+                    row["MaTL"] = 0;
+                    row["TenTL"] = "--- Tất cả sách ---";
+                    dt.Rows.InsertAt(row, 0);
+
+                    // Gắn vào cboTheLoai (nếu tồn tại trên form)
+                    if (this.Controls.Find("cboTheLoai", true).Length > 0)
+                    {
+                        ComboBox cboTL = (ComboBox)this.Controls.Find("cboTheLoai", true)[0];
+
+                        // Tắt event trước khi đổ data
+                        cboTL.SelectedIndexChanged -= cboTheLoai_SelectedIndexChanged;
+
+                        cboTL.DataSource = dt;
+                        cboTL.DisplayMember = "TenTL";
+                        cboTL.ValueMember = "MaTL";
+                        cboTL.SelectedIndex = 0;
+
+                        // Bật lại event
+                        cboTL.SelectedIndexChanged += cboTheLoai_SelectedIndexChanged;
+                    }
+                }
+                catch (Exception ex) { MessageBox.Show("Lỗi load Thể loại: " + ex.Message); }
+            }
+        }
+
+        // =========================================================================
+        // ĐÃ SỬA: HÀM LOAD COMBOBOX SÁCH CÓ THÊM CHỨC NĂNG LỌC THEO THỂ LOẠI
+        // =========================================================================
+        private void LoadComboBoxSach(int maTL = 0)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 try
                 {
                     conn.Open();
-                    // Lấy sẵn GiaNhap, GiaBan để tí tự điền
-                    SqlDataAdapter da = new SqlDataAdapter("SELECT MaSach, TenSach, GiaNhap, GiaBan FROM Sach", conn);
+                    string sql = "SELECT MaSach, TenSach, GiaNhap, GiaBan FROM Sach";
+
+                    // Lọc theo thể loại nếu maTL > 0
+                    if (maTL > 0)
+                    {
+                        sql += " WHERE MaTL = " + maTL;
+                    }
+
+                    SqlDataAdapter da = new SqlDataAdapter(sql, conn);
                     DataTable dt = new DataTable(); da.Fill(dt);
-                    cboMaSach.DataSource = null; this.BindingContext = new BindingContext();
-                    cboMaSach.DataSource = dt; cboMaSach.DisplayMember = "TenSach"; cboMaSach.ValueMember = "MaSach";
+
+                    // Tắt sự kiện để chống lỗi nhảy liên hoàn
+                    cboMaSach.SelectedIndexChanged -= cboMaSach_SelectedIndexChanged;
+
+                    cboMaSach.DataSource = null;
+                    this.BindingContext = new BindingContext();
+                    cboMaSach.DataSource = dt;
+                    cboMaSach.DisplayMember = "TenSach";
+                    cboMaSach.ValueMember = "MaSach";
+
                     if (cboMaSach.Items.Count > 0) cboMaSach.SelectedIndex = -1;
+
+                    // Bật lại sự kiện
+                    cboMaSach.SelectedIndexChanged += cboMaSach_SelectedIndexChanged;
                 }
                 catch (Exception ex) { MessageBox.Show("Lỗi: " + ex.Message); }
+            }
+        }
+
+        // =========================================================================
+        // ĐÃ THÊM: SỰ KIỆN KHI CHỌN THỂ LOẠI -> LỌC SÁCH
+        // =========================================================================
+        private void cboTheLoai_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ComboBox cboTL = sender as ComboBox;
+            if (cboTL != null && cboTL.SelectedValue != null)
+            {
+                int maTL = 0;
+                int.TryParse(cboTL.SelectedValue.ToString(), out maTL);
+
+                // Gọi hàm load sách và truyền mã thể loại vào để lọc
+                LoadComboBoxSach(maTL);
+
+                // Xóa trắng ô đơn giá vì danh sách sách vừa bị đổi
+                txtDongianhap.Clear();
+                txtGiaBan.Clear();
             }
         }
 
@@ -596,16 +671,19 @@ namespace Thinh_QLNhasach
         {
             txtMaPN.Text = TuSinhMaPhieu();
             txtMaPN.ReadOnly = true;
+
+            // Mặc định về dòng "Tất cả sách" nếu có control này trên giao diện
+            if (this.Controls.Find("cboTheLoai", true).Length > 0)
+            {
+                ((ComboBox)this.Controls.Find("cboTheLoai", true)[0]).SelectedIndex = 0;
+            }
+
             cboMaSach.SelectedIndex = -1;
             cboMaNCC.SelectedIndex = -1;
 
-            // Ép người lập phiếu là người đang đăng nhập (nếu có Session)
             if (cboMaND.Items.Count > 0)
             {
-                // Bắt đúng tên người dùng hiện tại đang đăng nhập
                 cboMaND.Text = Session.Username;
-
-                // Khóa mồm lại, cấm nhân viên (staff) tự ý chọn tên người khác để đổ vỏ
                 cboMaND.Enabled = false;
             }
 
@@ -666,6 +744,112 @@ namespace Thinh_QLNhasach
                 txtDongianhap.Clear();
                 txtGiaBan.Clear();
             }
+        }
+
+        // =========================================================================
+        // TÍNH NĂNG IN PHIẾU NHẬP HÀNG 
+        // =========================================================================
+        private void btnIn_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(txtMaPN.Text) || dtGioHang.Rows.Count > 0)
+            {
+                MessageBox.Show("Vui lòng Lưu phiếu hoặc Chọn một phiếu dưới bảng để in!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            PrintPreviewDialog ppd = new PrintPreviewDialog();
+            PrintDocument pd = new PrintDocument();
+
+            pd.PrintPage += new PrintPageEventHandler(InPhieuNhap_PrintPage);
+
+            ppd.Document = pd;
+            ppd.Width = 800;
+            ppd.Height = 1000;
+            ppd.ShowDialog();
+        }
+
+        private void InPhieuNhap_PrintPage(object sender, PrintPageEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            Font fontTitle = new Font("Segoe UI", 22, FontStyle.Bold);
+            Font fontHeader = new Font("Segoe UI", 12, FontStyle.Bold);
+            Font fontNormal = new Font("Segoe UI", 12, FontStyle.Regular);
+            Font fontItalic = new Font("Segoe UI", 11, FontStyle.Italic);
+
+            int y = 50;
+            int left = 50;
+
+            g.DrawString("CỬA HÀNG SÁCH DT STORE", fontHeader, Brushes.Black, left, y);
+            y += 25;
+            g.DrawString("Địa chỉ: Hà Nội - Điện thoại: 0987.654.321", fontNormal, Brushes.Black, left, y);
+            y += 60;
+
+            g.DrawString("PHIẾU NHẬP KHO", fontTitle, Brushes.Black, new PointF(280, y));
+            y += 50;
+
+            g.DrawString("Mã phiếu: " + txtMaPN.Text, fontNormal, Brushes.Black, left, y);
+            y += 25;
+            g.DrawString("Ngày nhập: " + dtpNgayNhap.Value.ToString("dd/MM/yyyy HH:mm"), fontNormal, Brushes.Black, left, y);
+            y += 25;
+            g.DrawString("Nhà cung cấp: " + cboMaNCC.Text, fontNormal, Brushes.Black, left, y);
+            y += 25;
+            g.DrawString("Người lập: " + cboMaND.Text, fontNormal, Brushes.Black, left, y);
+            y += 40;
+
+            g.DrawLine(Pens.Black, left, y, 780, y);
+            y += 10;
+            g.DrawString("STT", fontHeader, Brushes.Black, left, y);
+            g.DrawString("Tên Sách", fontHeader, Brushes.Black, left + 50, y);
+            g.DrawString("SL", fontHeader, Brushes.Black, left + 400, y);
+            g.DrawString("Đơn Giá", fontHeader, Brushes.Black, left + 480, y);
+            g.DrawString("Thành Tiền", fontHeader, Brushes.Black, left + 620, y);
+            y += 25;
+            g.DrawLine(Pens.Black, left, y, 780, y);
+            y += 15;
+
+            double tongTien = 0;
+            int stt = 1;
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                string sql = "SELECT s.TenSach, ct.SoLuong, ct.DonGiaNhap, ct.ThanhTien FROM ChiTietPhieuNhap ct JOIN Sach s ON ct.MaSach = s.MaSach WHERE ct.MaPN = @ma";
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@ma", txtMaPN.Text);
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    g.DrawString(stt.ToString(), fontNormal, Brushes.Black, left, y);
+
+                    string tenSach = reader["TenSach"].ToString();
+                    if (tenSach.Length > 35) tenSach = tenSach.Substring(0, 35) + "...";
+                    g.DrawString(tenSach, fontNormal, Brushes.Black, left + 50, y);
+
+                    g.DrawString(reader["SoLuong"].ToString(), fontNormal, Brushes.Black, left + 400, y);
+                    g.DrawString(Convert.ToDouble(reader["DonGiaNhap"]).ToString("N0"), fontNormal, Brushes.Black, left + 480, y);
+                    g.DrawString(Convert.ToDouble(reader["ThanhTien"]).ToString("N0"), fontNormal, Brushes.Black, left + 620, y);
+
+                    tongTien += Convert.ToDouble(reader["ThanhTien"]);
+                    stt++;
+                    y += 30;
+                }
+            }
+
+            y += 10;
+            g.DrawLine(Pens.Black, left, y, 780, y);
+            y += 20;
+
+            Font fontTongTien = new Font("Segoe UI", 16, FontStyle.Bold);
+            g.DrawString("TỔNG CỘNG: " + tongTien.ToString("N0") + " VNĐ", fontTongTien, Brushes.Black, left + 420, y);
+
+            y += 60;
+
+            g.DrawString("Người giao hàng", fontHeader, Brushes.Black, left + 50, y);
+            g.DrawString("Người lập phiếu", fontHeader, Brushes.Black, left + 550, y);
+            y += 20;
+            g.DrawString("(Ký, ghi rõ họ tên)", fontItalic, Brushes.Black, left + 60, y);
+            g.DrawString("(Ký, ghi rõ họ tên)", fontItalic, Brushes.Black, left + 560, y);
         }
     }
 }

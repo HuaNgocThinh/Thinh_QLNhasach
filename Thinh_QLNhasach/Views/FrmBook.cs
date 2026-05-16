@@ -49,43 +49,27 @@ namespace Thinh_QLNhasach.Views
             LoadComboBoxData();
             ApplyCustomInterface();
 
-            // MẶC ĐỊNH MỞ LÊN LÀ KHÓA CHẶT CẢ 3 TAB (Chỉ cho phép nhập khi bấm Thêm/Sửa)
-            KhoaFormSach(true);
-            KhoaFormTL(true);
-            KhoaFormNXB(true);
-
-            // ==============================================================================
-            // ĐÃ FIX: TỰ ĐỘNG BỐC DỮ LIỆU DÒNG ĐẦU TIÊN LÊN FORM NGAY KHI VỪA MỞ
-            // ==============================================================================
-
-            // Tab Sách
+            // ==============================================================
+            // LOGIC KHỞI TẠO SIÊU THÔNG MINH
+            // ==============================================================
+            KhoaFormSach(true); // Tab sách mặc định vẫn khóa và bốc dòng đầu tiên lên
             if (dtSachTam.Rows.Count > 0)
             {
                 indexChonSach = 0;
-                BocDuLieuSach(0); // Bốc dòng 0 lên form
+                BocDuLieuSach(0);
             }
 
-            // Tab Thể Loại
-            if (dtTLTam.Rows.Count > 0)
-            {
-                indexChonTL = 0;
-                BocDuLieuTheLoai(0);
-            }
-
-            // Tab Nhà Xuất Bản
-            if (dtNXBTam.Rows.Count > 0)
-            {
-                indexChonNXB = 0;
-                BocDuLieuNXB(0);
-            }
+            // MỞ KHÓA SẴN CHO THỂ LOẠI & NXB ĐỂ THÊM MỚI TỐC ĐỘ (MÃ TỰ ĐỘNG KHÓA)
+            KhoaFormTL(false);
+            KhoaFormNXB(false);
         }
 
         // ==============================================================================
-        // BỘ HÀM KHÓA/MỞ GIAO DIỆN CHUYÊN NGHIỆP CHO 3 TAB
+        // BỘ HÀM KHÓA/MỞ GIAO DIỆN
         // ==============================================================================
         private void KhoaFormSach(bool isLocked)
         {
-            txtMasach.ReadOnly = true; // Mã lúc nào cũng khóa
+            txtMasach.ReadOnly = true;
             txtTensach.ReadOnly = isLocked;
             txtTonKho.ReadOnly = isLocked;
             txtMoTa.ReadOnly = isLocked;
@@ -93,19 +77,19 @@ namespace Thinh_QLNhasach.Views
             cboMaTG.Enabled = !isLocked;
             cboMaTL.Enabled = !isLocked;
             cboMaNXB.Enabled = !isLocked;
-            btnChonAnh.Enabled = !isLocked; // Khóa luôn nút chọn ảnh
+            btnChonAnh.Enabled = !isLocked;
         }
 
         private void KhoaFormTL(bool isLocked)
         {
-            txtMaTL.ReadOnly = true; // Mã lúc nào cũng khóa
+            txtMaTL.ReadOnly = true; // Mã TL lúc nào cũng khóa, Database tự tăng
             txtTenTL.ReadOnly = isLocked;
             textMoTa.ReadOnly = isLocked;
         }
 
         private void KhoaFormNXB(bool isLocked)
         {
-            txtMaNXB.ReadOnly = true; // Mã lúc nào cũng khóa
+            txtMaNXB.ReadOnly = true; // Mã NXB lúc nào cũng khóa, Database tự tăng
             txtTenNXB.ReadOnly = isLocked;
             txtDiachi.ReadOnly = isLocked;
             txtSdt.ReadOnly = isLocked;
@@ -145,7 +129,6 @@ namespace Thinh_QLNhasach.Views
                 dgvBook.Columns["TenNXB"].HeaderText = "Nhà XB";
                 if (dgvBook.Columns.Contains("NamXuatBan")) dgvBook.Columns["NamXuatBan"].Visible = false;
 
-                // ẨN CỘT GIÁ NHẬP, ĐẢM BẢO CỘT GIÁ BÁN HIỂN THỊ
                 if (dgvBook.Columns.Contains("GiaNhap")) dgvBook.Columns["GiaNhap"].Visible = false;
                 if (dgvBook.Columns.Contains("GiaBan")) dgvBook.Columns["GiaBan"].Visible = true;
 
@@ -250,10 +233,7 @@ namespace Thinh_QLNhasach.Views
             if (e.RowIndex < 0) return;
             indexChonSach = e.RowIndex;
 
-            // LUÔN LUÔN bốc dữ liệu lên để xem
             BocDuLieuSach(indexChonSach);
-
-            // Nếu chưa bấm nút Cờ Lê (Sửa) thì ép khóa lại không cho táy máy gõ bậy
             if (!isEditingSach) KhoaFormSach(true);
         }
 
@@ -275,7 +255,7 @@ namespace Thinh_QLNhasach.Views
 
             if (isEditingSach)
             {
-                KhoaFormSach(false); // MỞ KHÓA CHO SỬA
+                KhoaFormSach(false);
                 MessageBox.Show("Đã BẬT chế độ Sửa!\nBạn có thể sửa thông tin của cuốn sách đang chọn.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 if (indexChonSach != -1) BocDuLieuSach(indexChonSach);
             }
@@ -288,11 +268,15 @@ namespace Thinh_QLNhasach.Views
 
         private void btnDel_Click(object sender, EventArgs e)
         {
-            if (dgvBook.CurrentRow != null)
+            if (dgvBook.CurrentRow != null && !dgvBook.CurrentRow.IsNewRow)
             {
-                DataRowView drv = (DataRowView)dgvBook.CurrentRow.DataBoundItem;
-                drv.Row.Delete();
-                indexChonSach = -1;
+                if (MessageBox.Show("Xác nhận xóa Sách này?\n(Cần bấm Lưu để xóa hẳn khỏi hệ thống)", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    DataRowView drv = (DataRowView)dgvBook.CurrentRow.DataBoundItem;
+                    drv.Row.Delete();
+                    indexChonSach = -1;
+                    btnReset_Click(null, null);
+                }
             }
         }
 
@@ -356,10 +340,12 @@ namespace Thinh_QLNhasach.Views
             indexChonSach = -1;
             isEditingSach = false;
 
-            KhoaFormSach(false); // ĐÁNH TRẮNG FORM VÀ MỞ KHÓA ĐỂ SẴN SÀNG THÊM SÁCH MỚI
+            KhoaFormSach(false);
         }
 
-        // ==================== 3. TAB THỂ LOẠI ====================
+        // ==============================================================================
+        // 3. TAB THỂ LOẠI (CHỈ LƯU VÀO BẢNG TẠM)
+        // ==============================================================================
         private void BocDuLieuTheLoai(int index)
         {
             DataRow dr = dtTLTam.Rows[index];
@@ -373,8 +359,10 @@ namespace Thinh_QLNhasach.Views
             if (e.RowIndex < 0) return;
             indexChonTL = e.RowIndex;
 
-            BocDuLieuTheLoai(indexChonTL); // Bốc lên xem
-            if (!isEditingTL) KhoaFormTL(true); // Chưa ấn Cờ lê thì khóa
+            BocDuLieuTheLoai(indexChonTL);
+
+            // Khóa lại để không gõ nhầm khi đang xem, muốn sửa phải bấm Cờ lê
+            if (!isEditingTL) KhoaFormTL(true);
         }
 
         private void btnAddTL_Click(object sender, EventArgs e)
@@ -382,32 +370,34 @@ namespace Thinh_QLNhasach.Views
             isEditingTL = false;
             if (string.IsNullOrWhiteSpace(txtTenTL.Text)) { MessageBox.Show("Vui lòng nhập tên thể loại!"); return; }
 
+            // THÊM VÀO BẢNG TẠM TRƯỚC
             DataRow dr = dtTLTam.NewRow();
             dr["TenTL"] = txtTenTL.Text.Trim();
             dr["MoTa"] = textMoTa.Text.Trim();
             dtTLTam.Rows.Add(dr);
 
-            MessageBox.Show("Đã thêm tạm! Nhấn Save để chốt vào DB.");
+            MessageBox.Show("Đã thêm vào danh sách chờ thành công! (Vui lòng nhấn [Save] để đẩy vào CSDL)", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             btnResetTL_Click(null, null);
         }
 
         private void btnEditTL_Click(object sender, EventArgs e)
         {
-            if (indexChonTL == -1) { MessageBox.Show("Hãy chọn một dòng thể loại dưới bảng!"); return; }
+            if (indexChonTL == -1) { MessageBox.Show("Hãy chọn một dòng thể loại dưới bảng để sửa!"); return; }
 
             if (!isEditingTL)
             {
+                // BẤM LẦN 1 -> MỞ KHÓA CHO GÕ
                 isEditingTL = true;
-                KhoaFormTL(false); // MỞ KHÓA
-                BocDuLieuTheLoai(indexChonTL);
-                MessageBox.Show("Đã bật chế độ sửa.");
+                KhoaFormTL(false);
+                MessageBox.Show("Đã bật chế độ sửa! Bạn có thể sửa nội dung và bấm nút Cờ Lê 1 lần nữa để cập nhật.", "Chế độ sửa", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
+                // BẤM LẦN 2 -> LƯU VÀO BẢNG TẠM, KHÓA LẠI
                 DataRow dr = dtTLTam.Rows[indexChonTL];
                 dr["TenTL"] = txtTenTL.Text.Trim();
                 dr["MoTa"] = textMoTa.Text.Trim();
-                MessageBox.Show("Cập nhật danh sách chờ thành công!");
+                MessageBox.Show("Đã cập nhật danh sách chờ thành công! (Vui lòng nhấn [Save] để đẩy vào CSDL)", "Hoàn tất", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 isEditingTL = false;
                 KhoaFormTL(true);
@@ -416,18 +406,22 @@ namespace Thinh_QLNhasach.Views
 
         private void btnDelTL_Click(object sender, EventArgs e)
         {
-            if (dgvTheLoai.CurrentRow != null)
+            if (dgvTheLoai.CurrentRow != null && !dgvTheLoai.CurrentRow.IsNewRow)
             {
-                DataRowView drv = (DataRowView)dgvTheLoai.CurrentRow.DataBoundItem;
-                drv.Row.Delete();
-                indexChonTL = -1;
+                if (MessageBox.Show("Xác nhận xóa Thể Loại này khỏi bảng tạm?\n(Vui lòng nhấn [Save] để xóa vĩnh viễn khỏi CSDL)", "Xác nhận Xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                {
+                    DataRowView drv = (DataRowView)dgvTheLoai.CurrentRow.DataBoundItem;
+                    drv.Row.Delete(); // Xóa khỏi bảng tạm
+                    indexChonTL = -1;
+                    btnResetTL_Click(null, null);
+                }
             }
         }
 
         private void btnSaveTL_Click(object sender, EventArgs e)
         {
             dgvTheLoai.EndEdit();
-            LuuDatabase("TheLoai");
+            LuuDatabase("TheLoai"); // Đẩy toàn bộ thay đổi (Thêm, Sửa, Xóa) xuống Database
         }
 
         private void btnSearchTL_Click(object sender, EventArgs e)
@@ -444,14 +438,16 @@ namespace Thinh_QLNhasach.Views
             txtSearchTL.Clear();
 
             if (dtTLTam != null) dtTLTam.DefaultView.RowFilter = "";
-
             indexChonTL = -1;
             isEditingTL = false;
 
-            KhoaFormTL(false); // MỞ KHÓA CHO PHÉP THÊM MỚI
+            // MỞ KHÓA NGAY ĐỂ SẴN SÀNG ĐÓN DỮ LIỆU MỚI TỐC ĐỘ CAO
+            KhoaFormTL(false);
         }
 
-        // ==================== 4. TAB NHÀ XUẤT BẢN ====================
+        // ==============================================================================
+        // 4. TAB NHÀ XUẤT BẢN (CHỈ LƯU VÀO BẢNG TẠM)
+        // ==============================================================================
         private void BocDuLieuNXB(int index)
         {
             DataRow dr = dtNXBTam.Rows[index];
@@ -467,8 +463,9 @@ namespace Thinh_QLNhasach.Views
             if (e.RowIndex < 0) return;
             indexChonNXB = e.RowIndex;
 
-            BocDuLieuNXB(indexChonNXB); // Bốc lên xem
-            if (!isEditingNXB) KhoaFormNXB(true); // Chưa ấn Cờ lê thì khóa
+            BocDuLieuNXB(indexChonNXB);
+
+            if (!isEditingNXB) KhoaFormNXB(true);
         }
 
         private void btnAddNXB_Click(object sender, EventArgs e)
@@ -476,6 +473,7 @@ namespace Thinh_QLNhasach.Views
             isEditingNXB = false;
             if (string.IsNullOrWhiteSpace(txtTenNXB.Text)) { MessageBox.Show("Vui lòng nhập tên Nhà xuất bản!"); return; }
 
+            // THÊM VÀO BẢNG TẠM TRƯỚC
             DataRow dr = dtNXBTam.NewRow();
             dr["TenNXB"] = txtTenNXB.Text.Trim();
             dr["DiaChi"] = txtDiachi.Text.Trim();
@@ -483,20 +481,19 @@ namespace Thinh_QLNhasach.Views
             dr["Email"] = txtEmail.Text.Trim();
             dtNXBTam.Rows.Add(dr);
 
-            MessageBox.Show("Đã thêm tạm! Nhấn Save để chốt vào DB.");
+            MessageBox.Show("Đã thêm vào danh sách chờ thành công! (Vui lòng nhấn [Save] để đẩy vào CSDL)", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
             btnResetNXB_Click(null, null);
         }
 
         private void btnEditNXB_Click(object sender, EventArgs e)
         {
-            if (indexChonNXB == -1) { MessageBox.Show("Hãy chọn một dòng nhà xuất bản dưới bảng!"); return; }
+            if (indexChonNXB == -1) { MessageBox.Show("Hãy chọn một dòng nhà xuất bản dưới bảng để sửa!"); return; }
 
             if (!isEditingNXB)
             {
                 isEditingNXB = true;
-                KhoaFormNXB(false); // MỞ KHÓA
-                BocDuLieuNXB(indexChonNXB);
-                MessageBox.Show("Đã bật chế độ sửa.");
+                KhoaFormNXB(false);
+                MessageBox.Show("Đã bật chế độ sửa! Bạn có thể sửa nội dung và bấm nút Cờ Lê 1 lần nữa để cập nhật.", "Chế độ sửa", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
@@ -505,7 +502,8 @@ namespace Thinh_QLNhasach.Views
                 dr["DiaChi"] = txtDiachi.Text.Trim();
                 dr["SoDienThoai"] = txtSdt.Text.Trim();
                 dr["Email"] = txtEmail.Text.Trim();
-                MessageBox.Show("Cập nhật danh sách chờ thành công!");
+
+                MessageBox.Show("Đã cập nhật danh sách chờ thành công! (Vui lòng nhấn [Save] để đẩy vào CSDL)", "Hoàn tất", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 isEditingNXB = false;
                 KhoaFormNXB(true);
@@ -514,18 +512,22 @@ namespace Thinh_QLNhasach.Views
 
         private void btnDelNXB_Click(object sender, EventArgs e)
         {
-            if (dgvNXB.CurrentRow != null)
+            if (dgvNXB.CurrentRow != null && !dgvNXB.CurrentRow.IsNewRow)
             {
-                DataRowView drv = (DataRowView)dgvNXB.CurrentRow.DataBoundItem;
-                drv.Row.Delete();
-                indexChonNXB = -1;
+                if (MessageBox.Show("Xác nhận xóa Nhà Xuất Bản này khỏi bảng tạm?\n(Vui lòng nhấn [Save] để xóa vĩnh viễn khỏi CSDL)", "Xác nhận Xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                {
+                    DataRowView drv = (DataRowView)dgvNXB.CurrentRow.DataBoundItem;
+                    drv.Row.Delete(); // Xóa khỏi bảng tạm
+                    indexChonNXB = -1;
+                    btnResetNXB_Click(null, null);
+                }
             }
         }
 
         private void btnSaveNXB_Click(object sender, EventArgs e)
         {
             dgvNXB.EndEdit();
-            LuuDatabase("NXB");
+            LuuDatabase("NXB"); // Đẩy toàn bộ thay đổi xuống Database
         }
 
         private void btnSearchNXB_Click(object sender, EventArgs e)
@@ -544,14 +546,16 @@ namespace Thinh_QLNhasach.Views
             txtSearchNXB.Clear();
 
             if (dtNXBTam != null) dtNXBTam.DefaultView.RowFilter = "";
-
             indexChonNXB = -1;
             isEditingNXB = false;
 
-            KhoaFormNXB(false); // MỞ KHÓA CHO PHÉP THÊM MỚI
+            // MỞ KHÓA NGAY ĐỂ SẴN SÀNG ĐÓN DỮ LIỆU MỚI TỐC ĐỘ CAO
+            KhoaFormNXB(false);
         }
 
-        // ==================== 5. LOGIC LƯU DATABASE (TRANSACTION) ====================
+        // ===================================================================================
+        // 5. HÀM CHỐT LƯU DATABASE: KIỂM SOÁT ĐÚNG TỪNG TRẠNG THÁI CỦA DÒNG BẢNG TẠM
+        // ===================================================================================
         private void LuuDatabase(string loai)
         {
             using (SqlConnection conn = new SqlConnection(connStr))
@@ -564,75 +568,112 @@ namespace Thinh_QLNhasach.Views
                     {
                         foreach (DataRow dr in dtSachTam.Rows)
                         {
+                            // Bỏ qua nếu dòng không bị thay đổi
+                            if (dr.RowState == DataRowState.Unchanged) continue;
+
                             if (dr.RowState == DataRowState.Deleted)
                             {
                                 string sqlDelete = "DELETE FROM Sach WHERE MaSach = @ma";
                                 SqlCommand cmdDel = new SqlCommand(sqlDelete, conn, trans);
                                 cmdDel.Parameters.AddWithValue("@ma", dr["MaSach", DataRowVersion.Original]);
                                 cmdDel.ExecuteNonQuery();
-                                continue;
                             }
-
-                            string sql = @"UPDATE Sach SET TenSach=@ten, MaTG=(SELECT TOP 1 MaTG FROM TacGia WHERE TenTG=@tg), 
-                            MaTL=(SELECT TOP 1 MaTL FROM TheLoai WHERE TenTL=@tl), MaNXB=(SELECT TOP 1 MaNXB FROM NhaXuatBan WHERE TenNXB=@nxb), 
-                            SoLuongTon=@sl, MoTa=@mt, HinhAnh=@ha WHERE MaSach=@ma";
-
-                            SqlCommand cmd = new SqlCommand(sql, conn, trans);
-                            cmd.Parameters.AddWithValue("@ma", dr["MaSach"]);
-                            cmd.Parameters.AddWithValue("@ten", dr["TenSach"]);
-                            cmd.Parameters.AddWithValue("@tg", dr["TenTG"]);
-                            cmd.Parameters.AddWithValue("@tl", dr["TenTL"]);
-                            cmd.Parameters.AddWithValue("@nxb", dr["TenNXB"]);
-                            cmd.Parameters.AddWithValue("@sl", dr["SoLuongTon"]);
-                            cmd.Parameters.AddWithValue("@mt", dr["MoTa"]);
-
-                            if (dr["HinhAnh"] == DBNull.Value || string.IsNullOrEmpty(dr["HinhAnh"].ToString()))
+                            else if (dr.RowState == DataRowState.Modified)
                             {
-                                cmd.Parameters.AddWithValue("@ha", DBNull.Value);
-                            }
-                            else
-                            {
-                                cmd.Parameters.AddWithValue("@ha", dr["HinhAnh"]);
-                            }
+                                string sql = @"UPDATE Sach SET TenSach=@ten, MaTG=(SELECT TOP 1 MaTG FROM TacGia WHERE TenTG=@tg), 
+                                MaTL=(SELECT TOP 1 MaTL FROM TheLoai WHERE TenTL=@tl), MaNXB=(SELECT TOP 1 MaNXB FROM NhaXuatBan WHERE TenNXB=@nxb), 
+                                SoLuongTon=@sl, MoTa=@mt, HinhAnh=@ha WHERE MaSach=@ma";
 
-                            cmd.ExecuteNonQuery();
+                                SqlCommand cmd = new SqlCommand(sql, conn, trans);
+                                cmd.Parameters.AddWithValue("@ma", dr["MaSach"]);
+                                cmd.Parameters.AddWithValue("@ten", dr["TenSach"]);
+                                cmd.Parameters.AddWithValue("@tg", dr["TenTG"]);
+                                cmd.Parameters.AddWithValue("@tl", dr["TenTL"]);
+                                cmd.Parameters.AddWithValue("@nxb", dr["TenNXB"]);
+                                cmd.Parameters.AddWithValue("@sl", dr["SoLuongTon"]);
+                                cmd.Parameters.AddWithValue("@mt", dr["MoTa"]);
+
+                                if (dr["HinhAnh"] == DBNull.Value || string.IsNullOrEmpty(dr["HinhAnh"].ToString()))
+                                    cmd.Parameters.AddWithValue("@ha", DBNull.Value);
+                                else
+                                    cmd.Parameters.AddWithValue("@ha", dr["HinhAnh"]);
+
+                                cmd.ExecuteNonQuery();
+                            }
                         }
                     }
                     else if (loai == "TheLoai")
                     {
                         foreach (DataRow dr in dtTLTam.Rows)
                         {
-                            if (dr.RowState == DataRowState.Deleted) continue;
-                            string sql = @"IF EXISTS (SELECT 1 FROM TheLoai WHERE MaTL = @ma)
-                                UPDATE TheLoai SET TenTL=@ten, MoTa=@mt WHERE MaTL=@ma
-                                ELSE INSERT INTO TheLoai (TenTL, MoTa) VALUES (@ten, @mt)";
-                            SqlCommand cmd = new SqlCommand(sql, conn, trans);
-                            cmd.Parameters.AddWithValue("@ma", dr["MaTL"] == DBNull.Value ? -1 : dr["MaTL"]);
-                            cmd.Parameters.AddWithValue("@ten", dr["TenTL"]);
-                            cmd.Parameters.AddWithValue("@mt", dr["MoTa"]);
-                            cmd.ExecuteNonQuery();
+                            // Phân luồng chạy SQL siêu nhẹ và chính xác tuyệt đối
+                            if (dr.RowState == DataRowState.Unchanged) continue;
+
+                            if (dr.RowState == DataRowState.Deleted)
+                            {
+                                string sqlDelete = "DELETE FROM TheLoai WHERE MaTL = @ma";
+                                SqlCommand cmdDel = new SqlCommand(sqlDelete, conn, trans);
+                                cmdDel.Parameters.AddWithValue("@ma", dr["MaTL", DataRowVersion.Original]);
+                                cmdDel.ExecuteNonQuery();
+                            }
+                            else if (dr.RowState == DataRowState.Added)
+                            {
+                                string sqlInsert = "INSERT INTO TheLoai (TenTL, MoTa) VALUES (@ten, @mt)";
+                                SqlCommand cmdIns = new SqlCommand(sqlInsert, conn, trans);
+                                cmdIns.Parameters.AddWithValue("@ten", dr["TenTL"]);
+                                cmdIns.Parameters.AddWithValue("@mt", dr["MoTa"]);
+                                cmdIns.ExecuteNonQuery();
+                            }
+                            else if (dr.RowState == DataRowState.Modified)
+                            {
+                                string sqlUpdate = "UPDATE TheLoai SET TenTL=@ten, MoTa=@mt WHERE MaTL=@ma";
+                                SqlCommand cmdUpd = new SqlCommand(sqlUpdate, conn, trans);
+                                cmdUpd.Parameters.AddWithValue("@ma", dr["MaTL"]);
+                                cmdUpd.Parameters.AddWithValue("@ten", dr["TenTL"]);
+                                cmdUpd.Parameters.AddWithValue("@mt", dr["MoTa"]);
+                                cmdUpd.ExecuteNonQuery();
+                            }
                         }
                     }
                     else if (loai == "NXB")
                     {
                         foreach (DataRow dr in dtNXBTam.Rows)
                         {
-                            if (dr.RowState == DataRowState.Deleted) continue;
-                            string sql = @"IF EXISTS (SELECT 1 FROM NhaXuatBan WHERE MaNXB = @ma)
-                                UPDATE NhaXuatBan SET TenNXB=@ten, DiaChi=@dc, SoDienThoai=@sdt, Email=@email WHERE MaNXB=@ma
-                                ELSE INSERT INTO NhaXuatBan (TenNXB, DiaChi, SoDienThoai, Email) VALUES (@ten, @dc, @sdt, @email)";
-                            SqlCommand cmd = new SqlCommand(sql, conn, trans);
-                            cmd.Parameters.AddWithValue("@ma", dr["MaNXB"] == DBNull.Value ? -1 : dr["MaNXB"]);
-                            cmd.Parameters.AddWithValue("@ten", dr["TenNXB"]);
-                            cmd.Parameters.AddWithValue("@dc", dr["DiaChi"]);
-                            cmd.Parameters.AddWithValue("@sdt", dr["SoDienThoai"]);
-                            cmd.Parameters.AddWithValue("@email", dr["Email"]);
-                            cmd.ExecuteNonQuery();
+                            if (dr.RowState == DataRowState.Unchanged) continue;
+
+                            if (dr.RowState == DataRowState.Deleted)
+                            {
+                                string sqlDelete = "DELETE FROM NhaXuatBan WHERE MaNXB = @ma";
+                                SqlCommand cmdDel = new SqlCommand(sqlDelete, conn, trans);
+                                cmdDel.Parameters.AddWithValue("@ma", dr["MaNXB", DataRowVersion.Original]);
+                                cmdDel.ExecuteNonQuery();
+                            }
+                            else if (dr.RowState == DataRowState.Added)
+                            {
+                                string sqlInsert = "INSERT INTO NhaXuatBan (TenNXB, DiaChi, SoDienThoai, Email) VALUES (@ten, @dc, @sdt, @email)";
+                                SqlCommand cmdIns = new SqlCommand(sqlInsert, conn, trans);
+                                cmdIns.Parameters.AddWithValue("@ten", dr["TenNXB"]);
+                                cmdIns.Parameters.AddWithValue("@dc", dr["DiaChi"]);
+                                cmdIns.Parameters.AddWithValue("@sdt", dr["SoDienThoai"]);
+                                cmdIns.Parameters.AddWithValue("@email", dr["Email"]);
+                                cmdIns.ExecuteNonQuery();
+                            }
+                            else if (dr.RowState == DataRowState.Modified)
+                            {
+                                string sqlUpdate = "UPDATE NhaXuatBan SET TenNXB=@ten, DiaChi=@dc, SoDienThoai=@sdt, Email=@email WHERE MaNXB=@ma";
+                                SqlCommand cmdUpd = new SqlCommand(sqlUpdate, conn, trans);
+                                cmdUpd.Parameters.AddWithValue("@ma", dr["MaNXB"]);
+                                cmdUpd.Parameters.AddWithValue("@ten", dr["TenNXB"]);
+                                cmdUpd.Parameters.AddWithValue("@dc", dr["DiaChi"]);
+                                cmdUpd.Parameters.AddWithValue("@sdt", dr["SoDienThoai"]);
+                                cmdUpd.Parameters.AddWithValue("@email", dr["Email"]);
+                                cmdUpd.ExecuteNonQuery();
+                            }
                         }
                     }
 
                     trans.Commit();
-                    MessageBox.Show("Đã lưu vào Database!");
+                    MessageBox.Show("Đã lưu các thay đổi thành công vào Database!", "Hoàn tất", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     if (loai == "Sach") AppLogger.GhiLog(Session.Username, "Cập nhật Sách", "Đã lưu thay đổi danh sách Sách vào hệ thống");
                     else if (loai == "TheLoai") AppLogger.GhiLog(Session.Username, "Cập nhật Thể Loại", "Đã lưu thay đổi danh sách Thể Loại vào hệ thống");
@@ -643,7 +684,7 @@ namespace Thinh_QLNhasach.Views
                 catch (Exception ex)
                 {
                     trans.Rollback();
-                    MessageBox.Show("Lỗi lưu DB: " + ex.Message);
+                    MessageBox.Show("Lỗi lưu Database (Có thể do Thể loại/NXB này đang được gán cho một số Sách, không thể xóa):\n" + ex.Message, "Lỗi Ràng Buộc Dữ Liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -675,7 +716,6 @@ namespace Thinh_QLNhasach.Views
             {
                 try
                 {
-                    // Lấy chính xác các cột cần thiết cho dtSachTam
                     string sql = @"SELECT s.MaSach, s.TenSach, tg.TenTG, tl.TenTL, nxb.TenNXB, 
                                           s.NamXuatBan, s.GiaNhap, s.GiaBan, s.SoLuongTon, s.HinhAnh, s.MoTa 
                                    FROM Sach s
@@ -696,24 +736,32 @@ namespace Thinh_QLNhasach.Views
 
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
 
-                    // CHỐT HẠ: Dọn sạch bảng tạm rồi đổ dữ liệu thẳng vào dtSachTam
                     dtSachTam.Clear();
                     da.Fill(dtSachTam);
-                    dgvBook.DataSource = dtSachTam; // Gán DataSource 1 lần duy nhất ở đây!
+                    dgvBook.DataSource = dtSachTam;
 
-                    // ĐỔI TÊN TIÊU ĐỀ CHO CỘT GIÁ BÁN, XÓA TOÀN BỘ FORMAT MÀU MÈ
                     if (dgvBook.Columns.Count > 0)
                     {
                         if (dgvBook.Columns.Contains("GiaBan"))
                         {
                             dgvBook.Columns["GiaBan"].HeaderText = "Giá Bán";
-                            // Cột Giá Bán bây giờ sẽ có định dạng mặc định (mộc mạc) giống y hệt cột Tồn Kho
                         }
                     }
+
+                    string sqlTL = "SELECT MaTL, TenTL, MoTa FROM TheLoai";
+                    SqlDataAdapter daTL = new SqlDataAdapter(sqlTL, conn);
+                    dtTLTam.Clear();
+                    daTL.Fill(dtTLTam);
+
+                    string sqlNXB = "SELECT MaNXB, TenNXB, DiaChi, SoDienThoai, Email FROM NhaXuatBan";
+                    SqlDataAdapter daNXB = new SqlDataAdapter(sqlNXB, conn);
+                    dtNXBTam.Clear();
+                    daNXB.Fill(dtNXBTam);
+
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Lỗi tải dữ liệu Sách: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Lỗi tải dữ liệu: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }

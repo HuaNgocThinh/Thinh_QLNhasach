@@ -40,10 +40,43 @@ namespace Thinh_QLNhasach
             dgvTopSach.RowHeadersVisible = false;
             dgvTopSach.ColumnHeadersVisible = false;
 
-            // ĐÃ FIX: Tắt hoàn toàn thanh cuộn, chơi hệ Dashboard
+            // Tắt hoàn toàn thanh cuộn, chơi hệ Dashboard
             dgvTopSach.ScrollBars = ScrollBars.None;
 
+            LoadComboBoxTheLoai();
             ThucHienThongKe();
+        }
+
+        private void LoadComboBoxTheLoai()
+        {
+            using (SqlConnection conn = new SqlConnection(Thinh_QLNhasach.Database.DbConnection.connStr))
+            {
+                try
+                {
+                    conn.Open();
+                    string sql = "SELECT MaTL, TenTL FROM TheLoai";
+                    SqlDataAdapter da = new SqlDataAdapter(sql, conn);
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+
+                    DataRow row = dt.NewRow();
+                    row["MaTL"] = 0;
+                    row["TenTL"] = "--- Tất cả thể loại ---";
+                    dt.Rows.InsertAt(row, 0);
+
+                    if (cboTheLoai != null)
+                    {
+                        cboTheLoai.DataSource = dt;
+                        cboTheLoai.DisplayMember = "TenTL";
+                        cboTheLoai.ValueMember = "MaTL";
+                        cboTheLoai.SelectedIndex = 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi tải danh sách thể loại: " + ex.Message, "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
         private void btnThongKe_Click(object sender, EventArgs e)
@@ -56,6 +89,12 @@ namespace Thinh_QLNhasach
             int thang = dtpThang.Value.Month;
             int nam = dtpThang.Value.Year;
 
+            int maTL = 0;
+            if (cboTheLoai != null && cboTheLoai.SelectedValue != null)
+            {
+                int.TryParse(cboTheLoai.SelectedValue.ToString(), out maTL);
+            }
+
             lblTieuDeDoanhThu.Text = $"Doanh thu tháng {thang}/{nam}";
 
             using (SqlConnection conn = new SqlConnection(Thinh_QLNhasach.Database.DbConnection.connStr))
@@ -66,7 +105,7 @@ namespace Thinh_QLNhasach
                         conn.Open();
 
                     LoadDoanhThu(conn, thang, nam);
-                    LoadTop10Sach(conn, thang, nam);
+                    LoadTop10Sach(conn, thang, nam, maTL);
                     LoadCanhBaoTonKho(conn);
                 }
                 catch (Exception ex)
@@ -97,7 +136,7 @@ namespace Thinh_QLNhasach
             }
         }
 
-        private void LoadTop10Sach(SqlConnection conn, int thang, int nam)
+        private void LoadTop10Sach(SqlConnection conn, int thang, int nam, int maTL)
         {
             string query = @"SELECT TOP 10 
                                 ROW_NUMBER() OVER(ORDER BY SUM(c.SoLuong) DESC) AS STT,
@@ -111,6 +150,7 @@ namespace Thinh_QLNhasach
                              INNER JOIN Sach s ON c.MaSach = s.MaSach
                              LEFT JOIN TacGia tg ON s.MaTG = tg.MaTG 
                              WHERE MONTH(h.NgayLap) = @Thang AND YEAR(h.NgayLap) = @Nam
+                             AND (@MaTL = 0 OR s.MaTL = @MaTL)
                              GROUP BY s.MaSach, s.TenSach, tg.TenTG, s.HinhAnh
                              ORDER BY SUM(c.SoLuong) DESC";
 
@@ -118,6 +158,7 @@ namespace Thinh_QLNhasach
             {
                 cmd.Parameters.AddWithValue("@Thang", thang);
                 cmd.Parameters.AddWithValue("@Nam", nam);
+                cmd.Parameters.AddWithValue("@MaTL", maTL);
 
                 using (SqlDataAdapter da = new SqlDataAdapter(cmd))
                 {
@@ -144,15 +185,31 @@ namespace Thinh_QLNhasach
             }
         }
 
+        // =========================================================
+        // ĐÃ FIX: SỬ DỤNG THẺ <br> ĐỂ XUỐNG DÒNG CHO GUNA2HTMLLABEL
+        // =========================================================
         private void LoadCanhBaoTonKho(SqlConnection conn)
         {
-            string query = "SELECT COUNT(*) FROM Sach WHERE SoLuongTon < 10";
-            using (SqlCommand cmd = new SqlCommand(query, conn))
+            string query = "SELECT TenSach, SoLuongTon FROM Sach WHERE SoLuongTon < 10 ORDER BY SoLuongTon ASC";
+            using (SqlDataAdapter da = new SqlDataAdapter(query, conn))
             {
-                int soSachSapHet = Convert.ToInt32(cmd.ExecuteScalar());
-                if (soSachSapHet > 0)
+                DataTable dt = new DataTable();
+                da.Fill(dt);
+
+                if (dt.Rows.Count > 0)
                 {
-                    lblCanhBao.Text = $"⚠ CHÚ Ý: Hiện đang có {soSachSapHet} đầu sách sắp hết hàng (Dưới 10 cuốn)!";
+                    // Khởi tạo dòng tiêu đề và xuống dòng bằng thẻ <br>
+                    string thongBao = $"⚠ CHÚ Ý: Hiện đang có {dt.Rows.Count} đầu sách sắp hết hàng (Dưới 10 cuốn)!<br><br>";
+
+                    int stt = 1;
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        // Thêm từng cuốn sách, in đậm tên sách <b> và xuống dòng <br>
+                        thongBao += $"{stt}. <b>{row["TenSach"]}</b> (Chỉ còn: {row["SoLuongTon"]} quyển)<br>";
+                        stt++;
+                    }
+
+                    lblCanhBao.Text = thongBao;
                     lblCanhBao.BackColor = Color.LightPink;
                     lblCanhBao.ForeColor = Color.DarkRed;
                 }
@@ -180,14 +237,10 @@ namespace Thinh_QLNhasach
 
                 if (e.ColumnIndex == colTenSach)
                 {
-                    // =========================================================
-                    // ĐÃ FIX: TỰ ĐỘNG CO GIÃN ẢNH VÀ CHỮ THEO CHIỀU CAO THỰC TẾ
-                    // =========================================================
-
-                    int padding = 12; // Chừa khoảng lề trên/dưới 6px
+                    int padding = 12;
                     int imgSize = e.CellBounds.Height - padding;
-                    if (imgSize > 80) imgSize = 80; // To tối đa 80px để không bị vỡ ảnh
-                    if (imgSize < 30) imgSize = 30; // Nhỏ tối đa 30px để còn nhìn thấy
+                    if (imgSize > 80) imgSize = 80;
+                    if (imgSize < 30) imgSize = 30;
 
                     int imgX = e.CellBounds.X + 20;
                     int imgY = e.CellBounds.Y + (e.CellBounds.Height - imgSize) / 2;
@@ -233,7 +286,6 @@ namespace Thinh_QLNhasach
                         e.Graphics.DrawRectangle(Pens.LightGray, imgX, imgY, imgSize, imgSize);
                     }
 
-                    // TÍNH TOÁN FONT CHỮ TO NHỎ THEO CỠ ẢNH
                     int fontSizeTitle = imgSize >= 60 ? 12 : (imgSize >= 45 ? 11 : 9);
                     int fontSizeAuthor = imgSize >= 60 ? 10 : 8;
 
@@ -259,7 +311,6 @@ namespace Thinh_QLNhasach
                 {
                     string text = drv["SoLuongBan"].ToString() + " quyển";
 
-                    // Giãn chữ Huy Hiệu theo độ cao dòng
                     int badgeFontSize = e.CellBounds.Height >= 70 ? 10 : 9;
                     Font badgeFont = new Font("Segoe UI", badgeFontSize, FontStyle.Bold);
                     SizeF textSize = e.Graphics.MeasureString(text, badgeFont);
@@ -302,9 +353,6 @@ namespace Thinh_QLNhasach
             }
         }
 
-        // =========================================================
-        // ĐÃ FIX: CHIA ĐỀU CHIỀU CAO KHÔNG BỊ HỞ HAY CẮT MẨU
-        // =========================================================
         private void DanDeuDongDGV(DataGridView dgv)
         {
             if (dgv != null && dgv.Rows.Count > 0)
@@ -314,15 +362,13 @@ namespace Thinh_QLNhasach
                 int totalHeight = dgv.ClientSize.Height;
                 if (dgv.ColumnHeadersVisible) totalHeight -= dgv.ColumnHeadersHeight;
 
-                // Chia đều phần nguyên và giữ lại phần dư
                 int rowHeight = totalHeight / dgv.Rows.Count;
                 int remainder = totalHeight % dgv.Rows.Count;
 
-                if (rowHeight < 30) rowHeight = 30; // Chỉ khóa min 30px để chống sập UI
+                if (rowHeight < 30) rowHeight = 30;
 
                 for (int i = 0; i < dgv.Rows.Count; i++)
                 {
-                    // Dòng cuối cùng gánh thêm phần lẻ dư để lấp đầy 100% khe hở dưới cùng
                     if (i == dgv.Rows.Count - 1 && totalHeight >= 30 * dgv.Rows.Count)
                     {
                         dgv.Rows[i].Height = rowHeight + remainder;
@@ -372,6 +418,11 @@ namespace Thinh_QLNhasach
                         ws.Cells["A6:B6"].Merge = true;
                         ws.Cells["A6"].Style.Font.Bold = true;
 
+                        if (cboTheLoai != null && cboTheLoai.SelectedIndex > 0)
+                        {
+                            ws.Cells["A6"].Value = $"DANH SÁCH TOP 10 SÁCH BÁN CHẠY NHẤT ({cboTheLoai.Text.ToUpper()})";
+                        }
+
                         ws.Cells[7, 1].Value = "Tên Sách";
                         ws.Cells[7, 1].Style.Font.Bold = true;
                         ws.Cells[7, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -395,11 +446,53 @@ namespace Thinh_QLNhasach
                             ws.Cells[i + 8, 2].Style.Border.BorderAround(ExcelBorderStyle.Thin);
                         }
 
+                        // IN PHẦN CẢNH BÁO TỒN KHO VÀO EXCEL (TỰ ĐỘNG LẤY TỪ DATABASE)
                         int lastRow = dgvTopSach.Rows.Count + 10;
                         ws.Cells[$"A{lastRow}"].Value = "Tình trạng tồn kho:";
                         ws.Cells[$"A{lastRow}"].Style.Font.Bold = true;
-                        ws.Cells[$"A{lastRow + 1}"].Value = lblCanhBao.Text;
-                        ws.Cells[$"A{lastRow + 1}"].Style.Font.Color.SetColor(lblCanhBao.Text.Contains("⚠") ? Color.Red : Color.Green);
+
+                        using (SqlConnection conn = new SqlConnection(Thinh_QLNhasach.Database.DbConnection.connStr))
+                        {
+                            conn.Open();
+                            string query = "SELECT TenSach, SoLuongTon FROM Sach WHERE SoLuongTon < 10 ORDER BY SoLuongTon ASC";
+                            SqlDataAdapter da = new SqlDataAdapter(query, conn);
+                            DataTable dtTonKho = new DataTable();
+                            da.Fill(dtTonKho);
+
+                            if (dtTonKho.Rows.Count > 0)
+                            {
+                                ws.Cells[$"A{lastRow + 1}"].Value = $"⚠ CHÚ Ý: Hiện đang có {dtTonKho.Rows.Count} đầu sách sắp hết hàng (Dưới 10 cuốn)!";
+                                ws.Cells[$"A{lastRow + 1}"].Style.Font.Color.SetColor(Color.Red);
+
+                                lastRow += 3;
+                                ws.Cells[lastRow, 1].Value = "Tên Sách (Sắp hết)";
+                                ws.Cells[lastRow, 1].Style.Font.Bold = true;
+                                ws.Cells[lastRow, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                ws.Cells[lastRow, 1].Style.Fill.BackgroundColor.SetColor(Color.LightPink);
+                                ws.Cells[lastRow, 1].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+
+                                ws.Cells[lastRow, 2].Value = "Tồn Kho";
+                                ws.Cells[lastRow, 2].Style.Font.Bold = true;
+                                ws.Cells[lastRow, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                ws.Cells[lastRow, 2].Style.Fill.BackgroundColor.SetColor(Color.LightPink);
+                                ws.Cells[lastRow, 2].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+
+                                for (int i = 0; i < dtTonKho.Rows.Count; i++)
+                                {
+                                    DataRow drv = dtTonKho.Rows[i];
+                                    ws.Cells[lastRow + 1 + i, 1].Value = drv["TenSach"].ToString();
+                                    ws.Cells[lastRow + 1 + i, 2].Value = drv["SoLuongTon"].ToString();
+
+                                    ws.Cells[lastRow + 1 + i, 1].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                                    ws.Cells[lastRow + 1 + i, 2].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                                }
+                            }
+                            else
+                            {
+                                ws.Cells[$"A{lastRow + 1}"].Value = "Tồn kho ổn định, không có sách nào dưới 10 cuốn.";
+                                ws.Cells[$"A{lastRow + 1}"].Style.Font.Color.SetColor(Color.Green);
+                            }
+                        }
 
                         ws.Cells[ws.Dimension.Address].AutoFitColumns();
 
