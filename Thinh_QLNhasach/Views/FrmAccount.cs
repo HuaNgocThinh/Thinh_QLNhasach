@@ -42,7 +42,7 @@ namespace Thinh_QLNhasach
         }
 
         // =========================================================
-        // TẢI DỮ LIỆU TỪ DATABASE
+        // TẢI DỮ LIỆU TỪ DATABASE (ĐÃ NÂNG CẤP TÌM KIẾM SĐT)
         // =========================================================
         private void LoadDataTuDatabase(string searchKw = "")
         {
@@ -50,12 +50,13 @@ namespace Thinh_QLNhasach
             {
                 try
                 {
-                    // ĐÃ FIX: Xóa cột MatKhau khỏi câu truy vấn
+                    // Xóa cột MatKhau khỏi câu truy vấn
                     string sql = "SELECT MaND, TenDangNhap, HoTen, NgaySinh, SoDienThoai, VaiTro, TrangThai FROM NguoiDung";
 
                     if (!string.IsNullOrEmpty(searchKw))
                     {
-                        sql += " WHERE TenDangNhap LIKE @kw OR HoTen LIKE @kw";
+                        // ĐÃ BỔ SUNG: Tìm kiếm theo cả Tên Đăng Nhập, Họ Tên VÀ Số Điện Thoại
+                        sql += " WHERE TenDangNhap LIKE @kw OR HoTen LIKE @kw OR SoDienThoai LIKE @kw";
                     }
 
                     SqlCommand cmd = new SqlCommand(sql, conn);
@@ -239,7 +240,7 @@ namespace Thinh_QLNhasach
 
                     if (isEditing)
                     {
-                        // ĐÃ FIX: Update thuần túy các thông tin, hoàn toàn không đụng chạm mật khẩu
+                        // Update thuần túy các thông tin, hoàn toàn không đụng chạm mật khẩu
                         sql = "UPDATE NguoiDung SET TenDangNhap=@u, HoTen=@t, NgaySinh=@n, SoDienThoai=@s, VaiTro=@r, TrangThai=@tt WHERE MaND=@ma";
                         cmd.Parameters.AddWithValue("@ma", currentMaND);
                     }

@@ -29,14 +29,13 @@ namespace Thinh_QLNhasach
             FormatDataGridView(dgvPhieuNhap);
             FormatDataGridView(dgvNCC);
 
-            // BẢN NÂNG CẤP: Thêm cột Giá Bán vào giỏ hàng
             if (dtGioHang.Columns.Count == 0)
             {
                 dtGioHang.Columns.Add("MaSach", typeof(string));
                 dtGioHang.Columns.Add("TenSach", typeof(string));
                 dtGioHang.Columns.Add("SoLuong", typeof(int));
                 dtGioHang.Columns.Add("DonGiaNhap", typeof(double));
-                dtGioHang.Columns.Add("GiaBan", typeof(double)); // <-- Cột mới thêm
+                dtGioHang.Columns.Add("GiaBan", typeof(double));
                 dtGioHang.Columns.Add("ThanhTien", typeof(double), "SoLuong * DonGiaNhap");
             }
 
@@ -44,7 +43,7 @@ namespace Thinh_QLNhasach
 
             LoadData();
             LoadComboBoxNCC();
-            LoadComboBoxTheLoai(); // ĐÃ THÊM: Tải danh sách Thể loại trước
+            LoadComboBoxTheLoai(); 
             LoadComboBoxSach();
             LoadComboBoxNguoiDung();
             LoadDataNhaCungCap();
@@ -55,11 +54,50 @@ namespace Thinh_QLNhasach
         }
 
         // =========================================================================
+        // ĐÃ THÊM: HÀM QUẢN LÝ KHÓA/MỞ GIAO DIỆN THÔNG MINH (UX)
+        // =========================================================================
+        private void KhoaChucNang()
+        {
+            // Xác định xem có đang "dính" vào một Phiếu nhập cũ hay không
+            bool dangXemPhieuCu = (btnSave.Tag != null && btnSave.Tag.ToString().Contains("EDIT_MASTER"));
+
+            // 1. Xử lý khóa phần thông tin Master (Nhà cung cấp, Ghi chú)
+            // Nếu đang bốc phiếu cũ lên xem mà CHƯA bật chế độ Sửa => KHÓA
+            bool khoaMaster = dangXemPhieuCu && !isEditingPhieu;
+            cboMaNCC.Enabled = !khoaMaster;
+            txtGhichu.ReadOnly = khoaMaster;
+
+            // 2. Xử lý khóa phần Nhập Sách (Thể loại, Sách, Số lượng, Giá)
+            // Nếu đang dính vào phiếu cũ => TUYỆT ĐỐI KHÓA để không thêm nhầm sách vào phiếu đã lưu
+            bool khoaNhapSach = dangXemPhieuCu;
+
+            if (this.Controls.Find("cboTheLoai", true).Length > 0)
+            {
+                this.Controls.Find("cboTheLoai", true)[0].Enabled = !khoaNhapSach;
+            }
+            cboMaSach.Enabled = !khoaNhapSach;
+            nudSoLuong.Enabled = !khoaNhapSach;
+            txtDongianhap.ReadOnly = khoaNhapSach;
+            txtGiaBan.ReadOnly = khoaNhapSach;
+            btnAdd.Enabled = !khoaNhapSach;
+
+            // 3. Khóa nút Save an toàn
+            if (dangXemPhieuCu && !isEditingPhieu)
+            {
+                btnSave.Enabled = false;
+            }
+            else
+            {
+                btnSave.Enabled = true;
+            }
+        }
+
+        // =========================================================================
         // NÚT GỌI FORM TẠO SÁCH MỚI
         // =========================================================================
         private void btnTaoSachMoi_Click(object sender, EventArgs e)
         {
-            Views.FrmTaoSachMoi frm = new Views.FrmTaoSachMoi(); // Gọi đúng Namespace Views
+            Views.FrmTaoSachMoi frm = new Views.FrmTaoSachMoi();
             if (frm.ShowDialog() == DialogResult.OK)
             {
                 LoadComboBoxSach();
@@ -126,9 +164,6 @@ namespace Thinh_QLNhasach
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                // ======================================================================================
-                // ĐÃ FIX SQL: Dùng STUFF gom nhóm tất cả sách vào cột ChiTietSach, 1 Phiếu = 1 Dòng
-                // ======================================================================================
                 string sql = @"
                     SELECT 
                         pn.MaPN, 
@@ -160,11 +195,9 @@ namespace Thinh_QLNhasach
 
                 if (dgvPhieuNhap.Columns.Count > 0)
                 {
-                    // Ẩn ID
                     if (dgvPhieuNhap.Columns.Contains("MaNCC")) dgvPhieuNhap.Columns["MaNCC"].Visible = false;
                     if (dgvPhieuNhap.Columns.Contains("MaND")) dgvPhieuNhap.Columns["MaND"].Visible = false;
 
-                    // Đổi tên cột
                     dgvPhieuNhap.Columns["MaPN"].HeaderText = "Mã Phiếu";
                     dgvPhieuNhap.Columns["MaPN"].FillWeight = 50;
 
@@ -176,7 +209,7 @@ namespace Thinh_QLNhasach
                     dgvPhieuNhap.Columns["NguoiLap"].HeaderText = "Người Lập";
 
                     dgvPhieuNhap.Columns["ChiTietSach"].HeaderText = "Sách Đã Nhập (Gộp)";
-                    dgvPhieuNhap.Columns["ChiTietSach"].FillWeight = 150; // Cho cột này rộng ra để đọc được nhiều sách
+                    dgvPhieuNhap.Columns["ChiTietSach"].FillWeight = 150;
 
                     dgvPhieuNhap.Columns["TongTien"].HeaderText = "Tổng Tiền";
                     dgvPhieuNhap.Columns["TongTien"].DefaultCellStyle.Format = "N0";
@@ -192,15 +225,15 @@ namespace Thinh_QLNhasach
 
             if (dgvPhieuNhap.DataSource == dtGioHang)
             {
-                // Khi đang bốc dữ liệu từ Giỏ hàng tạm
                 cboMaSach.SelectedValue = r.Cells["MaSach"].Value.ToString();
                 nudSoLuong.Value = Convert.ToDecimal(r.Cells["SoLuong"].Value);
                 txtDongianhap.Text = r.Cells["DonGiaNhap"].Value.ToString();
                 if (r.Cells["GiaBan"] != null) txtGiaBan.Text = r.Cells["GiaBan"].Value.ToString();
+
+                KhoaChucNang();
             }
             else
             {
-                // Khi click vào dòng Lịch sử (Đã gộp sách), chỉ bốc dữ liệu Master lên
                 string maPN = r.Cells["MaPN"].Value.ToString();
                 txtMaPN.Text = maPN;
                 dtpNgayNhap.Value = Convert.ToDateTime(r.Cells["NgayNhap"].Value);
@@ -211,15 +244,27 @@ namespace Thinh_QLNhasach
                 txtTongtien.Text = Convert.ToDouble(r.Cells["TongTien"].Value).ToString("N0");
                 txtGhichu.Text = r.Cells["GhiChu"].Value.ToString();
 
-                // Xóa trắng ô sách vì dòng lịch sử hiện tại đại diện cho RẤT NHIỀU sách
                 cboMaSach.SelectedIndex = -1;
                 nudSoLuong.Value = 1;
                 txtDongianhap.Clear();
                 txtGiaBan.Clear();
                 txtThanhTien.Text = "0";
 
-                // Chuyển Tag sang EDIT_MASTER để khi bấm Save nó chỉ update Ghi chú và NCC
                 btnSave.Tag = new { Mode = "EDIT_MASTER", MaPN = maPN };
+
+                KhoaChucNang();
+            }
+        }
+
+        // =========================================================================
+        // ĐÃ FIX: BẤM VÀO LƯỚI LÀ BỐC LÊN XEM LUÔN ĐỂ IN (TỰ ĐỘNG KHÓA NGAY LẬP TỨC)
+        // =========================================================================
+        private void dgvPhieuNhap_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                // Bỏ qua mọi rào cản, click là bốc lên form để xem/in
+                BocDuLieuPhieuNhap(e.RowIndex);
             }
         }
 
@@ -245,6 +290,12 @@ namespace Thinh_QLNhasach
             // === LOGIC SỬA PHIẾU CŨ (CHỈ SỬA MASTER VÌ ĐÃ GỘP PHIẾU) ===
             if (btnSave.Tag != null && btnSave.Tag.ToString().Contains("EDIT_MASTER"))
             {
+                if (!isEditingPhieu)
+                {
+                    MessageBox.Show("Vui lòng BẬT CHẾ ĐỘ SỬA (Nút cờ lê) trước khi lưu!", "Cảnh báo");
+                    return;
+                }
+
                 dynamic data = btnSave.Tag;
                 using (SqlConnection conn = new SqlConnection(connectionString))
                 {
@@ -261,7 +312,7 @@ namespace Thinh_QLNhasach
                         btnSave.Tag = null;
                         isEditingPhieu = false;
 
-                        MessageBox.Show("Cập nhật thôngত্তি phiếu thành công (Chỉ sửa Nhà Cung Cấp & Ghi Chú)!");
+                        MessageBox.Show("Cập nhật thông tin phiếu thành công (Chỉ sửa Nhà Cung Cấp & Ghi Chú)!");
                         AppLogger.GhiLog(Session.Username, "Sửa Phiếu Nhập", $"Đã sửa thông tin tổng quan phiếu nhập mã {data.MaPN}");
 
                         LoadData();
@@ -303,7 +354,6 @@ namespace Thinh_QLNhasach
                         cmdCT.Parameters.AddWithValue("@tt", dr["ThanhTien"]);
                         cmdCT.ExecuteNonQuery();
 
-                        // NÂNG CẤP: Cập nhật CẢ Giá Nhập và Giá Bán thẳng vào bảng Sách
                         string sqlUpdateSach = $"UPDATE Sach SET SoLuongTon = SoLuongTon + {dr["SoLuong"]}, GiaNhap = {dr["DonGiaNhap"]}, GiaBan = {dr["GiaBan"]} WHERE MaSach='{dr["MaSach"]}'";
                         new SqlCommand(sqlUpdateSach, conn, trans).ExecuteNonQuery();
                     }
@@ -324,25 +374,28 @@ namespace Thinh_QLNhasach
             }
         }
 
+        // =========================================================================
+        // ĐÃ FIX: CHỈ LÀM NHIỆM VỤ MỞ KHÓA KHI ĐANG XEM PHIẾU CŨ
+        // =========================================================================
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            if (dgvPhieuNhap.CurrentRow == null)
+            if (dgvPhieuNhap.CurrentRow == null || dgvPhieuNhap.DataSource == dtGioHang)
             {
-                MessageBox.Show("Hãy chọn một dòng dưới bảng trước!");
+                MessageBox.Show("Hãy chọn một Phiếu nhập từ Lịch Sử dưới bảng trước!");
                 return;
             }
 
-            if (!isEditingPhieu)
+            isEditingPhieu = !isEditingPhieu;
+
+            if (isEditingPhieu)
             {
-                isEditingPhieu = true;
-                MessageBox.Show("Đã bật chế độ Sửa! Click vào bất kỳ dòng nào dưới bảng để sửa (Chỉ sửa thông tin Nhà Cung Cấp và Ghi Chú).");
-                BocDuLieuPhieuNhap(dgvPhieuNhap.CurrentRow.Index);
+                MessageBox.Show("Đã BẬT chế độ Sửa!\nBạn có thể sửa thông tin Nhà Cung Cấp và Ghi Chú của phiếu nhập này.");
+                KhoaChucNang(); // Cập nhật lại Form (Mở khóa)
             }
             else
             {
-                isEditingPhieu = false;
-                MessageBox.Show("Đã tắt chế độ sửa.");
-                ResetTabLapPhieu();
+                MessageBox.Show("Đã TẮT chế độ Sửa.");
+                KhoaChucNang(); // Cập nhật lại Form (Đóng khóa)
             }
         }
 
@@ -351,7 +404,7 @@ namespace Thinh_QLNhasach
             dtGioHang.Clear();
             isEditingPhieu = false;
             ResetTabLapPhieu();
-            LoadData();
+            LoadData(); // Load lại lưới về Lịch sử CSDL
         }
 
         private void btnSearch_Click(object sender, EventArgs e)
@@ -370,23 +423,13 @@ namespace Thinh_QLNhasach
                     }
                     else
                     {
-                        // Đã thay 'TenSach' bằng 'ChiTietSach' do bảng đã gộp
-                        if (string.IsNullOrEmpty(keyword)) dtCurrent.DefaultView.RowFilter = "";
-                        else dtCurrent.DefaultView.RowFilter = string.Format("Convert(ChiTietSach, 'System.String') LIKE '%{0}%' OR Convert(MaPN, 'System.String') LIKE '%{0}%'", keyword);
+                        if (string.IsNullOrEmpty(keyword))
+                            dtCurrent.DefaultView.RowFilter = "";
+                        else
+                            dtCurrent.DefaultView.RowFilter = string.Format("Convert(ChiTietSach, 'System.String') LIKE '%{0}%' OR Convert(MaPN, 'System.String') LIKE '%{0}%' OR Convert(TenNCC, 'System.String') LIKE '%{0}%' OR Convert(NguoiLap, 'System.String') LIKE '%{0}%'", keyword);
                     }
                 }
                 catch (Exception ex) { MessageBox.Show("Lỗi cú pháp tìm kiếm: " + ex.Message); }
-            }
-        }
-
-        private void dgvPhieuNhap_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex >= 0)
-            {
-                if (isEditingPhieu || dgvPhieuNhap.DataSource == dtGioHang)
-                {
-                    BocDuLieuPhieuNhap(e.RowIndex);
-                }
             }
         }
 
@@ -558,9 +601,6 @@ namespace Thinh_QLNhasach
             }
         }
 
-        // =========================================================================
-        // ĐÃ THÊM: HÀM LOAD COMBOBOX THỂ LOẠI
-        // =========================================================================
         private void LoadComboBoxTheLoai()
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -571,18 +611,14 @@ namespace Thinh_QLNhasach
                     DataTable dt = new DataTable();
                     da.Fill(dt);
 
-                    // Chèn thêm dòng Tất cả sách lên đầu để nếu thích thì xem full sách
                     DataRow row = dt.NewRow();
                     row["MaTL"] = 0;
                     row["TenTL"] = "--- Tất cả sách ---";
                     dt.Rows.InsertAt(row, 0);
 
-                    // Gắn vào cboTheLoai (nếu tồn tại trên form)
                     if (this.Controls.Find("cboTheLoai", true).Length > 0)
                     {
                         ComboBox cboTL = (ComboBox)this.Controls.Find("cboTheLoai", true)[0];
-
-                        // Tắt event trước khi đổ data
                         cboTL.SelectedIndexChanged -= cboTheLoai_SelectedIndexChanged;
 
                         cboTL.DataSource = dt;
@@ -590,7 +626,6 @@ namespace Thinh_QLNhasach
                         cboTL.ValueMember = "MaTL";
                         cboTL.SelectedIndex = 0;
 
-                        // Bật lại event
                         cboTL.SelectedIndexChanged += cboTheLoai_SelectedIndexChanged;
                     }
                 }
@@ -598,9 +633,6 @@ namespace Thinh_QLNhasach
             }
         }
 
-        // =========================================================================
-        // ĐÃ SỬA: HÀM LOAD COMBOBOX SÁCH CÓ THÊM CHỨC NĂNG LỌC THEO THỂ LOẠI
-        // =========================================================================
         private void LoadComboBoxSach(int maTL = 0)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -610,7 +642,6 @@ namespace Thinh_QLNhasach
                     conn.Open();
                     string sql = "SELECT MaSach, TenSach, GiaNhap, GiaBan FROM Sach";
 
-                    // Lọc theo thể loại nếu maTL > 0
                     if (maTL > 0)
                     {
                         sql += " WHERE MaTL = " + maTL;
@@ -619,7 +650,6 @@ namespace Thinh_QLNhasach
                     SqlDataAdapter da = new SqlDataAdapter(sql, conn);
                     DataTable dt = new DataTable(); da.Fill(dt);
 
-                    // Tắt sự kiện để chống lỗi nhảy liên hoàn
                     cboMaSach.SelectedIndexChanged -= cboMaSach_SelectedIndexChanged;
 
                     cboMaSach.DataSource = null;
@@ -630,16 +660,12 @@ namespace Thinh_QLNhasach
 
                     if (cboMaSach.Items.Count > 0) cboMaSach.SelectedIndex = -1;
 
-                    // Bật lại sự kiện
                     cboMaSach.SelectedIndexChanged += cboMaSach_SelectedIndexChanged;
                 }
                 catch (Exception ex) { MessageBox.Show("Lỗi: " + ex.Message); }
             }
         }
 
-        // =========================================================================
-        // ĐÃ THÊM: SỰ KIỆN KHI CHỌN THỂ LOẠI -> LỌC SÁCH
-        // =========================================================================
         private void cboTheLoai_SelectedIndexChanged(object sender, EventArgs e)
         {
             ComboBox cboTL = sender as ComboBox;
@@ -648,10 +674,8 @@ namespace Thinh_QLNhasach
                 int maTL = 0;
                 int.TryParse(cboTL.SelectedValue.ToString(), out maTL);
 
-                // Gọi hàm load sách và truyền mã thể loại vào để lọc
                 LoadComboBoxSach(maTL);
 
-                // Xóa trắng ô đơn giá vì danh sách sách vừa bị đổi
                 txtDongianhap.Clear();
                 txtGiaBan.Clear();
             }
@@ -667,12 +691,14 @@ namespace Thinh_QLNhasach
             }
         }
 
+        // =========================================================================
+        // ĐÃ FIX: KHI RESET LÀ TRẢ VỀ FORM TRỐNG VÀ MỞ KHÓA MỌI THỨ
+        // =========================================================================
         private void ResetTabLapPhieu()
         {
             txtMaPN.Text = TuSinhMaPhieu();
             txtMaPN.ReadOnly = true;
 
-            // Mặc định về dòng "Tất cả sách" nếu có control này trên giao diện
             if (this.Controls.Find("cboTheLoai", true).Length > 0)
             {
                 ((ComboBox)this.Controls.Find("cboTheLoai", true)[0]).SelectedIndex = 0;
@@ -692,6 +718,10 @@ namespace Thinh_QLNhasach
             txtTongtien.Text = "0";
             txtGhichu.Clear();
             nudSoLuong.Value = 1;
+
+            btnSave.Tag = null; // Cực kỳ quan trọng: Báo cho hệ thống biết là đang lập phiếu MỚI
+            isEditingPhieu = false;
+            KhoaChucNang(); // Mở khóa toàn bộ
         }
 
         private void ResetTabNCC()
@@ -713,7 +743,7 @@ namespace Thinh_QLNhasach
         private void TinhThanhTienHienTai()
         {
             if (double.TryParse(txtDongianhap.Text, out double dg))
-                txtThanhTien.Text = ((double)nudSoLuong.Value * dg).ToString("N0"); // Thêm phẩy cho đẹp
+                txtThanhTien.Text = ((double)nudSoLuong.Value * dg).ToString("N0");
             else
                 txtThanhTien.Text = "0";
         }
@@ -727,7 +757,6 @@ namespace Thinh_QLNhasach
             if (tcPhieuHang.SelectedIndex == 0) LoadComboBoxSach();
         }
 
-        // TỰ ĐỘNG ĐIỀN GIÁ NHẬP & GIÁ BÁN KHI CHỌN SÁCH CŨ
         private void cboMaSach_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (cboMaSach.SelectedIndex >= 0 && cboMaSach.SelectedItem != null)
@@ -746,9 +775,6 @@ namespace Thinh_QLNhasach
             }
         }
 
-        // =========================================================================
-        // TÍNH NĂNG IN PHIẾU NHẬP HÀNG 
-        // =========================================================================
         private void btnIn_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(txtMaPN.Text) || dtGioHang.Rows.Count > 0)

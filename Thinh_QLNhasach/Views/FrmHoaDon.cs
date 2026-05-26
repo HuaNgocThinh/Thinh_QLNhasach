@@ -46,7 +46,6 @@ namespace Thinh_QLNhasach.Views
 
             if (cboGiamGia != null)
             {
-                // Bắt cứng sự kiện thay đổi Giảm Giá bằng Code để đảm bảo 100% luôn chạy
                 cboGiamGia.SelectedIndexChanged -= cboGiamGia_SelectedIndexChanged;
 
                 cboGiamGia.Items.Clear();
@@ -54,15 +53,11 @@ namespace Thinh_QLNhasach.Views
                 cboGiamGia.DropDownStyle = ComboBoxStyle.DropDownList;
                 cboGiamGia.SelectedIndex = 0;
 
-                // Nối lại sự kiện sau khi set Value để sẵn sàng bắt tương tác của User
                 cboGiamGia.SelectedIndexChanged += cboGiamGia_SelectedIndexChanged;
             }
 
             LoadComboBoxNguoiDung();
-
-            // ĐÃ THÊM: Tải Thể Loại trước
             LoadComboBoxTheLoai();
-
             LoadComboBoxSach();
             ResetForm();
             LoadLichSuHoaDon();
@@ -92,13 +87,11 @@ namespace Thinh_QLNhasach.Views
 
             dgv.ColumnAdded += (s, e) =>
             {
-                // BẢNG GIỎ HÀNG
                 if (e.Column.Name == "TenSach" && dgv.Name == "dgvGioHang") e.Column.HeaderText = "Tên Sách";
                 if (e.Column.Name == "SoLuong" && dgv.Name == "dgvGioHang") { e.Column.HeaderText = "Số Lượng"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter; }
                 if (e.Column.Name == "DonGia" && dgv.Name == "dgvGioHang") { e.Column.HeaderText = "Đơn Giá"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
                 if (e.Column.Name == "ThanhTien" && dgv.Name == "dgvGioHang") { e.Column.HeaderText = "Thành Tiền"; e.Column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight; }
 
-                // BẢNG LỊCH SỬ HÓA ĐƠN ĐÃ GỘP
                 if (e.Column.Name == "MaHD") { e.Column.HeaderText = "Mã HD"; e.Column.FillWeight = 80; }
                 if (e.Column.Name == "NgayLap") { e.Column.HeaderText = "Ngày Lập"; e.Column.DefaultCellStyle.Format = "dd/MM/yyyy HH:mm"; }
                 if (e.Column.Name == "NhanVien") { e.Column.HeaderText = "Nhân Viên"; e.Column.FillWeight = 120; }
@@ -157,9 +150,6 @@ namespace Thinh_QLNhasach.Views
             }
         }
 
-        // =========================================================================
-        // ĐÃ THÊM: HÀM LOAD COMBOBOX THỂ LOẠI (LỌC SÁCH LÚC BÁN HÀNG)
-        // =========================================================================
         private void LoadComboBoxTheLoai()
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -170,7 +160,6 @@ namespace Thinh_QLNhasach.Views
                     DataTable dt = new DataTable();
                     da.Fill(dt);
 
-                    // Chèn thêm dòng Tất cả sách lên đầu
                     DataRow row = dt.NewRow();
                     row["MaTL"] = 0;
                     row["TenTL"] = "--- Tất cả sách ---";
@@ -179,8 +168,6 @@ namespace Thinh_QLNhasach.Views
                     if (this.Controls.Find("cboTheLoai", true).Length > 0)
                     {
                         ComboBox cboTL = (ComboBox)this.Controls.Find("cboTheLoai", true)[0];
-
-                        // Tắt event trước khi đổ data để tránh lỗi
                         cboTL.SelectedIndexChanged -= cboTheLoai_SelectedIndexChanged;
 
                         cboTL.DataSource = dt;
@@ -188,7 +175,6 @@ namespace Thinh_QLNhasach.Views
                         cboTL.ValueMember = "MaTL";
                         cboTL.SelectedIndex = 0;
 
-                        // Bật lại event
                         cboTL.SelectedIndexChanged += cboTheLoai_SelectedIndexChanged;
                     }
                 }
@@ -196,9 +182,6 @@ namespace Thinh_QLNhasach.Views
             }
         }
 
-        // =========================================================================
-        // ĐÃ SỬA: LOAD SÁCH THEO THỂ LOẠI (CHỈ LOAD SÁCH CÒN TỒN KHO > 0)
-        // =========================================================================
         private void LoadComboBoxSach(int maTL = 0)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -206,7 +189,6 @@ namespace Thinh_QLNhasach.Views
                 try
                 {
                     conn.Open();
-                    // Khi bán hàng, chỉ lấy sách có số lượng > 0
                     string sql = "SELECT MaSach, TenSach, GiaBan, SoLuongTon FROM Sach WHERE SoLuongTon > 0";
 
                     if (maTL > 0)
@@ -234,9 +216,6 @@ namespace Thinh_QLNhasach.Views
             }
         }
 
-        // =========================================================================
-        // ĐÃ THÊM: SỰ KIỆN KHI ĐỔI THỂ LOẠI THÌ LỌC LẠI SÁCH
-        // =========================================================================
         private void cboTheLoai_SelectedIndexChanged(object sender, EventArgs e)
         {
             ComboBox cboTL = sender as ComboBox;
@@ -247,7 +226,6 @@ namespace Thinh_QLNhasach.Views
 
                 LoadComboBoxSach(maTL);
 
-                // Khi vừa đổi thể loại thì xóa trắng ô đơn giá
                 txtDonGia.Clear();
                 nudSoLuong.Value = 1;
             }
@@ -309,11 +287,23 @@ namespace Thinh_QLNhasach.Views
             finally { isProcessing = false; }
         }
 
+        // =========================================================================
+        // ĐÃ FIX LỖI: TỰ ĐỘNG RESET BỘ LỌC THỂ LOẠI TRƯỚC KHI BỐC SÁCH LÊN FORM
+        // =========================================================================
         private void btnEdit_Click(object sender, EventArgs e)
         {
             if (dgvGioHang.CurrentRow == null || dgvGioHang.CurrentRow.IsNewRow) return;
 
             DataRowView drv = (DataRowView)dgvGioHang.CurrentRow.DataBoundItem;
+
+            // Xử lý thông minh: Gạt combobox Thể Loại về "Tất cả sách" để chắc chắn cuốn nào cũng hiện ra được
+            if (this.Controls.Find("cboTheLoai", true).Length > 0)
+            {
+                ComboBox cboTL = (ComboBox)this.Controls.Find("cboTheLoai", true)[0];
+                cboTL.SelectedIndex = 0; // Nó sẽ tự động gọi hàm Load lại toàn bộ sách
+            }
+
+            // Bây giờ thì thoải mái chọn lại cuốn sách đó
             cboMaSach.SelectedValue = drv["MaSach"].ToString();
 
             decimal sl = 1;
@@ -431,7 +421,7 @@ namespace Thinh_QLNhasach.Views
                         AppLogger.GhiLog(Session.Username, "Tạo Hóa Đơn", $"Lập thành công hóa đơn {txtMaHD.Text} - Tổng tiền: {thanhTien.ToString("N0")} VNĐ");
 
                         ResetForm();
-                        LoadComboBoxSach(); // Tải lại giỏ sách để cập nhật Tồn kho
+                        LoadComboBoxSach();
                         LoadLichSuHoaDon();
                     }
                     catch (Exception ex)
@@ -751,7 +741,6 @@ namespace Thinh_QLNhasach.Views
             txtTenKH.Clear();
             cboMaNV.SelectedIndex = -1;
 
-            // ĐÃ THÊM: Khi tạo phiếu mới thì mặc định nhảy về "Tất cả sách" để khỏi bị lọc sai
             if (this.Controls.Find("cboTheLoai", true).Length > 0)
             {
                 ComboBox cboTL = (ComboBox)this.Controls.Find("cboTheLoai", true)[0];

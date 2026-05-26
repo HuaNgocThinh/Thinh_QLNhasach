@@ -401,7 +401,7 @@ namespace Thinh_QLNhasach
                     {
                         ExcelWorksheet ws = excel.Workbook.Worksheets.Add("Báo Cáo Thống Kê");
 
-                        ws.Cells["A1"].Value = "BÁO CÁO THỐNG KÊ KINH DOANH NHÀ SÁCH";
+                        ws.Cells["A1"].Value = "BÁO CÁO THỐNG KÊ KINH DOANH HIỆU SÁCH";
                         ws.Cells["A1:B1"].Merge = true;
                         ws.Cells["A1"].Style.Font.Bold = true;
                         ws.Cells["A1"].Style.Font.Size = 14;

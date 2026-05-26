@@ -23,11 +23,11 @@ namespace Thinh_QLNhasach.Views
         private string duongDanAnhTam = "";
         private string tenAnhHienTai = "";
 
-        // Biến kiểm soát vùng chờ cho TAB THỂ LOẠI
+        // Biến kiểm soát vùng chờ cho TAB THỂ LOẠI 
         private int indexChonTL = -1;
         private bool isEditingTL = false;
 
-        // Biến kiểm soát vùng chờ cho TAB NXB
+        // Biến kiểm soát vùng chờ cho TAB NXB 
         private int indexChonNXB = -1;
         private bool isEditingNXB = false;
 
@@ -313,9 +313,16 @@ namespace Thinh_QLNhasach.Views
             isEditingSach = dangBatSua;
         }
 
+        // ==============================================================================
+        // ĐÃ FIX: NÂNG CẤP BỘ LỌC TÌM KIẾM VẠN NĂNG (THEO TÊN, TÁC GIẢ, THỂ LOẠI)
+        // ==============================================================================
         private void btnSearch_Click(object sender, EventArgs e)
         {
-            string filter = string.Format("TenSach LIKE '%{0}%' OR Convert(MaSach, 'System.String') LIKE '%{0}%'", txtSearch.Text.Trim());
+            string kw = txtSearch.Text.Trim();
+
+            // Tìm theo Tên Sách, Mã Sách, Tác Giả (TenTG), hoặc Thể Loại (TenTL)
+            string filter = string.Format("TenSach LIKE '%{0}%' OR Convert(MaSach, 'System.String') LIKE '%{0}%' OR TenTG LIKE '%{0}%' OR TenTL LIKE '%{0}%'", kw);
+
             dtSachTam.DefaultView.RowFilter = filter;
         }
 
